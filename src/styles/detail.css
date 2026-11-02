@@ -52,13 +52,14 @@
   display: none;
 }
 
-/* The palette: small round swatches down the image's left side. */
+/* The palette: round swatches down the image's left side, big enough to hit
+   at a glance. */
 .detail-swatches {
   position: absolute;
   display: flex;
   flex-direction: column;
   align-items: flex-end;
-  gap: 10px;
+  gap: 12px;
 }
 
 .detail-swatch-row {
@@ -68,8 +69,9 @@
 }
 
 .detail-swatch {
-  width: 14px;
-  height: 14px;
+  position: relative;
+  width: 28px;
+  height: 28px;
   padding: 0;
   border-radius: 50%;
   box-shadow: 0 1px 2px rgba(18, 18, 16, 0.14), 0 2px 6px rgba(18, 18, 16, 0.06);
@@ -77,14 +79,26 @@
   transition: transform 0.18s var(--ease-out);
 }
 
+/* A little more to hit than to see: the gaps between swatches count too. */
+.detail-swatch::after {
+  content: "";
+  position: absolute;
+  inset: -6px;
+  border-radius: 50%;
+}
+
 .detail-swatch:hover {
-  transform: scale(1.18);
+  transform: scale(1.08);
+}
+
+.detail-swatch:active {
+  transform: scale(0.94);
 }
 
 /* Copied: the hex shows beside its swatch for a moment. */
 .detail-hex {
   font-family: var(--mono);
-  font-size: 10.5px;
+  font-size: 11px;
   letter-spacing: 0.02em;
   color: var(--ink-2);
   opacity: 0;
