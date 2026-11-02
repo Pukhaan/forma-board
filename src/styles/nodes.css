@@ -86,6 +86,7 @@
   background: var(--card);
   border-radius: 12px;
   box-shadow: var(--shadow-rest);
+  transition: box-shadow 0.2s ease;
 }
 
 .note-head {
@@ -118,6 +119,11 @@
 .card[data-selected] .card-media,
 .stack[data-selected] .stack-card:last-child {
   box-shadow: var(--shadow-lift);
+}
+
+/* Drop hint on a note: the same soft glow a card gets. No border. */
+.note[data-target] {
+  box-shadow: 0 0 0 10px var(--drop), var(--shadow-lift);
 }
 
 /* Stack: a pile with its name underneath. */
@@ -224,6 +230,11 @@
   box-shadow: 0 0 0 10px var(--drop), var(--shadow-lift);
 }
 
+/* A link card: white, a little rounder than an image. */
+.card[data-kind="link"] .card-media {
+  border-radius: 12px;
+}
+
 .card-title {
   margin-top: 8px;
   font-size: 12px;
@@ -232,6 +243,11 @@
   transition: opacity 0.15s ease;
 }
 
-.card:hover .card-title {
+.card:hover /* A link card: white, a little rounder than an image. */
+.card[data-kind="link"] .card-media {
+  border-radius: 12px;
+}
+
+.card-title {
   opacity: 1;
 }

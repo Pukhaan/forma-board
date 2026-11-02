@@ -3,6 +3,7 @@ import { motion } from "motion/react";
 import { useState } from "react";
 import type { StackData } from "../../model/types";
 import { useCanvasUi } from "../context";
+import { ItemFace } from "./Faces";
 import { fitInBox } from "./fit";
 import { Ports } from "./Ports";
 
@@ -50,6 +51,7 @@ export function StackNode({ id, data, selected }: NodeProps<StackNodeType>) {
               <motion.div
                 key={item.id}
                 className="stack-card"
+                data-kind={item.kind}
                 style={{ ...size, zIndex: 10 - i }}
                 variants={
                   i === 0
@@ -58,7 +60,7 @@ export function StackNode({ id, data, selected }: NodeProps<StackNodeType>) {
                 }
                 transition={spring}
               >
-                {item.src && <img src={item.src} alt="" draggable={false} />}
+                <ItemFace item={item} />
               </motion.div>
             );
           })

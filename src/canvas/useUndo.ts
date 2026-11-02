@@ -4,7 +4,8 @@ import { emptyHistory, record, redo, undo } from "./history";
 
 type Board = { nodes: Node[]; edges: Edge[] };
 
-function typing(e: KeyboardEvent) {
+/** True when the event is aimed at a text field, which handles its own keys and paste. */
+export function typing(e: Event) {
   const el = e.target as HTMLElement | null;
   return !!el && (el.isContentEditable || el.tagName === "INPUT" || el.tagName === "TEXTAREA");
 }

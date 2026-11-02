@@ -18,7 +18,7 @@ import {
   type PointerEvent,
 } from "react";
 import type { Item } from "../model/types";
-import { fitSize, planGrid, slotPosition, stagger, type GridPlan, type Pose } from "./layout";
+import { planGrid, sizeIn, slotPosition, stagger, type GridPlan, type Pose } from "./layout";
 import { Lift, rectOf, type Rect } from "./Lift";
 import { poseOnPile, readPile, setPileOut, type Pile } from "./pile";
 import { Tile, type TileValues } from "./Tile";
@@ -88,7 +88,7 @@ export function FocusView({ stack, ...props }: Props) {
 const gridOrder = (items: Item[]) => items.map((i) => i.id).reverse();
 
 function restPose(plan: GridPlan, index: number, item: Item): Pose {
-  const size = fitSize(item.w, item.h, plan.cell);
+  const size = sizeIn(item, plan.cell);
   return { ...slotPosition(plan, index, size), scale: 1, rotate: 0, opacity: 1 };
 }
 
@@ -112,7 +112,7 @@ function firstFrame(stack: Stack, reduced: boolean) {
   const starts = new Map<string, Pose>();
   stack.items.forEach((item) => {
     const i = order.indexOf(item.id);
-    const onPile = !reduced && pile && poseOnPile(i, fitSize(item.w, item.h, plan.cell), pile, plan.scroll);
+    const onPile = !reduced && pile && poseOnPile(i, sizeIn(item, plan.cell), pile, plan.scroll);
     starts.set(item.id, onPile || { ...restPose(plan, i, item), opacity: 0 });
   });
   return { viewport, anchor, scroll: plan.scroll, starts };
@@ -187,7 +187,7 @@ function OpenStack({ stack, onClose, onTakeOut, onReorder }: Omit<Props, "stack"
     values,
     slotOf: (id, index) => {
       const item = byId.get(id);
-      return item ? slotPosition(plan, index, fitSize(item.w, item.h, plan.cell)) : { x: 0, y: 0 };
+      return item ? slotPosition(plan, index, sizeIn(item, plan.cell)) : { x: 0, y: 0 };
     },
     onOrder: setOrder,
     onDrop: (next, before) => {
@@ -261,7 +261,7 @@ function OpenStack({ stack, onClose, onTakeOut, onReorder }: Omit<Props, "stack"
       const v = values.get(item.id);
       if (!v) return;
       const j = now.pileIndex.get(item.id) ?? count - 1;
-      const to = pile && poseOnPile(j, fitSize(item.w, item.h, now.plan.cell), pile, scroll);
+      const to = pile && poseOnPile(j, sizeIn(item, now.plan.cell), pile, scroll);
       if (!to) {
         runs.push(Promise.resolve(animate(v.opacity, 0, fade)));
         return;
@@ -335,7 +335,7 @@ function OpenStack({ stack, onClose, onTakeOut, onReorder }: Omit<Props, "stack"
             <Tile
               key={item.id}
               item={item}
-              size={fitSize(item.w, item.h, plan.cell)}
+              size={sizeIn(item, plan.cell)}
               start={first.starts.get(item.id) ?? { ...restPose(plan, i, item), opacity: 0 }}
               z={items.length - (pileIndex.get(item.id) ?? i)}
               raised={raisedId === item.id}

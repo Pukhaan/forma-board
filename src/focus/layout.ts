@@ -2,6 +2,9 @@
 // sits around the stack it came out of, which slot a point falls in while
 // dragging, and how long each image waits before it flies.
 
+import { itemShape } from "../model/items";
+import type { Item } from "../model/types";
+
 export type Size = { w: number; h: number };
 export type Point = { x: number; y: number };
 /** Where a tile is drawn: top-left in sheet coordinates, then scale and tilt about its centre. */
@@ -101,6 +104,12 @@ export function fitSize(w: number | undefined, h: number | undefined, box: numbe
   const ih = h && h > 0 ? h : 1;
   const s = box / Math.max(iw, ih);
   return { w: Math.round(iw * s), h: Math.round(ih * s) };
+}
+
+/** An item's size inside a square cell: images keep their proportions, notes and links their shape. */
+export function sizeIn(item: Item, cell: number): Size {
+  const { w, h } = itemShape(item);
+  return fitSize(w, h, cell);
 }
 
 /** Top-left of an image of `size` centred in slot `index`, in sheet coordinates. */

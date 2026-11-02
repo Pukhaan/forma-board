@@ -6,6 +6,7 @@ import {
   moveItem,
   placeAxis,
   planGrid,
+  sizeIn,
   slotAt,
   slotPosition,
   stagger,
@@ -191,5 +192,17 @@ describe("poseOnPile", () => {
     const p = poseOnPile(5, { w: 200, h: 200 }, pile, { x: 0, y: 0 })!;
     expect(p.opacity).toBe(0);
     expect(p.x + 100).toBe(500);
+  });
+});
+
+describe("sizeIn", () => {
+  it("fills a cell with an image's proportions, a note upright, a link landscape", () => {
+    expect(sizeIn({ id: "i", kind: "image", w: 400, h: 200 }, 200)).toEqual({ w: 200, h: 100 });
+    const note = sizeIn({ id: "n", kind: "note", text: "" }, 200);
+    expect(note.h).toBe(200);
+    expect(note.w).toBeLessThan(200);
+    const link = sizeIn({ id: "l", kind: "link", url: "https://a.com" }, 200);
+    expect(link.w).toBe(200);
+    expect(link.h).toBeLessThan(200);
   });
 });

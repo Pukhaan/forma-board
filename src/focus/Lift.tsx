@@ -1,4 +1,6 @@
 import { motion, type Transition } from "motion/react";
+import { ItemFace } from "../canvas/nodes/Faces";
+import { itemShape } from "../model/items";
 import type { Item } from "../model/types";
 
 export type Rect = { x: number; y: number; w: number; h: number };
@@ -22,14 +24,16 @@ type Props = {
 };
 
 /**
- * One image lifted toward you, everything else pushed back. It grows out of
+ * One image or note lifted toward you, everything else pushed back. It grows out of
  * its tile and shrinks back into it, so the tile is hidden while it's up.
  */
 export function Lift({ item, from, to, reduced, spring, fade, onPutBack, onDone }: Props) {
   const vw = window.innerWidth;
   const vh = window.innerHeight;
-  const aspect = (item.w ?? 1) / (item.h ?? 1);
-  const w = Math.min(vw * 0.78, vh * 0.78 * aspect);
+  const shape = itemShape(item);
+  const aspect = shape.w / shape.h;
+  // A note comes up the size of a page to read, not as big as the window.
+  const w = Math.min(vw * 0.78, vh * 0.78 * aspect, item.kind === "note" ? 460 : Infinity);
   const h = w / aspect;
   const pose = (r: Rect) => ({ x: r.x + r.w / 2 - vw / 2, y: r.y + r.h / 2 - vh / 2, scale: r.w / w });
   const up = { x: 0, y: 0, scale: 1, opacity: 1 };
@@ -50,7 +54,7 @@ export function Lift({ item, from, to, reduced, spring, fade, onPutBack, onDone 
         transition={reduced ? fade : spring}
         onAnimationComplete={() => to && onDone()}
       >
-        {item.src && <img src={item.src} alt={item.title ?? ""} draggable={false} />}
+        <ItemFace item={item} read />
       </motion.div>
     </motion.div>
   );

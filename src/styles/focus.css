@@ -137,6 +137,17 @@
   transition: box-shadow 0.3s var(--focus-ease);
 }
 
+/* Notes and links are white cards, so they get the soft shadow cards have on the board. */
+.ft[data-kind="note"] .ft-media,
+.ft[data-kind="link"] .ft-media {
+  box-shadow: var(--shadow-rest);
+}
+
+/* A link opens on double-click rather than lifting. */
+.ft[data-kind="link"] .ft-media {
+  cursor: default;
+}
+
 .ft[data-lifted] .ft-media {
   visibility: hidden;
 }
@@ -189,7 +200,13 @@
   pointer-events: auto;
 }
 
-.ft-takeout {
+.ft-actions {
+  display: flex;
+  flex: none;
+  gap: 6px;
+}
+
+.ft-pill {
   flex: none;
   padding: 3px 9px;
   font-size: 11px;
@@ -200,7 +217,7 @@
   transition: background 0.15s ease;
 }
 
-.ft-takeout:hover {
+.ft-pill:hover {
   background: #ffffff;
 }
 
@@ -219,6 +236,7 @@
 
 .lift-media {
   overflow: hidden;
+  background: var(--card);
   border-radius: 14px;
   box-shadow: 0 4px 12px rgba(18, 18, 16, 0.1), 0 40px 80px rgba(18, 18, 16, 0.22);
 }

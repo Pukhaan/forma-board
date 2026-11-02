@@ -28,6 +28,7 @@ import { CardNode } from "./nodes/CardNode";
 import { NoteNode } from "./nodes/NoteNode";
 import { ProjectNode } from "./nodes/ProjectNode";
 import { StackNode } from "./nodes/StackNode";
+import { usePaste } from "./usePaste";
 import { useStacking } from "./useStacking";
 import { useUndo } from "./useUndo";
 
@@ -135,6 +136,8 @@ export function Canvas({ store, initial }: Props) {
     },
     [centre, commit, setNodes, store],
   );
+
+  usePaste({ enabled: !focusId, centre, commit, onImages: addImages });
 
   const focused = nodes.find((n) => n.id === focusId && n.type === "stack");
 

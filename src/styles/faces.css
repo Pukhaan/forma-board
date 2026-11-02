@@ -1,0 +1,129 @@
+/* Faces: a note or a link drawn inside a box (a card on the board, a card in
+   a pile, a tile in an opened stack). Sizes are in container units, so a face
+   reads exactly the same at any size, and a pile card grows into its tile
+   without its lines breaking differently. Notes are designed at 152px wide,
+   links at 176px (see NOTE_SHAPE and LINK_SHAPE in src/model/items.ts). */
+
+.face {
+  display: block;
+  width: 100%;
+  height: 100%;
+  overflow: hidden;
+  container-type: size;
+  text-align: left;
+  color: var(--ink);
+  background: var(--card);
+}
+
+.face-in {
+  display: flex;
+  flex-direction: column;
+  box-sizing: border-box;
+  height: 100%;
+}
+
+/* Note: heading, then the first lines of the rest. 1cqw = 1.52px at design size. */
+.face-note .face-in {
+  gap: 3.9cqw;
+  padding: 9.2cqw;
+}
+
+.face-note-head,
+.face-note-body {
+  display: -webkit-box;
+  -webkit-box-orient: vertical;
+  overflow: hidden;
+  overflow-wrap: anywhere;
+}
+
+.face-note-head {
+  flex: none;
+  font-size: 7.9cqw;
+  font-weight: 600;
+  line-height: 1.3;
+  letter-spacing: -0.01em;
+  -webkit-line-clamp: 2;
+}
+
+.face-note-body {
+  font-size: 7.2cqw;
+  line-height: 1.45;
+  white-space: pre-line;
+  color: var(--ink-2);
+  -webkit-line-clamp: 6;
+}
+
+/* A note lifted to read: plain sizes, nothing cut off, scrolls if long. */
+.face-read .face-in {
+  gap: 10px;
+  padding: 34px 38px;
+  overflow: auto;
+}
+
+.face-read .face-note-head {
+  font-size: 20px;
+  -webkit-line-clamp: unset;
+}
+
+.face-read .face-note-body {
+  font-size: 15px;
+  line-height: 1.6;
+  -webkit-line-clamp: unset;
+}
+
+/* Link: icon at the top, title and host at the bottom. 1cqw = 1.76px at design size. */
+.face-link .face-in {
+  justify-content: space-between;
+  padding: 8cqw;
+}
+
+.favicon {
+  display: grid;
+  flex: none;
+  place-items: center;
+  width: 15.9cqw;
+  height: 15.9cqw;
+  overflow: hidden;
+  border-radius: 4cqw;
+  background: rgba(22, 22, 21, 0.05);
+}
+
+.favicon img {
+  display: block;
+  width: 100%;
+  height: 100%;
+  object-fit: contain;
+}
+
+.favicon-letter {
+  font-size: 8cqw;
+  font-weight: 600;
+  color: var(--ink-2);
+}
+
+.face-link-text {
+  display: flex;
+  flex-direction: column;
+  gap: 1.1cqw;
+  min-width: 0;
+}
+
+.face-link-title {
+  display: -webkit-box;
+  overflow: hidden;
+  font-size: 7.1cqw;
+  font-weight: 600;
+  line-height: 1.25;
+  letter-spacing: -0.01em;
+  overflow-wrap: anywhere;
+  -webkit-box-orient: vertical;
+  -webkit-line-clamp: 2;
+}
+
+.face-link-host {
+  overflow: hidden;
+  font-size: 6cqw;
+  white-space: nowrap;
+  text-overflow: ellipsis;
+  color: var(--ink-3);
+}

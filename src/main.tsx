@@ -5,6 +5,7 @@ import "@xyflow/react/dist/base.css";
 import "./styles/tokens.css";
 import "./styles/base.css";
 import "./styles/nodes.css";
+import "./styles/faces.css";
 import "./styles/chrome.css";
 import "./styles/focus.css";
 import "./styles/project.css";

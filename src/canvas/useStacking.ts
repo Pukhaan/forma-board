@@ -4,8 +4,8 @@ import { applyDrop } from "../model/operations";
 import { resolveDrop, type Droppable } from "../model/stacking";
 
 /**
- * Drag a card onto a stack to file it, onto another card to start a stack, or
- * a stack onto a stack to merge them. The target lights up before you let go.
+ * Drag a card or a note onto a stack to file it, onto another card or note to
+ * start a stack, or a stack onto a stack to merge them. The target lights up before you let go.
  */
 export function useStacking() {
   const { getNodes, getEdges, getInternalNode, setNodes, setEdges } = useReactFlow();
@@ -45,7 +45,7 @@ export function useStacking() {
         action.type === "add-to-stack" || action.type === "merge-stacks"
           ? action.stackId
           : action.type === "new-stack"
-            ? action.withCardId
+            ? action.withId
             : null,
       );
     },
