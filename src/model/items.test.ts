@@ -3,6 +3,8 @@ import {
   asUrl,
   dayLabel,
   faviconUrl,
+  faviconUrls,
+  rootDomain,
   fromPastedText,
   hostOf,
   isoDay,
@@ -122,5 +124,20 @@ describe("fromPastedText", () => {
   it("shows a web source as its site, and words as they are", () => {
     expect(sourceLabel("https://www.are.na/block/123")).toEqual({ text: "are.na", url: "https://www.are.na/block/123" });
     expect(sourceLabel(" Dieter Rams ")).toEqual({ text: "Dieter Rams", url: null });
+  });
+});
+
+describe("faviconUrls", () => {
+  it("tries the host, then its main domain", () => {
+    expect(faviconUrls("https://notes.granola.ai/d/1").map((u) => new URL(u).searchParams.get("domain"))).toEqual([
+      "notes.granola.ai",
+      "granola.ai",
+    ]);
+    expect(faviconUrls("https://mobbin.com/x")).toHaveLength(1);
+  });
+
+  it("keeps country domains whole", () => {
+    expect(rootDomain("news.bbc.co.uk")).toBe("bbc.co.uk");
+    expect(rootDomain("www.are.na")).toBe("are.na");
   });
 });

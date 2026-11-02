@@ -38,7 +38,13 @@ export function liveSize(item: Item): Shape {
 }
 
 /** An image that says why it was saved. On a pile and in an opened stack it shows a corner of paper behind it. */
-export const hasNote = (item: Item) => item.kind === "image" && !!item.note?.trim();
+/** A picture or a video: what has a note, a palette and a source, and opens with them. */
+export const isMedia = (item: Item) => item.kind === "image" || item.kind === "video";
+
+/** The picture that stands for an item: an image itself, or a video's poster. */
+export const stillOf = (item: Item) => (item.kind === "video" ? item.posterSrc : item.src);
+
+export const hasNote = (item: Item) => isMedia(item) && !!item.note?.trim();
 
 /** A note's heading (its first paragraph) and the paragraphs after it. */
 export function noteParts(text: string) {
@@ -94,7 +100,27 @@ export function linkLabel(item: Item) {
 
 /** A small square icon for the site, from Google's favicon service. */
 export function faviconUrl(url: string) {
-  return `https://www.google.com/s2/favicons?domain=${encodeURIComponent(hostOf(url))}&sz=64`;
+  return faviconUrls(url)[0];
+}
+
+/** The site's main domain: notes.granola.ai is granola.ai (bbc.co.uk stays whole). */
+export function rootDomain(host: string) {
+  const parts = host.split(".");
+  const country = parts[parts.length - 1]?.length === 2 && SECOND_LEVEL.has(parts[parts.length - 2]);
+  return parts.slice(country ? -3 : -2).join(".");
+}
+
+/** The second parts of country domains like co.uk and com.au, which belong to the suffix. */
+const SECOND_LEVEL = new Set(["co", "com", "org", "net", "ac", "gov", "edu", "ne", "or"]);
+
+/**
+ * Where to ask for a site's icon, best first: its own host, then its main
+ * domain, since a subdomain (notes.granola.ai) often has none of its own.
+ */
+export function faviconUrls(url: string): string[] {
+  const host = hostOf(url);
+  const hosts = [...new Set([host, rootDomain(host)])];
+  return hosts.map((h) => `https://www.google.com/s2/favicons?domain=${encodeURIComponent(h)}&sz=64`);
 }
 
 /** What pasted text becomes on the board: a link card for an address, a note for anything else. */

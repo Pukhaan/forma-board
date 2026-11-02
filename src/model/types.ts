@@ -1,7 +1,7 @@
 // The canvas model. Plain data so the same shapes can be written to and read
 // from a project folder later (by the app, or by an AI editing the files).
 
-export type ItemKind = "image" | "link" | "note" | "live";
+export type ItemKind = "image" | "video" | "link" | "note" | "live";
 
 /**
  * One piece of material: an image, a saved link, a short text note, or a live
@@ -13,8 +13,12 @@ export type Item = {
   title?: string;
   /** Path inside the project folder, when the item is a file there. */
   file?: string;
-  /** What an <img> (or a live card's frame) shows: the file as a displayable URL, a web URL, or a data URL. */
+  /** What an <img> (or a live card's frame, or a video) shows: the file as a displayable URL, a web URL, or a data URL. */
   src?: string;
+  /** A video: a still of it, a picture file in the project, shown wherever it isn't playing. */
+  poster?: string;
+  /** The poster as a displayable URL (worked out on load, never saved). */
+  posterSrc?: string;
   /** Natural size, used to keep the aspect ratio. */
   w?: number;
   h?: number;

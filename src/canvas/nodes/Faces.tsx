@@ -1,5 +1,5 @@
 import { useState, type SyntheticEvent } from "react";
-import { faviconUrl, hostOf, linkLabel, noteParts } from "../../model/items";
+import { faviconUrls, hostOf, linkLabel, noteParts } from "../../model/items";
 import type { Item } from "../../model/types";
 
 /**
@@ -7,16 +7,19 @@ import type { Item } from "../../model/types";
  * that small, or that fails to load, becomes the host's first letter.
  */
 export function Favicon({ url }: { url: string }) {
-  const [failed, setFailed] = useState(false);
+  // Which address is being tried: the host's own icon first, then its main domain's.
+  const [tried, setTried] = useState(0);
+  const urls = faviconUrls(url);
+  const next = () => setTried((t) => t + 1);
   const onLoad = (e: SyntheticEvent<HTMLImageElement>) => {
-    if (e.currentTarget.naturalWidth <= 16) setFailed(true);
+    if (e.currentTarget.naturalWidth <= 16) next();
   };
   return (
     <span className="favicon">
-      {failed ? (
+      {tried >= urls.length ? (
         <span className="favicon-letter">{hostOf(url).charAt(0).toUpperCase() || "?"}</span>
       ) : (
-        <img src={faviconUrl(url)} alt="" draggable={false} onLoad={onLoad} onError={() => setFailed(true)} />
+        <img key={urls[tried]} src={urls[tried]} alt="" draggable={false} onLoad={onLoad} onError={next} />
       )}
     </span>
   );
