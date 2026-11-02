@@ -55,14 +55,32 @@ img {
   inset: 0;
 }
 
-/* Dots stay 1.2px on screen at any zoom. Sits under the board's contents. */
+/* The dot grid sits under the board's contents. Dots keep one size at any zoom. */
 .dots {
   position: absolute;
   inset: 0;
   z-index: -1;
   pointer-events: none;
-  background-color: var(--canvas);
-  background-image: radial-gradient(circle, var(--dot) 1.2px, transparent 1.4px);
+  background: var(--canvas);
+}
+
+.dots-layer {
+  position: absolute;
+  inset: 0;
+  background-image: radial-gradient(circle, var(--dot) 0.9px, transparent 1.2px);
+}
+
+/* Near the cursor the same dots are darker and a little larger, fading out
+   with distance. Hidden until the pointer is over the board. */
+.dots-layer.dots-near {
+  background-image: radial-gradient(circle, var(--dot-near) 1.3px, transparent 1.7px);
+  -webkit-mask-image: radial-gradient(circle 150px at var(--mx, -999px) var(--my, -999px), #000 0%, rgba(0, 0, 0, 0.35) 45%, transparent 100%);
+  mask-image: radial-gradient(circle 150px at var(--mx, -999px) var(--my, -999px), #000 0%, rgba(0, 0, 0, 0.35) 45%, transparent 100%);
+  visibility: hidden;
+}
+
+.dots[data-near] .dots-near {
+  visibility: visible;
 }
 
 .board[data-tool="hand"] .react-flow__pane {
