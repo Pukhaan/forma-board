@@ -1,5 +1,6 @@
 import { useReactFlow, useUpdateNodeInternals, type Node, type NodeProps } from "@xyflow/react";
 import { useState, type CSSProperties } from "react";
+import { hasNote } from "../../model/items";
 import type { StackData } from "../../model/types";
 import { PILE, titleWidth } from "../body";
 import { useCanvasUi } from "../context";
@@ -71,7 +72,13 @@ export function StackNode({ id, data, selected }: NodeProps<StackNodeType>) {
           .map((item, i) => {
             const size = fitInBox(item, BOX);
             return (
-              <div key={item.id} className="stack-card" data-kind={item.kind} style={{ ...size, ...pose(i), zIndex: 10 - i }}>
+              <div
+                key={item.id}
+                className="stack-card"
+                data-kind={item.kind}
+                data-note={hasNote(item) || undefined}
+                style={{ ...size, ...pose(i), zIndex: 10 - i }}
+              >
                 <ItemFace item={item} />
               </div>
             );

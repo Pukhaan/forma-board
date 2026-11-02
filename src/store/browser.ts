@@ -4,7 +4,7 @@
 import { parseBoard, serialize, type Board } from "../model/format";
 import { newId } from "../model/operations";
 import { sampleEdges, sampleNodes } from "../model/sample";
-import { imageSize, titleFromName, type BoardStore } from "./types";
+import { imageSize, newImageFields, titleFromName, type BoardStore } from "./types";
 
 const KEY = "forma.board.v1";
 
@@ -41,9 +41,9 @@ export function browserStore(): BoardStore {
         }
       }, 300);
     },
-    async importImage(file) {
-      const [src, size] = await Promise.all([readDataUrl(file), imageSize(file)]);
-      return { id: newId("item"), kind: "image", src, ...size, title: titleFromName(file.name) };
+    async importImage(file, source) {
+      const [src, size, fields] = await Promise.all([readDataUrl(file), imageSize(file), newImageFields(file, source)]);
+      return { id: newId("item"), kind: "image", src, ...size, title: titleFromName(file.name), ...fields };
     },
     watch() {
       return () => {};

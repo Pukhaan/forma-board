@@ -277,6 +277,31 @@
   will-change: transform;
 }
 
+/* An image with a note: a corner of paper behind it (see .ft[data-note] in
+   focus.css). The card can't clip, so the picture rounds its own corners. It
+   is part of the card's layer, so the fan and panning never repaint it. */
+.stack-card[data-note] {
+  overflow: visible;
+}
+
+.stack-card[data-note] img {
+  border-radius: inherit;
+}
+
+.stack-card[data-note]::before {
+  content: "";
+  position: absolute;
+  top: 0;
+  right: 0;
+  z-index: -1;
+  width: 18%;
+  aspect-ratio: 1;
+  background: var(--paper);
+  border-radius: 2px;
+  box-shadow: var(--paper-shadow);
+  transform: translate(30%, -30%) rotate(8deg);
+}
+
 .stack:hover .stack-card {
   transform: translate(var(--fx, 0px), var(--fy, 0px)) rotate(var(--fr, 0deg)) scale(var(--fs, 1));
 }

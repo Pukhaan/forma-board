@@ -1,9 +1,11 @@
 import { describe, expect, it } from "vitest";
 import {
   asUrl,
+  dayLabel,
   faviconUrl,
   fromPastedText,
   hostOf,
+  isoDay,
   itemShape,
   linkLabel,
   LIVE_MAX_HEIGHT,
@@ -12,6 +14,7 @@ import {
   liveSize,
   noteParts,
   NOTE_SHAPE,
+  sourceLabel,
 } from "./items";
 
 describe("itemShape", () => {
@@ -105,5 +108,19 @@ describe("fromPastedText", () => {
     expect(fromPastedText("https://a.com")).toEqual({ kind: "link", url: "https://a.com/" });
     expect(fromPastedText(" Calm and trustworthy \n")).toEqual({ kind: "note", text: "Calm and trustworthy" });
     expect(fromPastedText("   ")).toBeNull();
+  });
+
+  it("stores the day an image was added as YYYY-MM-DD, and reads it back as a date", () => {
+    expect(isoDay(new Date(2026, 10, 2, 23, 59))).toBe("2026-11-02");
+    expect(dayLabel("2026-11-02")).toBe("2 Nov 2026");
+    expect(dayLabel("2026-01-09T10:00:00Z")).toBe("9 Jan 2026");
+    expect(dayLabel("yesterday")).toBeNull();
+    expect(dayLabel("2026-13-01")).toBeNull();
+    expect(dayLabel(undefined)).toBeNull();
+  });
+
+  it("shows a web source as its site, and words as they are", () => {
+    expect(sourceLabel("https://www.are.na/block/123")).toEqual({ text: "are.na", url: "https://www.are.na/block/123" });
+    expect(sourceLabel(" Dieter Rams ")).toEqual({ text: "Dieter Rams", url: null });
   });
 });

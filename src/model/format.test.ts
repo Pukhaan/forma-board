@@ -188,4 +188,50 @@ describe("board.json", () => {
     expect(parseBoard("not json")).toBeNull();
     expect(parseBoard('{"hello": 1}')).toBeNull();
   });
+
+  it("round-trips an image's note, palette, source and date", () => {
+    const item = {
+      id: "i",
+      kind: "image" as const,
+      file: "media/a.jpg",
+      src: "shown:media/a.jpg",
+      w: 300,
+      h: 200,
+      note: "The calm blue\n\nThis is the one.",
+      palette: ["#1d3b6f", "#f4f1ea"],
+      source: "https://www.are.na/block/1",
+      added: "2026-11-02",
+    };
+    const board = { nodes: [{ id: "c", type: "card", position: { x: 0, y: 0 }, data: { item } }], edges: [] };
+    const text = serialize(board);
+    expect(JSON.parse(text).nodes[0].item).toMatchObject({ note: item.note, palette: item.palette, source: item.source, added: item.added });
+    const back = parseBoard(text, (f) => `shown:${f}`)!;
+    expect(back.nodes).toEqual(board.nodes);
+    expect(serialize(back)).toBe(text);
+  });
+
+  it("drops an image's details when they are malformed, and an empty note", () => {
+    const text = JSON.stringify({
+      forma: 1,
+      nodes: [
+        {
+          id: "c",
+          type: "card",
+          x: 0,
+          y: 0,
+          item: { id: "i", file: "media/a.jpg", note: "  ", palette: ["#ABCDEF", "red", 3, "#fff"], source: 42, added: "soon" },
+        },
+        { id: "d", type: "card", x: 0, y: 0, item: { id: "j", file: "media/b.jpg", palette: "blue", source: " Dieter Rams " } },
+      ],
+      wires: [],
+    });
+    const [a, b] = parseBoard(text)!.nodes.map((n) => (n.data as { item: Record<string, unknown> }).item);
+    expect(a).toEqual({ id: "i", kind: "image", file: "media/a.jpg", src: "media/a.jpg", palette: ["#abcdef"] });
+    expect(b).toEqual({ id: "j", kind: "image", file: "media/b.jpg", src: "media/b.jpg", source: "Dieter Rams" });
+    const saved = toBoardFile({
+      nodes: [{ id: "c", type: "card", position: { x: 0, y: 0 }, data: { item: { id: "i", kind: "image", file: "a.jpg", note: "" } } }],
+      edges: [],
+    });
+    expect(saved.nodes[0]).toEqual({ id: "c", x: 0, y: 0, type: "card", item: { id: "i", kind: "image", file: "a.jpg" } });
+  });
 });

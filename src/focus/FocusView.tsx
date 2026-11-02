@@ -9,6 +9,7 @@ import {
   type MouseEvent,
   type PointerEvent,
 } from "react";
+import { typing } from "../canvas/useUndo";
 import type { Item } from "../model/types";
 import { planGrid, sizeIn, slotPosition, stagger } from "./layout";
 import { Lift, rectOf, type Rect } from "./Lift";
@@ -238,6 +239,11 @@ function OpenStack({ stack, onClose, onTakeOut, onReorder }: Omit<Props, "stack"
     const onKey = (e: KeyboardEvent) => {
       if (e.key !== "Escape" || phaseRef.current === "closing") return;
       e.stopPropagation();
+      // Writing a lifted image's note: Esc lets go of the field, the next one puts it back.
+      if (typing(e)) {
+        (e.target as HTMLElement).blur();
+        return;
+      }
       if (lift) putBack();
       else latest.current.onClose();
     };

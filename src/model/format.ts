@@ -4,6 +4,7 @@
 import type { Edge, Node } from "@xyflow/react";
 import type { AreaData, CardData, Item, LinkData, NoteData, ProjectData, StackData } from "./types";
 import { areaNode, areaSize, NEW_AREA } from "./operations";
+import { isHex } from "./palette";
 
 export const FORMAT_VERSION = 1;
 
@@ -29,8 +30,24 @@ export type Resolve = (file: string) => string;
 
 const round = (v: number) => Math.round(v * 10) / 10;
 
+/**
+ * An image's own notes on itself: why it was saved, its colours, where it came
+ * from and when. Each one is kept when it is well formed and dropped when it
+ * isn't, and an empty note is no note.
+ */
+function details(item: FileItem): Item {
+  const { note, palette, source, added, ...rest } = item;
+  const out: Item = rest;
+  if (typeof note === "string" && note.trim()) out.note = note;
+  const colours = Array.isArray(palette) ? palette.filter(isHex).map((c) => c.toLowerCase()) : [];
+  if (colours.length) out.palette = colours;
+  if (typeof source === "string" && source.trim()) out.source = source.trim();
+  if (typeof added === "string" && /^\d{4}-\d{2}-\d{2}/.test(added) && !Number.isNaN(Date.parse(added))) out.added = added;
+  return out;
+}
+
 function itemOut(item: Item): FileItem {
-  const { src, ...rest } = item;
+  const { src, ...rest } = details(item);
   // A file in the project is the truth; only keep `src` for things that aren't files yet.
   return rest.file || !src ? rest : { ...rest, src };
 }
@@ -41,8 +58,9 @@ function itemOut(item: Item): FileItem {
  * runs its file (or its `src`) the same way. Anything else is
  * a broken entry and is skipped.
  */
-function itemIn(item: FileItem, resolve: Resolve): Item | null {
-  if (!item || typeof item !== "object" || typeof item.id !== "string") return null;
+function itemIn(raw: FileItem, resolve: Resolve): Item | null {
+  if (!raw || typeof raw !== "object" || typeof raw.id !== "string") return null;
+  const item = details(raw);
   const kind = item.kind ?? "image";
   if (kind === "note") return { ...item, kind, text: typeof item.text === "string" ? item.text : "" };
   if (kind === "link") return typeof item.url === "string" && item.url ? { ...item, kind } : null;

@@ -2,7 +2,7 @@ import { motion, useMotionValue, type MotionValue } from "motion/react";
 import { memo, useEffect, type PointerEvent } from "react";
 import { ItemFace } from "../canvas/nodes/Faces";
 import { openLink } from "../canvas/openLink";
-import { noteParts } from "../model/items";
+import { hasNote, noteParts } from "../model/items";
 import type { Item } from "../model/types";
 import type { Pose, Size } from "./layout";
 
@@ -64,6 +64,7 @@ export const Tile = memo(function Tile({ item, size, start, z, raised, lifted, r
       data-kind={item.kind}
       data-raised={raised || undefined}
       data-lifted={lifted || undefined}
+      data-note={hasNote(item) || undefined}
       style={{ x, y, scale, rotate, opacity, width: size.w, height: size.h, zIndex: raised ? 100000 : z }}
       onPointerDown={(e) => onPointerDown(e, item.id)}
     >

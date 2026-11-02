@@ -1,6 +1,6 @@
 import { useReactFlow, type Node } from "@xyflow/react";
 import { useEffect, useLayoutEffect, useRef } from "react";
-import { fromPastedText } from "../model/items";
+import { asUrl, fromPastedText } from "../model/items";
 import { newId, nodeFromItem } from "../model/operations";
 import { typing } from "./useUndo";
 import { snapToDots } from "./dots";
@@ -11,8 +11,8 @@ type Options = {
   /** The middle of the view, in board units. */
   centre: () => { x: number; y: number };
   commit: () => void;
-  /** Images go through the store, which copies them into the project. */
-  onImages: (files: File[]) => void;
+  /** Images go through the store, which copies them into the project. `source` is the web address they came from, when the clipboard says. */
+  onImages: (files: File[], source?: string) => void;
 };
 
 /** The text on the clipboard: plain text, or the first address of a link list. */
@@ -20,6 +20,21 @@ function clipboardText(data: DataTransfer) {
   const plain = data.getData("text/plain");
   if (plain.trim()) return plain;
   return data.getData("text/uri-list").split(/\r?\n/).find((l) => l && !l.startsWith("#")) ?? "";
+}
+
+/**
+ * Where a pasted image came from, when it was copied off a web page: the
+ * browser puts its address beside the picture, as a link or as the <img> in
+ * the copied HTML.
+ */
+function imageSource(data: DataTransfer) {
+  const listed = data.getData("text/uri-list").split(/\r?\n/).find((l) => l && !l.startsWith("#"));
+  const fromHtml = /<img[^>]+src=["']([^"']+)["']/i.exec(data.getData("text/html"))?.[1];
+  for (const candidate of [listed, fromHtml, data.getData("text/plain")]) {
+    const url = candidate ? asUrl(candidate) : null;
+    if (url) return url;
+  }
+  return undefined;
 }
 
 /**
@@ -54,7 +69,7 @@ export function usePaste(options: Options) {
       const images = Array.from(data.files).filter((f) => f.type.startsWith("image/"));
       if (images.length) {
         e.preventDefault();
-        onImages(images);
+        onImages(images, imageSource(data));
         return;
       }
       const pasted = fromPastedText(clipboardText(data));

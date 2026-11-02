@@ -13,7 +13,7 @@ import { exists, mkdir, readTextFile, rename, watch, writeFile, writeTextFile } 
 import { parseBoard, serialize, type Board } from "../model/format";
 import { newId } from "../model/operations";
 import type { Item } from "../model/types";
-import { imageSize, titleFromName, type BoardStore } from "./types";
+import { imageSize, newImageFields, titleFromName, type BoardStore } from "./types";
 
 export const BOARD_FILE = "board.json";
 export const MEDIA_DIR = "media";
@@ -109,14 +109,14 @@ export function folderStore(root: string): BoardStore {
       window.clearTimeout(timer);
       timer = window.setTimeout(flush, 300);
     },
-    async importImage(file): Promise<Item> {
+    async importImage(file, source): Promise<Item> {
       const id = newId("item");
       const name = `${id}.${extensionOf(file)}`;
       await mkdir(join(root, MEDIA_DIR), { recursive: true });
-      const [bytes, size] = await Promise.all([file.arrayBuffer(), imageSize(file)]);
+      const [bytes, size, fields] = await Promise.all([file.arrayBuffer(), imageSize(file), newImageFields(file, source)]);
       await writeFile(join(root, MEDIA_DIR, name), new Uint8Array(bytes));
       const rel = join(MEDIA_DIR, name);
-      return { id, kind: "image", file: rel, src: resolve(rel), ...size, title: titleFromName(file.name) };
+      return { id, kind: "image", file: rel, src: resolve(rel), ...size, title: titleFromName(file.name), ...fields };
     },
     watch(onChange) {
       let stop: (() => void) | null = null;

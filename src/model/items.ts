@@ -37,6 +37,9 @@ export function liveSize(item: Item): Shape {
   return { w: Math.round(w * s), h: Math.round(h * s) };
 }
 
+/** An image that says why it was saved. On a pile and in an opened stack it shows a corner of paper behind it. */
+export const hasNote = (item: Item) => item.kind === "image" && !!item.note?.trim();
+
 /** A note's heading (its first paragraph) and the paragraphs after it. */
 export function noteParts(text: string) {
   const [head = "", ...body] = text.trim().split(/\n\s*\n/);
@@ -100,4 +103,26 @@ export function fromPastedText(text: string): { kind: "link"; url: string } | { 
   if (url) return { kind: "link", url };
   const t = text.trim();
   return t ? { kind: "note", text: t } : null;
+}
+
+/** A day as stored in `added`: the local date, YYYY-MM-DD. */
+export function isoDay(at = new Date()) {
+  const two = (n: number) => String(n).padStart(2, "0");
+  return `${at.getFullYear()}-${two(at.getMonth() + 1)}-${two(at.getDate())}`;
+}
+
+const MONTHS = ["Jan", "Feb", "Mar", "Apr", "May", "Jun", "Jul", "Aug", "Sep", "Oct", "Nov", "Dec"];
+
+/** A stored date (YYYY-MM-DD, or a full ISO time) as people read it: "2 Nov 2026". Null when it isn't one. */
+export function dayLabel(added: string | undefined) {
+  const m = /^(\d{4})-(\d{2})-(\d{2})/.exec(added ?? "");
+  const month = m ? MONTHS[Number(m[2]) - 1] : undefined;
+  const day = m ? Number(m[3]) : 0;
+  return m && month && day >= 1 && day <= 31 ? `${day} ${month} ${m[1]}` : null;
+}
+
+/** Where an image came from, as shown: a web address reads as its site and opens; plain words stay as they are. */
+export function sourceLabel(source: string) {
+  const url = asUrl(source);
+  return url ? { text: hostOf(url), url } : { text: source.trim(), url: null };
 }

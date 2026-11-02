@@ -31,6 +31,10 @@
 
   --veil: rgba(245, 245, 243, 0.7);
 
+  /* The corner of paper behind an image that has a note. */
+  --paper: #f6efdc;
+  --paper-shadow: 0 1px 1.5px rgba(18, 18, 16, 0.1), 0 2px 6px rgba(18, 18, 16, 0.06);
+
   --r-card: 10px;
   --r-block: 22px;
   --r-chrome: 14px;
