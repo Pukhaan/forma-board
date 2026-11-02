@@ -1,6 +1,6 @@
 import { useStoreApi } from "@xyflow/react";
 import { useEffect, useRef } from "react";
-import { axisDots, dotDiameter, dotLevels, isCoarse, snapSprite, spriteSide } from "./dots";
+import { axisDots, dotDiameter, followPan, snapSprite, SPACING, spriteSide, type Offset } from "./dots";
 
 type Transform = readonly [number, number, number];
 
@@ -22,9 +22,10 @@ function makeSprite(color: string, diameter: number) {
 
 /**
  * The dot grid. One canvas, drawn straight from React Flow's store in the same
- * tick the viewport moves, so it never trails the board. Dots keep one size
- * and sit on whole device pixels, so they stay crisp and identical everywhere.
- * As you zoom in, dots fade in halfway between the others; see `dotLevels`.
+ * tick the viewport moves, so it never trails the board. Dots keep one size and
+ * one spacing at every zoom and sit on whole device pixels, so they stay crisp.
+ * Panning slides them with the board; zooming leaves them exactly where they
+ * are (see `followPan`).
  *
  * Colour and size come from the `--dot` and `--dot-size` tokens.
  */
@@ -42,37 +43,27 @@ export function DotGrid() {
     let dpr = 1;
     let dot = makeSprite("transparent", 1);
     let drawn: Transform | null = null;
+    let offset: Offset = { x: 0, y: 0 };
 
     const draw = (t: Transform) => {
+      offset = followPan(offset, drawn, t);
       drawn = t;
-      const [x, y, zoom] = t;
       ctx.setTransform(1, 0, 0, 1, 0, 0);
       ctx.clearRect(0, 0, canvas.width, canvas.height);
-      const { spacing, between } = dotLevels(zoom);
       const pad = dot.side / dpr;
-      const cols = axisDots(x, spacing, width, pad);
-      const rows = axisDots(y, spacing, height, pad);
+      const cols = axisDots(offset.x, SPACING, width, pad);
+      const rows = axisDots(offset.y, SPACING, height, pad);
       const lefts = new Array<number>(cols.count);
       for (let c = 0; c < cols.count; c++) {
-        lefts[c] = snapSprite(x + (cols.first + c) * spacing, dpr, dot.side);
+        lefts[c] = snapSprite(offset.x + (cols.first + c) * SPACING, dpr, dot.side);
       }
-      // Coarse dots at full strength, then the in-between ones at theirs.
-      // Each dot is drawn once.
-      const pass = (alpha: number, coarse: boolean) => {
-        ctx.globalAlpha = alpha;
-        for (let r = 0; r < rows.count; r++) {
-          const j = rows.first + r;
-          const top = snapSprite(y + j * spacing, dpr, dot.side);
-          for (let c = 0; c < cols.count; c++) {
-            if (isCoarse(cols.first + c, j) === coarse) ctx.drawImage(dot.sprite, lefts[c], top);
-          }
-        }
-      };
-      pass(1, true);
-      if (between > 0.005) pass(between, false);
-      ctx.globalAlpha = 1;
+      for (let r = 0; r < rows.count; r++) {
+        const top = snapSprite(offset.y + (rows.first + r) * SPACING, dpr, dot.side);
+        for (let c = 0; c < cols.count; c++) ctx.drawImage(dot.sprite, lefts[c], top);
+      }
     };
-    const redraw = () => draw(store.getState().transform);
+    // Redraw in place (resize, theme): same transform, so the dots stay put.
+    const redraw = () => draw(drawn ?? store.getState().transform);
 
     const readTokens = () => {
       const style = getComputedStyle(canvas);

@@ -1,57 +1,37 @@
-/** Grid spacing in board units at 100% zoom. Every dot level is this times a power of two. */
-export const GRID = 24;
+/**
+ * Space between dots on screen, in CSS px. One fixed value: zooming never
+ * changes it, and no dots ever appear or disappear.
+ */
+export const SPACING = 32;
+
+type Transform = readonly [number, number, number];
+
+/** Where the dot pattern starts on screen. Kept small (within one spacing). */
+export type Offset = { x: number; y: number };
+
+const wrap = (v: number, spacing: number) => ((v % spacing) + spacing) % spacing;
 
 /**
- * On-screen spacing (px) of the finest dot level at which its in-between dots
- * start to appear. The finest level always sits in [FADE_FROM, 2 * FADE_FROM).
+ * Moves the dots with the board when you pan, and keeps them still when you
+ * zoom. A zoom (even one that also shifts the view to keep the point under
+ * your fingers) leaves the dots exactly where they were; a pan slides them by
+ * exactly as much as the board moved.
  */
-export const FADE_FROM = 36;
-
-/** On-screen spacing (px) at which the in-between dots are fully in. */
-export const FADE_TO = 46;
-
-const smoothstep = (t: number) => {
-  const c = Math.min(1, Math.max(0, t));
-  return c * c * (3 - 2 * c);
-};
-
-/**
- * The dots to show at a zoom level. Dots sit every `spacing` screen px. Those
- * on even rows and even columns (the coarse level) always show at full
- * strength; the rest sit halfway between them and show at `between`.
- *
- * Each dot is drawn once, at one strength, so there is never a darker dot
- * where two levels overlap. When `between` reaches 1 the levels hand over
- * (every dot is at full strength, and the new coarse level is the old fine
- * one), so nothing jumps.
- *
- * The fade runs over a short band of zoom (36 to 46 px, about a third of each
- * doubling) and is eased in log space, since zoom is multiplicative. The rest
- * of the time the grid is one even field of dots, 46 to 72 px apart.
- */
-export function dotLevels(zoom: number, grid = GRID, from = FADE_FROM, to = FADE_TO) {
-  let spacing = grid * zoom;
-  if (!(spacing > 0) || !Number.isFinite(spacing)) spacing = grid;
-  while (spacing < from) spacing *= 2;
-  while (spacing >= from * 2) spacing /= 2;
-  const between = smoothstep(Math.log(spacing / from) / Math.log(to / from));
-  return { spacing, between };
+export function followPan(offset: Offset, prev: Transform | null, next: Transform, spacing = SPACING): Offset {
+  if (!prev) return { x: wrap(next[0], spacing), y: wrap(next[1], spacing) };
+  if (Math.abs(next[2] - prev[2]) > 1e-9) return offset;
+  return { x: wrap(offset.x + next[0] - prev[0], spacing), y: wrap(offset.y + next[1] - prev[1], spacing) };
 }
 
 /**
- * The dots along one screen axis. `origin` is where board 0 lands on screen.
- * Returns the global index of the first dot at or after `-pad` and how many
- * dots cover up to `length + pad`. Indices are global, so a dot keeps its
- * level (even or odd) while you pan.
+ * The dots along one screen axis, starting from `origin`. Returns the index of
+ * the first dot at or after `-pad` and how many dots cover up to `length + pad`.
  */
 export function axisDots(origin: number, spacing: number, length: number, pad = 0) {
   const first = Math.ceil((-pad - origin) / spacing) + 0; // + 0 turns -0 into 0
   const last = Math.floor((length + pad - origin) / spacing);
   return { first, count: Math.max(0, last - first + 1) };
 }
-
-/** True when a dot at these global indices belongs to the coarse level. */
-export const isCoarse = (i: number, j: number) => (i & 1) === 0 && (j & 1) === 0;
 
 /**
  * Dot diameter in whole device pixels, so every dot rasterises to the same
