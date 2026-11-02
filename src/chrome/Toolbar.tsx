@@ -3,30 +3,13 @@ import { useEffect, useRef, type ReactNode } from "react";
 
 export type Tool = "select" | "hand";
 
-type NewImage = { src: string; w: number; h: number; title: string };
-
 type Props = {
   tool: Tool;
   onTool: (t: Tool) => void;
   onNote: () => void;
-  onImages: (files: NewImage[]) => void;
+  onImages: (files: File[]) => void;
   onFit: () => void;
 };
-
-function readImage(file: File): Promise<NewImage> {
-  return new Promise((resolve, reject) => {
-    const reader = new FileReader();
-    reader.onerror = () => reject(reader.error);
-    reader.onload = () => {
-      const src = String(reader.result);
-      const img = new Image();
-      img.onload = () => resolve({ src, w: img.naturalWidth, h: img.naturalHeight, title: file.name.replace(/\.[^.]+$/, "") });
-      img.onerror = () => reject(new Error("Not an image"));
-      img.src = src;
-    };
-    reader.readAsDataURL(file);
-  });
-}
 
 function typing(e: KeyboardEvent) {
   const el = e.target as HTMLElement | null;
@@ -76,12 +59,10 @@ export function Toolbar({ tool, onTool, onNote, onImages, onFit }: Props) {
         accept="image/*"
         multiple
         hidden
-        onChange={async (e) => {
+        onChange={(e) => {
           const files = Array.from(e.currentTarget.files ?? []);
           e.currentTarget.value = "";
-          const read = await Promise.allSettled(files.map(readImage));
-          const ok = read.flatMap((r) => (r.status === "fulfilled" ? [r.value] : []));
-          if (ok.length) onImages(ok);
+          if (files.length) onImages(files);
         }}
       />
     </div>

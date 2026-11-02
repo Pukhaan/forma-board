@@ -13,7 +13,9 @@ import {
 } from "@xyflow/react";
 import { useCallback, useEffect, useMemo, useState } from "react";
 import { newId, takeOut } from "../model/operations";
+import type { Board } from "../model/format";
 import type { StackData } from "../model/types";
+import type { BoardStore } from "../store/types";
 import { Toolbar, type Tool } from "../chrome/Toolbar";
 import { ZoomPill } from "../chrome/ZoomPill";
 import { FocusView } from "../focus/FocusView";
@@ -25,13 +27,11 @@ import { CardNode } from "./nodes/CardNode";
 import { NoteNode } from "./nodes/NoteNode";
 import { ProjectNode } from "./nodes/ProjectNode";
 import { StackNode } from "./nodes/StackNode";
-import { loadBoard, saveBoard } from "./persist";
 import { useStacking } from "./useStacking";
 import { useUndo } from "./useUndo";
 
 const nodeTypes = { project: ProjectNode, stack: StackNode, card: CardNode, note: NoteNode };
 const edgeTypes = { link: LinkEdge };
-const initial = loadBoard();
 
 function linkEdge(source: string, target: string): Edge {
   return { id: newId("wire"), source, target, type: "link", data: {} };
@@ -42,7 +42,9 @@ function connected(edges: Edge[], a: string, b: string) {
   return edges.some((e) => (e.source === a && e.target === b) || (e.source === b && e.target === a));
 }
 
-export function Canvas() {
+type Props = { store: BoardStore; initial: Board };
+
+export function Canvas({ store, initial }: Props) {
   const [nodes, setNodes, onNodesChange] = useNodesState(initial.nodes);
   const [edges, setEdges, onEdgesChange] = useEdgesState(initial.edges);
   const { screenToFlowPosition, fitView } = useReactFlow();
@@ -51,7 +53,18 @@ export function Canvas() {
   const [tool, setTool] = useState<Tool>("select");
   const [focusId, setFocusId] = useState<string | null>(null);
 
-  useEffect(() => saveBoard(nodes, edges), [nodes, edges]);
+  useEffect(() => store.save({ nodes, edges }), [store, nodes, edges]);
+
+  // Someone else changed the board (an AI, an editor): show it, and let ⌘Z take it back.
+  useEffect(
+    () =>
+      store.watch((board) => {
+        commit();
+        setNodes(board.nodes);
+        setEdges(board.edges);
+      }),
+    [store, commit, setNodes, setEdges],
+  );
 
   const onConnect: OnConnect = useCallback(
     (c) => {
@@ -96,20 +109,23 @@ export function Canvas() {
   }, [centre, commit, setNodes]);
 
   const addImages = useCallback(
-    (files: { src: string; w: number; h: number; title: string }[]) => {
+    async (files: File[]) => {
       const p = centre();
+      const read = await Promise.allSettled(files.map((f) => store.importImage(f)));
+      const items = read.flatMap((r) => (r.status === "fulfilled" ? [r.value] : []));
+      if (!items.length) return;
       commit();
       setNodes((ns) => [
         ...ns,
-        ...files.map((f, i) => ({
+        ...items.map((item, i) => ({
           id: newId("card"),
           type: "card",
           position: { x: p.x - 90 + i * 28, y: p.y - 90 + i * 22 },
-          data: { item: { id: newId("item"), kind: "image" as const, src: f.src, w: f.w, h: f.h, title: f.title } },
+          data: { item },
         })),
       ]);
     },
-    [centre, commit, setNodes],
+    [centre, commit, setNodes, store],
   );
 
   const focused = nodes.find((n) => n.id === focusId && n.type === "stack");
