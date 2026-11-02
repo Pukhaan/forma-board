@@ -6,10 +6,12 @@ import { exists, mkdir } from "@tauri-apps/plugin-fs";
 import { sampleEdges, sampleNodes } from "../model/sample";
 import { BOARD_FILE, join, seedSample } from "../store/folder";
 
-const LAST = "forma.lastProject";
 const RECENT = "forma.recentProjects";
-/** How many recent projects the project menu offers. */
-const RECENT_MAX = 6;
+/**
+ * How many recent projects are remembered. The home finds boards outside
+ * Documents/Forma only through this list, so it keeps plenty.
+ */
+const RECENT_MAX = 40;
 
 /** The recent list with `root` first, each folder once, the oldest let go past `max`. */
 export function withRecent(list: string[], root: string, max = RECENT_MAX): string[] {
@@ -28,22 +30,12 @@ export function recentProjects(): string[] {
 
 export const inApp = typeof window !== "undefined" && "__TAURI_INTERNALS__" in window;
 
-export function lastProject(): string | null {
+/** Adds a folder to the recent ones, first. */
+export function rememberProject(root: string) {
   try {
-    return localStorage.getItem(LAST);
+    localStorage.setItem(RECENT, JSON.stringify(withRecent(recentProjects(), root)));
   } catch {
-    return null;
-  }
-}
-
-export function rememberProject(root: string | null) {
-  try {
-    if (root) {
-      localStorage.setItem(LAST, root);
-      localStorage.setItem(RECENT, JSON.stringify(withRecent(recentProjects(), root)));
-    } else localStorage.removeItem(LAST);
-  } catch {
-    // Not remembered; the app just asks again next time.
+    // Not remembered; it only leaves the recent list.
   }
 }
 

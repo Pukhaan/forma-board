@@ -11,11 +11,15 @@ type Props = {
   root?: string;
   onSwitch: () => void;
   onOpen: (root: string) => void;
-  onClose: () => void;
+  /** Back to the home screen and all the boards. Absent where there is no home (a plain browser tab). */
+  onHome?: () => void;
 };
 
 /** A folder as people read it: the home folder as ~. */
 const shortPath = (root: string) => root.replace(/^\/Users\/[^/]+/, "~");
+
+/** How many recent projects the menu offers. */
+const RECENT_SHOWN = 6;
 
 /**
  * Where the project lives, with a button that copies its full path: what you
@@ -48,7 +52,7 @@ function PathRow({ root }: { root: string }) {
  * window buttons (in the corner when full screen). Its menu shows where the
  * project lives, the recent ones to switch to, and what you can do with it.
  */
-export function ProjectChip({ name, root, onSwitch, onOpen, onClose }: Props) {
+export function ProjectChip({ name, root, onSwitch, onOpen, onHome }: Props) {
   const [open, setOpen] = useState(false);
   const [recent, setRecent] = useState<string[]>([]);
   // The corner is free when full screen, and in a browser (no window buttons).
@@ -70,7 +74,7 @@ export function ProjectChip({ name, root, onSwitch, onOpen, onClose }: Props) {
   }, [open]);
 
   const toggle = () => {
-    if (!open) setRecent(recentProjects().filter((r) => r !== root));
+    if (!open) setRecent(recentProjects().filter((r) => r !== root).slice(0, RECENT_SHOWN));
     setOpen((o) => !o);
   };
   const pick = (action: () => void) => () => {
@@ -116,12 +120,23 @@ export function ProjectChip({ name, root, onSwitch, onOpen, onClose }: Props) {
                 <button role="menuitem" onClick={pick(() => revealItemInDir(root).catch(() => {}))}>
                   Show in Finder
                 </button>
-                <button role="menuitem" onClick={pick(onClose)}>
-                  Close project
-                </button>
+                {onHome && (
+                  <button role="menuitem" onClick={pick(onHome)}>
+                    All boards
+                  </button>
+                )}
               </div>
             ) : (
-              <span className="project-menu-note">Open the Mac app to work in a folder.</span>
+              <>
+                <span className="project-menu-note">Open the Mac app to work in a folder.</span>
+                {onHome && (
+                  <div className="project-menu-group">
+                    <button role="menuitem" onClick={pick(onHome)}>
+                      All boards
+                    </button>
+                  </div>
+                )}
+              </>
             )}
           </motion.div>
         )}

@@ -170,7 +170,7 @@ export function folderStore(root: string): BoardStore {
 /**
  * Makes the sample project in a folder: copies the sample images into media/
  * and its live card's component into components/, and writes a board that
- * points at them. Used by "Try the sample".
+ * points at them. Used by "Open the sample" on an empty home.
  */
 export async function seedSample(root: string, sample: Board) {
   await mkdir(join(root, MEDIA_DIR), { recursive: true });

@@ -18,6 +18,7 @@ browser. The project-folder file layer comes next.
 pnpm install
 pnpm tauri dev      # the Mac app
 pnpm dev            # the same interface in a browser, at http://localhost:1420
+                    # (add ?home for the home screen with made-up boards, ?home=empty, ?home=many)
 pnpm test           # model tests
 ```
 
@@ -41,6 +42,13 @@ share of frames over 20ms, and fails if any run averages under 55 fps or has
 more than 5% of frames over 20ms. It uses your `pnpm dev` server when one is
 running for this checkout, and starts its own otherwise.
 
+## Home
+
+The app opens on Forma's home: every board on this Mac (each folder in
+Documents/Forma with a `board.json`, and any opened from elsewhere) as a pile
+of its own pictures, the latest first. Click one to go in; the last spot makes
+a new board. "All boards" in the project menu comes back here.
+
 ## On the board
 
 - **Stacks.** Drag a card onto another card to start a stack; drag cards or
@@ -57,6 +65,7 @@ running for this checkout, and starts its own otherwise.
 - `src/model` pure logic (stacking rules, wire geometry, board operations) with tests
 - `src/canvas` the board: nodes, wires, drag-to-stack, undo
 - `src/focus` an opened stack
+- `src/home` the home screen: every board as a pile, and making a new one
 - `src/chrome` toolbar and zoom
 - `src/styles` design tokens and styles (light theme; dark comes later)
 - `src-tauri` the Mac app shell

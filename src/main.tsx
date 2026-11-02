@@ -14,6 +14,7 @@ import "./styles/source.css";
 import "./styles/project-files.css";
 import "./styles/video.css";
 import "./styles/project.css";
+import "./styles/home.css";
 import App from "./App";
 
 ReactDOM.createRoot(document.getElementById("root") as HTMLElement).render(

@@ -1,66 +1,66 @@
 import { ReactFlowProvider } from "@xyflow/react";
-import { useCallback, useEffect, useState } from "react";
-import { inApp, lastProject, makeSample, pickFolder, rememberProject } from "./app/projects";
-import { Welcome } from "./app/Welcome";
+import { useEffect, useState } from "react";
+import { inApp, pickFolder, rememberProject } from "./app/projects";
+import { Veil } from "./app/Veil";
 import { Canvas } from "./canvas/Canvas";
 import { ProjectChip } from "./chrome/ProjectChip";
-import type { Board } from "./model/format";
+import { devSource } from "./home/dev";
+import { Home } from "./home/Home";
+import { appSource, type HomeSource, type Opened } from "./home/source";
 import { browserStore } from "./store/browser";
 import { folderStore } from "./store/folder";
-import type { BoardStore } from "./store/types";
 
-type Opened = { store: BoardStore; board: Board };
+/**
+ * Where the boards come from: folders, in the app. In a browser there is
+ * only the browser board, unless the address asks for the home (?home) to
+ * work on it.
+ */
+const homeParam = new URLSearchParams(window.location.search).get("home");
+const source: HomeSource | null = inApp ? appSource : homeParam !== null ? devSource(homeParam) : null;
 
 export default function App() {
   const [opened, setOpened] = useState<Opened | null>(null);
-  const [error, setError] = useState<string | null>(null);
-  const [busy, setBusy] = useState(inApp);
+  /** The veil over the board: uncovering it as it arrives, covering it as it leaves. */
+  const [veil, setVeil] = useState<"in" | "out" | null>(null);
+  /** The board just left, so the home comes back out of its pile. */
+  const [from, setFrom] = useState<string | null>(null);
+  /** Why a board didn't open, said on the home. */
+  const [notice, setNotice] = useState<string | null>(null);
 
-  const openStore = useCallback(async (store: BoardStore) => {
-    setBusy(true);
-    setError(null);
-    try {
-      const board = await store.load();
-      setOpened({ store, board });
-      if (store.root) rememberProject(store.root);
-    } catch (e) {
-      rememberProject(null);
-      setError(e instanceof Error ? e.message : `Couldn't open ${store.name}.`);
-    } finally {
-      setBusy(false);
-    }
-  }, []);
-
-  // Start where you left off: the last project in the app, the browser board otherwise.
+  // A browser without the home goes straight to its board, as before.
   useEffect(() => {
-    if (!inApp) {
-      void openStore(browserStore());
-      return;
-    }
-    const last = lastProject();
-    if (last) void openStore(folderStore(last));
-    else setBusy(false);
-  }, [openStore]);
-
-  const openFolder = useCallback(async () => {
-    const root = await pickFolder("Choose a project folder");
-    if (root) await openStore(folderStore(root));
-  }, [openStore]);
-
-  const openSample = useCallback(async () => {
-    setBusy(true);
-    try {
-      await openStore(folderStore(await makeSample()));
-    } catch (e) {
-      setBusy(false);
-      setError(e instanceof Error ? e.message : "Couldn't make the sample project.");
-    }
-  }, [openStore]);
-
-  const close = useCallback(() => {
-    rememberProject(null);
-    setOpened(null);
+    if (source) return;
+    const store = browserStore();
+    void store.load().then((board) => setOpened({ store, board }));
   }, []);
+
+  const enter = (next: Opened) => {
+    if (next.store.root) rememberProject(next.store.root);
+    setNotice(null);
+    setOpened(next);
+    setVeil("in");
+  };
+
+  /** Another board from the project menu: a recent one, or a folder chosen there. */
+  const switchTo = async (root: string | null) => {
+    if (!root) return;
+    const store = folderStore(root);
+    try {
+      enter({ store, board: await store.load() });
+    } catch (e) {
+      setNotice(e instanceof Error ? e.message : `Couldn't open ${store.name}.`);
+      setFrom(null);
+      setOpened(null);
+    }
+  };
+
+  const veilDone = () => {
+    if (veil === "out") {
+      setFrom(opened?.store.root ?? "browser");
+      setOpened(null);
+    }
+    setVeil(null);
+  };
 
   return (
     <ReactFlowProvider>
@@ -70,16 +70,17 @@ export default function App() {
         <>
           {/* Keyed by folder, so switching projects starts a fresh board (and undo history). */}
           <Canvas key={opened.store.root ?? "browser"} store={opened.store} initial={opened.board} />
+          {veil && <Veil key={veil} cover={veil === "out"} onDone={veilDone} />}
           <ProjectChip
             name={opened.store.name}
             root={opened.store.root}
-            onSwitch={openFolder}
-            onOpen={(root) => void openStore(folderStore(root))}
-            onClose={close}
+            onSwitch={() => void pickFolder("Open a folder as a board").then(switchTo)}
+            onOpen={(root) => void switchTo(root)}
+            onHome={source ? () => setVeil("out") : undefined}
           />
         </>
       ) : (
-        inApp && <Welcome error={error} busy={busy} onOpen={openFolder} onSample={openSample} />
+        source && <Home source={source} from={from} notice={notice} onEnter={enter} />
       )}
     </ReactFlowProvider>
   );
