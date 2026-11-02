@@ -3,6 +3,7 @@ import { useEffect, useLayoutEffect, useRef } from "react";
 import { fromPastedText } from "../model/items";
 import { newId, nodeFromItem } from "../model/operations";
 import { typing } from "./useUndo";
+import { snapToDots } from "./dots";
 
 type Options = {
   /** Off while a stack is open, so nothing lands on the board behind it. */
@@ -36,7 +37,8 @@ export function usePaste(options: Options) {
   useEffect(() => {
     const place = (node: Node) => {
       latest.current.commit();
-      setNodes((ns) => [...ns.map((n) => (n.selected ? { ...n, selected: false } : n)), { ...node, selected: true }]);
+      const placed = { ...node, position: snapToDots(node.position), selected: true };
+      setNodes((ns) => [...ns.map((n) => (n.selected ? { ...n, selected: false } : n)), placed]);
     };
 
     // WebKit only offers Paste where something could take it; saying so here

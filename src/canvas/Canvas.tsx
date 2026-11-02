@@ -21,6 +21,7 @@ import { ZoomPill } from "../chrome/ZoomPill";
 import { FocusView } from "../focus/FocusView";
 import { CanvasUiContext } from "./context";
 import { DotGrid } from "./DotGrid";
+import { GRID, snapToDots } from "./dots";
 import { hoverNode, leaveNode, trackPointer } from "./gridFx";
 import { ConnectionLine } from "./edges/ConnectionLine";
 import { LinkEdge } from "./edges/LinkEdge";
@@ -113,7 +114,7 @@ export function Canvas({ store, initial }: Props) {
     commit();
     setNodes((ns) => [
       ...ns.map((n) => ({ ...n, selected: false })),
-      { id: newId("note"), type: "note", position: { x: p.x - 130, y: p.y - 60 }, selected: true, data: { text: "New note\n\nDouble-click to write." } },
+      { id: newId("note"), type: "note", position: snapToDots({ x: p.x - 130, y: p.y - 60 }), selected: true, data: { text: "New note\n\nDouble-click to write." } },
     ]);
   }, [centre, commit, setNodes]);
 
@@ -129,7 +130,7 @@ export function Canvas({ store, initial }: Props) {
         ...items.map((item, i) => ({
           id: newId("card"),
           type: "card",
-          position: { x: p.x - 90 + i * 28, y: p.y - 90 + i * 22 },
+          position: snapToDots({ x: p.x - 90 + i * GRID, y: p.y - 90 + i * GRID }),
           data: { item },
         })),
       ]);
@@ -144,7 +145,7 @@ export function Canvas({ store, initial }: Props) {
   const onTakeOut = useCallback(
     (itemId: string) => {
       if (!focused) return;
-      const at = { x: focused.position.x + 260, y: focused.position.y + 40 };
+      const at = snapToDots({ x: focused.position.x + 260, y: focused.position.y + 40 });
       commit();
       const next = takeOut({ nodes, edges }, focused.id, itemId, at);
       setNodes(next.nodes);
@@ -197,6 +198,8 @@ export function Canvas({ store, initial }: Props) {
           panOnDrag={tool === "hand" ? true : [1]}
           selectionOnDrag={tool === "select"}
           selectionMode={SelectionMode.Partial}
+          snapToGrid
+          snapGrid={[GRID, GRID]}
           nodeDragThreshold={3}
           minZoom={0.1}
           maxZoom={4}

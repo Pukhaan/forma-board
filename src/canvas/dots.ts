@@ -39,3 +39,12 @@ export function axisDots(origin: number, spacing: number, length: number, pad = 
   const last = Math.floor((length + pad - origin) / spacing);
   return { first, count: Math.max(0, last - first + 1) };
 }
+
+/**
+ * The nearest dot to a board position. Things placed on the board snap their
+ * top-left corner to a dot, like FigJam, so everything lines up with the grid
+ * and with everything else.
+ */
+export function snapToDots(p: { x: number; y: number }, grid = GRID) {
+  return { x: Math.round(p.x / grid) * grid + 0, y: Math.round(p.y / grid) * grid + 0 };
+}

@@ -1,5 +1,5 @@
 import { describe, expect, it } from "vitest";
-import { axisDots, dotStyle, FADE_OUT, FULL, GRID } from "./dots";
+import { axisDots, dotStyle, FADE_OUT, FULL, GRID, snapToDots } from "./dots";
 
 /** Board positions of the dots visible on a 1000px-wide strip at a given pan and zoom. */
 const visible = (x: number, zoom: number) => {
@@ -59,5 +59,13 @@ describe("the dots belong to the board", () => {
     expect(first).toBe(0);
     expect(count).toBe(4);
     expect(axisDots(-130, 50, 200, 31).first).toBe(2);
+  });
+});
+
+describe("snapToDots", () => {
+  it("moves a position to the nearest dot", () => {
+    expect(snapToDots({ x: 47, y: -17 })).toEqual({ x: 32, y: -32 });
+    expect(snapToDots({ x: 49, y: 15 })).toEqual({ x: 64, y: 0 });
+    expect(snapToDots({ x: -170, y: -70 })).toEqual({ x: -160, y: -64 });
   });
 });
