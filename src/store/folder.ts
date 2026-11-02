@@ -52,7 +52,9 @@ export function emptyBoard(root: string): Board {
 
 export function folderStore(root: string): BoardStore {
   const boardPath = join(root, BOARD_FILE);
-  const tmpPath = join(root, `.${BOARD_FILE}.tmp`);
+  // Not a dotfile: the app's file permissions ($HOME/**) don't match hidden
+  // names, so a ".board.json.tmp" write was refused and nothing ever saved.
+  const tmpPath = join(root, `${BOARD_FILE}.saving`);
   const resolve = (file: string) => convertFileSrc(join(root, file));
 
   // The last text we wrote or read. Lets us skip writes that change nothing
@@ -74,7 +76,11 @@ export function folderStore(root: string): BoardStore {
     if (!pending) return;
     const board = pending;
     pending = null;
-    writing = writing.then(() => write(board)).catch((e) => console.error("Could not save the board", e));
+    writing = writing.then(() => write(board)).catch((e) => {
+      // Forget what we think is on disk, so the next change retries the write.
+      known = "";
+      console.error("Could not save the board", e);
+    });
   };
 
   window.addEventListener("beforeunload", flush);
