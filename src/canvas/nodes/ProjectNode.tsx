@@ -1,4 +1,5 @@
 import { useReactFlow, type Node, type NodeProps } from "@xyflow/react";
+import { Plus, X } from "lucide-react";
 import { useState, type KeyboardEvent } from "react";
 import type { ProjectData } from "../../model/types";
 import { addWorkingFile, workingFileName } from "../../model/workfiles";
@@ -66,9 +67,7 @@ function WorkingFiles({ id, links }: { id: string; links: string[] }) {
             aria-label={`Take ${workingFileName(url)} off the project`}
             onClick={() => save(links.filter((l) => l !== url))}
           >
-            <svg viewBox="0 0 10 10" aria-hidden>
-              <path d="M2.5 2.5l5 5M7.5 2.5l-5 5" />
-            </svg>
+            <X aria-hidden />
           </button>
         </span>
       ))}
@@ -82,9 +81,7 @@ function WorkingFiles({ id, links }: { id: string; links: string[] }) {
         />
       ) : (
         <button className="project-file-add" aria-label="Add a working file" onClick={() => setAdding(true)}>
-          <svg viewBox="0 0 10 10" aria-hidden>
-            <path d="M5 1.5v7M1.5 5h7" />
-          </svg>
+          <Plus aria-hidden />
         </button>
       )}
     </div>
