@@ -68,6 +68,24 @@ export function applyDrop(g: Graph, draggedId: string, action: DropAction): Grap
 }
 
 /**
+ * Puts a stack's items in a new order (last = the cover). Ids that aren't in
+ * the stack are ignored; items missing from the list keep their place at the
+ * bottom, so nothing is ever lost.
+ */
+export function reorderStack(g: Graph, stackId: string, itemIds: string[]): Graph {
+  const nodes = g.nodes.map((n) => {
+    if (n.id !== stackId) return n;
+    const items = (n.data as StackData).items;
+    const byId = new Map(items.map((i) => [i.id, i]));
+    const ordered = itemIds.flatMap((id) => (byId.has(id) ? [byId.get(id)!] : []));
+    const listed = new Set(ordered.map((i) => i.id));
+    const rest = items.filter((i) => !listed.has(i.id));
+    return { ...n, data: { ...n.data, items: [...rest, ...ordered] } };
+  });
+  return { nodes, edges: g.edges };
+}
+
+/**
  * Takes one item out of a stack and puts it on the canvas beside the stack.
  * A stack left empty is removed.
  */

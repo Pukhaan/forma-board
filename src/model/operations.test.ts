@@ -1,6 +1,6 @@
 import type { Edge, Node } from "@xyflow/react";
 import { describe, expect, it } from "vitest";
-import { applyDrop, moveWires, takeOut } from "./operations";
+import { applyDrop, moveWires, reorderStack, takeOut } from "./operations";
 
 const item = (id: string) => ({ id, kind: "image" as const });
 const card = (id: string, x = 0): Node => ({ id, type: "card", position: { x, y: 0 }, data: { item: item(id) } });
@@ -37,6 +37,20 @@ describe("moveWires", () => {
   it("drops loops and duplicates", () => {
     const edges = [wire("a", "x", "c1"), wire("b", "x", "s1"), wire("c", "c1", "s1")];
     expect(moveWires(edges, ["c1"], "s1").map((e) => e.id)).toEqual(["a"]);
+  });
+});
+
+describe("reorderStack", () => {
+  const ids = (g: { nodes: Node[] }) => (g.nodes[0].data as { items: { id: string }[] }).items.map((i) => i.id);
+
+  it("applies the new order", () => {
+    const g = { nodes: [stack("s1", ["a", "b", "c"])], edges: [] };
+    expect(ids(reorderStack(g, "s1", ["c", "a", "b"]))).toEqual(["c", "a", "b"]);
+  });
+
+  it("never loses an item left out of the list", () => {
+    const g = { nodes: [stack("s1", ["a", "b", "c"])], edges: [] };
+    expect(ids(reorderStack(g, "s1", ["c", "x", "a"]))).toEqual(["b", "c", "a"]);
   });
 });
 

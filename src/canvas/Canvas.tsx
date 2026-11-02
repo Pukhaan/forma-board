@@ -12,7 +12,7 @@ import {
   type OnConnectEnd,
 } from "@xyflow/react";
 import { useCallback, useEffect, useMemo, useState } from "react";
-import { newId, takeOut } from "../model/operations";
+import { newId, reorderStack, takeOut } from "../model/operations";
 import type { Board } from "../model/format";
 import type { StackData } from "../model/types";
 import type { BoardStore } from "../store/types";
@@ -143,6 +143,15 @@ export function Canvas({ store, initial }: Props) {
     [commit, edges, focused, nodes, setEdges, setNodes],
   );
 
+  const onReorder = useCallback(
+    (itemIds: string[]) => {
+      if (!focusId) return;
+      commit();
+      setNodes((ns) => reorderStack({ nodes: ns, edges: [] }, focusId, itemIds).nodes);
+    },
+    [commit, focusId, setNodes],
+  );
+
   const ui = useMemo(() => ({ dropTargetId, commit }), [dropTargetId, commit]);
 
   return (
@@ -190,6 +199,7 @@ export function Canvas({ store, initial }: Props) {
           stack={focused ? { id: focused.id, ...(focused.data as StackData) } : null}
           onClose={() => setFocusId(null)}
           onTakeOut={onTakeOut}
+          onReorder={onReorder}
         />
       </div>
     </CanvasUiContext.Provider>
