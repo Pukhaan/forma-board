@@ -4,9 +4,11 @@
 
 import type { InternalNode, ReactFlowState } from "@xyflow/react";
 import { wirePath } from "../model/geometry";
+import { portCentreOf } from "./body";
+import { labelZoom } from "./zoom";
 import { dotStyle, GRID } from "./dots";
 import type { GridFxState } from "./gridFx";
-import { cubicFromPath, plusOffsets, portCentre, sampleEvenly, SIDES, type Side } from "./gridFx.math";
+import { cubicFromPath, plusOffsets, sampleEvenly, SIDES, type Side } from "./gridFx.math";
 import { FOLLOW, GATHER, type Env, type Want } from "./gridFx.swarm";
 
 /** Half the port's hit area: a wire starts this far out from the edge, at the "+"'s centre. */
@@ -59,11 +61,20 @@ export function sceneWants(s: ReactFlowState, fx: GridFxState): Map<string, Want
   const fromSide = conn.inProgress ? (conn.fromPosition as Side | null) : null;
 
   const hovered = fx.hover ? s.nodeLookup.get(fx.hover) : undefined;
+  // A wire pulled close enough to a port is caught by it (React Flow's
+  // connection radius). That port's "+" doesn't stay a "+": its dots become
+  // the end of the wire.
+  const caught =
+    conn.inProgress && conn.toHandle && conn.toNode && conn.toNode.id !== from?.id
+      ? { node: conn.toNode.id, side: conn.toHandle.position as Side }
+      : null;
+
   if (hovered && !hovered.dragging && !hovered.hidden && hovered.id !== from?.id) {
-    const r = rectOf(hovered);
     SIDES.forEach((side, order) => {
+      if (caught && caught.node === hovered.id && caught.side === side) return;
       const active = fx.port?.node === hovered.id && fx.port.side === side;
-      addPlus(wants, hovered.id, side, portCentre(r, side, PORT_OUT), active, zoom, order);
+      // Clear of the thing's title and, on a stack, of its fanned cards (body.ts).
+      addPlus(wants, hovered.id, side, portCentreOf(hovered, side, labelZoom(), PORT_OUT), active, zoom, order);
     });
   }
 
@@ -71,15 +82,25 @@ export function sceneWants(s: ReactFlowState, fx: GridFxState): Map<string, Want
     // The port you pulled from stays lit, and the wire runs out of its centre.
     addPlus(wants, from.id, fromSide, conn.from, true, zoom, 0);
     const to = { x: (conn.to.x - s.transform[0]) * px, y: (conn.to.y - s.transform[1]) * px };
-    const { path } = wirePath({ ...conn.from, side: fromSide }, { ...to, side: BACK[fromSide] });
+    const toSide = caught ? caught.side : BACK[fromSide];
+    const { path } = wirePath({ ...conn.from, side: fromSide }, { ...to, side: toSide });
     const curve = cubicFromPath(path);
     if (curve) {
-      const handoff = reachOf(zoom) * 1.6;
+      // A wire dot stays within a few grid squares of its home. Further than
+      // that, it heads home and the most relevant dot takes its place: a free
+      // grid dot nearby, or one still on its way home that can turn around.
+      const handoff = Math.max(GRID * 2.5, 40 * px);
       const size = sizes(zoom);
       const pts = sampleEvenly(curve, WIRE_STEP * px, WIRE_START * px);
+      // When caught, the last five dots of the wire are the caught "+"'s own
+      // dots (same keys), so the "+" visibly melts into the line.
+      const melt = caught ? Math.min(5, pts.length) : 0;
       pts.forEach((p, k) => {
         const head = k === pts.length - 1;
-        wants.set(head ? "w:head" : `w:${k}`, {
+        const fromEnd = pts.length - 1 - k;
+        const key =
+          caught && fromEnd < melt ? `p:${caught.node}:${caught.side}:${fromEnd}` : head ? "w:head" : `w:${k}`;
+        wants.set(key, {
           x: p.x,
           y: p.y,
           size: head ? size.head : size.wire,
@@ -91,11 +112,6 @@ export function sceneWants(s: ReactFlowState, fx: GridFxState): Map<string, Want
     }
   }
   return wants;
-}
-
-/** Search radius in board units at a zoom. */
-function reachOf(zoom: number) {
-  return Math.max(REACH / zoom, 1.5 * GRID);
 }
 
 /** The swarm's view of the board this frame. `grid` and `borrow` come from the grid's own style. */

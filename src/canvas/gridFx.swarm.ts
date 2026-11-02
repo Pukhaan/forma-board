@@ -88,7 +88,34 @@ export class DotSwarm {
     }
   }
 
+  /**
+   * A dot on its way home whose home is still close to `w` can be caught again:
+   * it turns around and rejoins from wherever it is, so a wire swinging back
+   * and forth keeps using the same real grid dots instead of new ones.
+   */
+  private reclaim(w: Want, env: Env): FxDot | null {
+    const limit = w.handoff ?? env.reach;
+    let best: [string, FxDot, number] | null = null;
+    for (const [key, d] of this.dots) {
+      if (d.want || !d.home) continue;
+      if (Math.hypot(d.home.i * env.grid - w.x, d.home.j * env.grid - w.y) > limit) continue;
+      const far = Math.hypot(d.x - w.x, d.y - w.y);
+      if (!best || far < best[2]) best = [key, d, far];
+    }
+    if (!best) return null;
+    this.dots.delete(best[0]);
+    const d = best[1];
+    d.want = w;
+    d.boost = w.boost;
+    d.delay = 0;
+    return d;
+  }
+
   private create(w: Want, env: Env): FxDot {
+    if (env.borrow && !env.reduced) {
+      const again = this.reclaim(w, env);
+      if (again) return again;
+    }
     const home =
       env.borrow && !env.reduced
         ? nearestFreeDot(w, env.grid, env.reach, (i, j) => !this.borrowed.has(dotKey(i, j)) && !env.blocked(i, j))

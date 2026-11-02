@@ -83,6 +83,30 @@ describe("DotSwarm", () => {
     expect(s.size).toBe(2);
   });
 
+  it("catches a dot on its way home instead of making a new one", () => {
+    const s = new DotSwarm();
+    const e = env();
+    s.sync(new Map([["w", want(40, 0, { handoff: 80 })]]), e);
+    const first = s.dots.get("w")!;
+    const borrowed = s.borrowed.size;
+    s.sync(new Map(), e); // the wire moved on: the dot heads home
+    s.sync(new Map([["w2", want(50, 10, { handoff: 80 })]]), e);
+    expect(s.dots.get("w2")).toBe(first);
+    expect(s.borrowed.size).toBe(borrowed);
+    expect(s.size).toBe(1);
+  });
+
+  it("does not catch a dot whose home is far from where it is needed", () => {
+    const s = new DotSwarm();
+    const e = env();
+    s.sync(new Map([["w", want(0, 0, { handoff: 80 })]]), e);
+    const first = s.dots.get("w")!;
+    s.sync(new Map(), e);
+    s.sync(new Map([["w2", want(400, 0, { handoff: 80 })]]), e);
+    expect(s.dots.get("w2")).not.toBe(first);
+    expect(s.dots.get("w2")!.home).not.toBeNull();
+  });
+
   it("with reduced motion only fades, never flies", () => {
     const s = new DotSwarm();
     const e = env({ reduced: true });
