@@ -23,11 +23,13 @@
   background: var(--area-hot);
 }
 
+/* The name sits just above the area's top-left corner, like a section
+   heading, so however large it grows it never covers what's inside. */
 .area-title,
 .area-rename {
   position: absolute;
-  top: 9px;
-  left: 12px;
+  bottom: calc(100% + 6px);
+  left: 6px;
   max-width: calc(100% - 24px);
   padding: 3px 6px;
   font-size: 12px;
@@ -37,14 +39,22 @@
   pointer-events: auto;
 }
 
+/* An area's name is a section heading: a touch larger than a stack title,
+   and like titles it stays readable when zoomed out (--z is the zoom, written
+   by zoom.ts once a zoom settles), growing upward from its corner. */
 .area-title {
   overflow: hidden;
+  font-size: 15px;
+  font-weight: 600;
+  line-height: 18px;
   color: var(--ink-2);
   white-space: nowrap;
   text-overflow: ellipsis;
   cursor: grab;
   border-radius: 7px;
-  transition: color 0.15s ease;
+  transform-origin: left bottom;
+  scale: clamp(1, calc(0.9 / var(--z, 1)), 4);
+  transition: color 0.15s ease, scale 0.3s var(--ease-out);
 }
 
 .area-title:active {
