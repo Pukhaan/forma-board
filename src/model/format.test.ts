@@ -250,4 +250,15 @@ describe("board.json", () => {
     expect(toBoardFile(board).nodes[0]).toMatchObject({ source: "https://notes.granola.ai/d/1" });
     expect(toBoardFile(board).nodes[1]).not.toHaveProperty("source");
   });
+
+  it("keeps the project's working files, each once and only links", () => {
+    const text = JSON.stringify({
+      forma: 1,
+      nodes: [{ id: "p", type: "project", x: 0, y: 0, title: "F", brief: "", links: ["https://github.com/a/b", "nope", "https://github.com/a/b"] }],
+      wires: [],
+    });
+    const board = parseBoard(text)!;
+    expect(board.nodes[0].data).toEqual({ title: "F", brief: "", links: ["https://github.com/a/b"] });
+    expect(toBoardFile(board).nodes[0]).toMatchObject({ links: ["https://github.com/a/b"] });
+  });
 });

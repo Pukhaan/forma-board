@@ -36,6 +36,8 @@ export type Item = {
 export type ProjectData = {
   title: string;
   brief: string;
+  /** The working files: the links you work in (the Figma file, the repo, the site). */
+  links?: string[];
 };
 
 /** A pile of items sorted under one name. */

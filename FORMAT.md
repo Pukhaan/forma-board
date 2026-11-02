@@ -56,7 +56,7 @@ other node out itself.
 
 | type | fields | what it is |
 | --- | --- | --- |
-| `project` | `title`, `brief` | The centre of the board. Usually one. |
+| `project` | `title`, `brief`, `links` | The centre of the board. Usually one. `links` are its working files: the few addresses you work in (the Figma file, the repo, the live site), shown on the project and opened with a click. |
 | `note` | `text` | Research in words. The first paragraph (before a blank line) is its heading. |
 | `stack` | `title`, `items`, `description` | A pile of items under one name. The **last** item is the cover. `description` is optional: one short line shown under the title, saying what the stack is for. |
 | `card` | `item` | A single loose image, link or live card. |

@@ -3,6 +3,7 @@
 
 import type { Edge, Node } from "@xyflow/react";
 import type { AreaData, CardData, Item, LinkData, NoteData, ProjectData, StackData } from "./types";
+import { cleanWorkingFiles } from "./workfiles";
 import { areaNode, areaSize, NEW_AREA } from "./operations";
 import { isHex } from "./palette";
 
@@ -13,7 +14,7 @@ export type FileItem = Item;
 
 type At = { id: string; x: number; y: number };
 export type FileNode =
-  | (At & { type: "project"; title: string; brief: string })
+  | (At & { type: "project"; title: string; brief: string; links?: string[] })
   | (At & { type: "note"; text: string; source?: string })
   | (At & { type: "stack"; title: string; description?: string; items: FileItem[] })
   | (At & { type: "card"; item: FileItem })
@@ -88,7 +89,8 @@ export function toBoardFile({ nodes, edges }: Board): BoardFile {
     const at = { id: n.id, x: round(n.position.x), y: round(n.position.y) };
     if (n.type === "project") {
       const d = n.data as ProjectData;
-      out.push({ ...at, type: "project", title: d.title, brief: d.brief });
+      const links = d.links?.length ? { links: d.links } : {};
+      out.push({ ...at, type: "project", title: d.title, brief: d.brief, ...links });
     } else if (n.type === "note") {
       const { text, source } = n.data as NoteData;
       out.push({ ...at, type: "note", text, ...(source?.trim() ? { source } : {}) });
@@ -135,7 +137,8 @@ export function parseBoard(text: string, resolve: Resolve = (f) => f): Board | n
     const position = { x: Number(n.x) || 0, y: Number(n.y) || 0 };
     const base = { id: n.id, position };
     if (n.type === "project") {
-      nodes.push({ ...base, type: "project", data: { title: n.title ?? "", brief: n.brief ?? "" } });
+      const links = cleanWorkingFiles(n.links);
+      nodes.push({ ...base, type: "project", data: { title: n.title ?? "", brief: n.brief ?? "", ...(links.length ? { links } : {}) } });
     } else if (n.type === "note") {
       nodes.push({ ...base, type: "note", data: noteData(n.text, n.source) });
     } else if (n.type === "stack") {
