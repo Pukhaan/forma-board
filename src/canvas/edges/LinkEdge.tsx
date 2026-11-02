@@ -108,9 +108,13 @@ export function LinkEdge({ id, source, target, data, selected }: EdgeProps<LinkE
               className="wire-add"
               data-show={hover || undefined}
               aria-label="Add a note to this connection"
+              title="Add a note"
               onClick={() => setEditing(true)}
             >
-              +
+              {/* Drawn, not typed: a text "+" never sits quite in the centre. */}
+              <svg viewBox="0 0 10 10" aria-hidden>
+                <path d="M5 1.5v7M1.5 5h7" />
+              </svg>
             </button>
           )}
         </div>

@@ -228,18 +228,32 @@ img {
 .wire-add {
   display: grid;
   place-items: center;
-  width: 22px;
-  height: 22px;
-  font-size: 14px;
-  line-height: 1;
-  color: var(--ink-2);
+  width: 24px;
+  height: 24px;
+  padding: 0;
+  color: var(--ink);
   background: var(--card);
-  border: 1px solid var(--hairline);
+  border: 0;
   border-radius: 50%;
-  box-shadow: 0 1px 2px rgba(18, 18, 16, 0.06);
+  box-shadow: 0 1px 2px rgba(18, 18, 16, 0.08), 0 4px 12px rgba(18, 18, 16, 0.08);
   opacity: 0;
   transform: scale(0.8);
-  transition: opacity 0.15s ease, transform 0.2s var(--spring);
+  transition: opacity 0.15s ease, transform 0.2s var(--spring), background-color 0.15s ease, color 0.15s ease;
+}
+
+.wire-add svg {
+  display: block;
+  width: 10px;
+  height: 10px;
+  fill: none;
+  stroke: currentColor;
+  stroke-width: 1.6;
+  stroke-linecap: round;
+}
+
+.wire-add:hover {
+  color: #ffffff;
+  background: var(--ink);
 }
 
 .wire-add[data-show] {
