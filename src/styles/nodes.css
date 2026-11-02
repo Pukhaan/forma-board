@@ -127,8 +127,9 @@
   box-shadow: 0 4px 10px rgba(18, 18, 16, 0.14), 0 30px 60px rgba(18, 18, 16, 0.24);
 }
 
-/* Note: research in words. */
+/* Note: research in words. --s is how much its heading grows zoomed out. */
 .note {
+  --s: clamp(1, calc(0.93 / var(--z, 1)), 3.2);
   position: relative;
   width: 256px; /* 8 dots: both edges land on the grid */
   padding: 16px 18px 18px;
@@ -147,7 +148,6 @@
 }
 
 .note-show {
-  --s: clamp(1, calc(0.93 / var(--z, 1)), 3.2);
   position: absolute;
   inset: 0;
   padding: inherit;
@@ -177,6 +177,7 @@
   margin: 6px 0 0;
   font-size: 13px;
   line-height: 1.5;
+  white-space: pre-line;
   color: var(--ink-2);
 }
 
@@ -184,19 +185,6 @@
   opacity: var(--detail, 1);
   transition: opacity 0.3s var(--ease-out);
   will-change: opacity;
-}
-
-.note-edit {
-  display: block;
-  width: 100%;
-  min-height: 120px;
-  padding: 0;
-  font-size: 13px;
-  line-height: 1.5;
-  border: 0;
-  outline: none;
-  resize: none;
-  background: transparent;
 }
 
 .note[data-selected],

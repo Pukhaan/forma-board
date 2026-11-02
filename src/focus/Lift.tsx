@@ -1,7 +1,9 @@
 import { motion, type Transition } from "motion/react";
-import { useState } from "react";
+import { useEffect, useRef, useState } from "react";
+import { useCanvasUi } from "../canvas/context";
 import { LiveStage } from "../canvas/live/LiveStage";
 import { ItemFace } from "../canvas/nodes/Faces";
+import { NoteEditor } from "../canvas/nodes/NoteEditor";
 import { itemShape } from "../model/items";
 import type { Item } from "../model/types";
 import { detailLayout } from "./detail";
@@ -18,6 +20,11 @@ export const rectOf = (el: Element): Rect => {
 const DIALS_SIDE = 252;
 /** What a live card and its dials keep clear of the window's edges. */
 const LIVE_MARGIN = 56;
+/**
+ * How wide a note comes up. Its face is laid out in container units, so this
+ * is the tile grown, line for line; at this width its body reads at 16px.
+ */
+const NOTE_WIDTH = 320;
 
 type Props = {
   item: Item;
@@ -35,26 +42,33 @@ type Props = {
 /**
  * One image or note lifted toward you, everything else pushed back. It grows out of
  * its tile and shrinks back into it, so the tile is hidden while it's up. A
- * live card comes up running and takes the pointer, so you can play with it;
- * only a click around it puts it back.
+ * live card comes up running and takes the pointer, so you can play with it,
+ * and a note comes up ready to write in; only a click around them puts it back.
  */
 export function Lift({ item, from, to, reduced, spring, fade, onPutBack, onDone }: Props) {
   const vw = window.innerWidth;
   const vh = window.innerHeight;
   const shape = itemShape(item);
   const aspect = shape.w / shape.h;
-  // A note comes up the size of a page to read. A live card and its dials
+  // A note comes up big enough to read. A live card and its dials
   // are centred together, the card nudged left to make room for them.
   const live = item.kind === "live";
   const most = live ? Math.min(vw * 0.78, vw - DIALS_SIDE - 2 * LIVE_MARGIN) : vw * 0.78;
   // An image keeps room under it for its note, and at its sides for its
   // palette and where it came from.
   const detail = item.kind === "image" ? detailLayout({ w: vw, h: vh }, aspect) : null;
-  const w = detail ? detail.image.w : Math.min(most, vh * 0.78 * aspect, item.kind === "note" ? 460 : Infinity);
+  const w = detail ? detail.image.w : Math.min(most, vh * 0.78 * aspect, item.kind === "note" ? NOTE_WIDTH : Infinity);
   const h = w / aspect;
   const pose = (r: Rect) => ({ x: r.x + r.w / 2 - vw / 2, y: r.y + r.h / 2 - vh / 2, scale: r.w / w });
   const up = { x: live ? -DIALS_SIDE / 2 : 0, y: detail?.dy ?? 0, scale: 1, opacity: 1 };
   const [settled, setSettled] = useState(false);
+  const keep = live || item.kind === "note";
+  const media = useRef<HTMLDivElement>(null);
+  // A long note read further down rolls back to its top on the way home, so
+  // it lands as its tile.
+  useEffect(() => {
+    if (to) media.current?.querySelector(".face-in")?.scrollTo({ top: 0, behavior: reduced ? "auto" : "smooth" });
+  }, [to, reduced]);
 
   return (
     <div className="lift" onClick={onPutBack}>
@@ -67,18 +81,25 @@ export function Lift({ item, from, to, reduced, spring, fade, onPutBack, onDone 
         transition={fade}
       />
       <motion.div
+        ref={media}
         className="lift-media"
         data-kind={item.kind}
         style={{ width: w, height: h }}
-        onClick={live ? (e) => e.stopPropagation() : undefined}
+        onClick={keep ? (e) => e.stopPropagation() : undefined}
         initial={reduced ? { ...up, opacity: 0 } : { ...pose(from), opacity: 1 }}
         animate={to ? (reduced ? { ...up, opacity: 0 } : { ...pose(to), opacity: 1 }) : up}
         transition={reduced ? fade : spring}
         onAnimationComplete={() => (to ? onDone() : setSettled(true))}
       >
-        {live ? <LiveStage item={item} /> : <ItemFace item={item} read />}
+        {live ? <LiveStage item={item} /> : item.kind === "note" ? <NoteSheet item={item} /> : <ItemFace item={item} read />}
       </motion.div>
       {detail && <ImageDetail item={item} layout={detail} shown={!to} settled={settled} fade={fade} />}
     </div>
   );
+}
+
+/** A lifted note: the read face, written in straight away. Esc lets go of it first. */
+function NoteSheet({ item }: { item: Item }) {
+  const { updateItem } = useCanvasUi();
+  return <NoteEditor look="read" text={item.text ?? ""} onSave={(text) => updateItem(item.id, { text })} />;
 }

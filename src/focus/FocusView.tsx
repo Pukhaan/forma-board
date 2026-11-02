@@ -239,7 +239,7 @@ function OpenStack({ stack, onClose, onTakeOut, onReorder }: Omit<Props, "stack"
     const onKey = (e: KeyboardEvent) => {
       if (e.key !== "Escape" || phaseRef.current === "closing") return;
       e.stopPropagation();
-      // Writing a lifted image's note: Esc lets go of the field, the next one puts it back.
+      // Writing in a lifted note, or an image's note: Esc lets go of the field, the next one puts it back.
       if (typing(e)) {
         (e.target as HTMLElement).blur();
         return;
