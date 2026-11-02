@@ -48,11 +48,9 @@ export default function App() {
   }, [openStore]);
 
   const openSample = useCallback(async () => {
-    const parent = await pickFolder("Where should the sample project go?");
-    if (!parent) return;
     setBusy(true);
     try {
-      await openStore(folderStore(await makeSample(parent)));
+      await openStore(folderStore(await makeSample()));
     } catch (e) {
       setBusy(false);
       setError(e instanceof Error ? e.message : "Couldn't make the sample project.");

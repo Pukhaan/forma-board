@@ -32,7 +32,7 @@ export function Welcome({ error, busy, onOpen, onSample }: Props) {
             Try the sample
           </button>
         </div>
-        <p className="welcome-hint">An empty folder becomes a new project.</p>
+        <p className="welcome-hint">The sample goes in Documents/Weft. Any empty folder becomes a new project.</p>
         {error && <p className="welcome-error">{error}</p>}
       </motion.div>
     </div>
