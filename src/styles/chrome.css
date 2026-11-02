@@ -1,0 +1,86 @@
+/* Floating controls: frosted white, a hairline, a soft shadow. */
+.chrome {
+  background: rgba(255, 255, 255, 0.86);
+  -webkit-backdrop-filter: blur(16px) saturate(1.4);
+  backdrop-filter: blur(16px) saturate(1.4);
+  border: 1px solid var(--hairline);
+  border-radius: var(--r-chrome);
+  box-shadow: var(--shadow-chrome);
+}
+
+.toolbar {
+  position: fixed;
+  left: 50%;
+  bottom: 20px;
+  z-index: 20;
+  display: flex;
+  align-items: center;
+  gap: 2px;
+  padding: 5px;
+  transform: translateX(-50%);
+}
+
+.tool {
+  display: grid;
+  place-items: center;
+  width: 36px;
+  height: 36px;
+  color: var(--ink-2);
+  border-radius: 10px;
+  transition: background 0.15s ease, color 0.15s ease;
+}
+
+.tool svg {
+  width: 18px;
+  height: 18px;
+  stroke-width: 1.6;
+}
+
+.tool:hover {
+  color: var(--ink);
+  background: rgba(22, 22, 21, 0.06);
+}
+
+.tool[data-active] {
+  color: #ffffff;
+  background: var(--ink);
+}
+
+.toolbar-rule {
+  width: 1px;
+  height: 20px;
+  margin: 0 4px;
+  background: var(--hairline);
+}
+
+.zoom {
+  position: fixed;
+  right: 20px;
+  bottom: 20px;
+  z-index: 20;
+  display: flex;
+  align-items: center;
+  padding: 3px;
+}
+
+.zoom button {
+  height: 28px;
+  min-width: 28px;
+  padding: 0 6px;
+  font-size: 14px;
+  color: var(--ink-2);
+  border-radius: 9px;
+  transition: background 0.15s ease, color 0.15s ease;
+}
+
+.zoom button:hover {
+  color: var(--ink);
+  background: rgba(22, 22, 21, 0.06);
+}
+
+.zoom .zoom-level {
+  min-width: 50px;
+  font-family: var(--mono);
+  font-size: 11.5px;
+  font-variant-numeric: tabular-nums;
+}

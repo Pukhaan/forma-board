@@ -1,0 +1,178 @@
+html,
+body,
+#root {
+  height: 100%;
+  margin: 0;
+}
+
+body {
+  font-family: var(--font);
+  font-size: 13px;
+  color: var(--ink);
+  background: var(--canvas);
+  overflow: hidden;
+  -webkit-font-smoothing: antialiased;
+  -webkit-user-select: none;
+  user-select: none;
+  cursor: default;
+}
+
+input,
+textarea {
+  -webkit-user-select: text;
+  user-select: text;
+  font: inherit;
+  color: inherit;
+}
+
+button {
+  font: inherit;
+  color: inherit;
+  background: none;
+  border: 0;
+  padding: 0;
+  cursor: pointer;
+  -webkit-user-select: none;
+  user-select: none;
+}
+
+img {
+  -webkit-user-drag: none;
+  -webkit-user-select: none;
+  user-select: none;
+}
+
+/* The window's hidden title bar: drag the window from the top strip. */
+.titlebar {
+  position: fixed;
+  inset: 0 0 auto 0;
+  height: 28px;
+  z-index: 30;
+}
+
+.board {
+  position: fixed;
+  inset: 0;
+}
+
+/* Dots stay 1.2px on screen at any zoom. Sits under the board's contents. */
+.dots {
+  position: absolute;
+  inset: 0;
+  z-index: -1;
+  pointer-events: none;
+  background-color: var(--canvas);
+  background-image: radial-gradient(circle, var(--dot) 1.2px, transparent 1.4px);
+}
+
+.board[data-tool="hand"] .react-flow__pane {
+  cursor: grab;
+}
+
+.board[data-tool="hand"] .react-flow__pane.dragging {
+  cursor: grabbing;
+}
+
+/* Marquee selection. */
+.react-flow__selection,
+.react-flow__nodesselection-rect {
+  background: rgba(22, 22, 21, 0.04);
+  border: 1px solid rgba(22, 22, 21, 0.35);
+  border-radius: 6px;
+}
+
+/* Wires. */
+.wire {
+  fill: none;
+  stroke: var(--wire);
+  stroke-width: 1.5;
+  pointer-events: none;
+  transition: stroke 0.15s ease;
+}
+
+.wire[data-hot] {
+  stroke: var(--wire-hot);
+  stroke-width: 1.75;
+}
+
+.wire-end {
+  fill: var(--wire);
+  pointer-events: none;
+}
+
+.wire-end[data-hot] {
+  fill: var(--wire-hot);
+}
+
+.wire-tip {
+  fill: var(--card);
+  stroke: var(--wire-hot);
+  stroke-width: 1.5;
+}
+
+.wire-hit {
+  fill: none;
+  stroke: transparent;
+  stroke-width: 18;
+  pointer-events: stroke;
+  cursor: pointer;
+}
+
+.wire-label {
+  position: absolute;
+  pointer-events: all;
+}
+
+.wire-note,
+.wire-input {
+  display: block;
+  max-width: 240px;
+  padding: 5px 11px;
+  font-size: 12px;
+  line-height: 16px;
+  color: var(--ink);
+  background: var(--card);
+  border: 1px solid var(--hairline);
+  border-radius: 999px;
+  box-shadow: 0 1px 2px rgba(18, 18, 16, 0.06);
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  transition: border-color 0.15s ease;
+}
+
+.wire-note[data-hot] {
+  border-color: rgba(22, 22, 21, 0.5);
+}
+
+.wire-input {
+  width: 220px;
+  outline: none;
+  border-color: rgba(22, 22, 21, 0.5);
+}
+
+.wire-input::placeholder {
+  color: var(--ink-3);
+}
+
+.wire-add {
+  display: grid;
+  place-items: center;
+  width: 22px;
+  height: 22px;
+  font-size: 14px;
+  line-height: 1;
+  color: var(--ink-2);
+  background: var(--card);
+  border: 1px solid var(--hairline);
+  border-radius: 50%;
+  box-shadow: 0 1px 2px rgba(18, 18, 16, 0.06);
+  opacity: 0;
+  transform: scale(0.8);
+  transition: opacity 0.15s ease, transform 0.2s var(--spring);
+}
+
+.wire-add[data-show] {
+  opacity: 1;
+  transform: scale(1);
+}
