@@ -5,8 +5,9 @@
   /* A warm off-white, a touch below pure white so white cards lift off it
      without needing borders. */
   --canvas: #f5f5f3;
+  /* Board dots: one size at every zoom, drawn on whole device pixels. */
   --dot: rgba(20, 20, 18, 0.2);
-  --dot-near: rgba(20, 20, 18, 0.5);
+  --dot-size: 2px;
 
   --card: #ffffff;
   --ink: #161615;
