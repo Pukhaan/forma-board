@@ -70,7 +70,7 @@ export function Toolbar({ tool, onTool, onNote, onImages, onArea, onTidy, onFit 
       <input
         ref={fileInput}
         type="file"
-        accept="image/*"
+        accept="image/*,video/*"
         multiple
         hidden
         onChange={(e) => {

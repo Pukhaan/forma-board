@@ -1,6 +1,7 @@
 import { useState, type SyntheticEvent } from "react";
 import { faviconUrls, hostOf, linkLabel, noteParts } from "../../model/items";
 import type { Item } from "../../model/types";
+import { VideoFace } from "./VideoFace";
 
 /**
  * The site's icon. Google sends a tiny grey globe when it has none, so anything
@@ -74,5 +75,6 @@ export function ItemFace({ item, read }: { item: Item; read?: boolean }) {
   if (item.kind === "note") return <NoteFace item={item} read={read} />;
   if (item.kind === "live") return <LiveFace />;
   if (item.kind === "link") return <LinkFace item={item} />;
+  if (item.kind === "video") return <VideoFace item={item} />;
   return item.src ? <img src={item.src} alt={item.title ?? ""} draggable={false} /> : null;
 }

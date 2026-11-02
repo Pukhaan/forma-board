@@ -14,6 +14,7 @@ import { parseBoard, serialize, type Board } from "../model/format";
 import { newId } from "../model/operations";
 import type { Item } from "../model/types";
 import { imageSize, newImageFields, titleFromName, type BoardStore } from "./types";
+import { isVideoFile, videoStill } from "./videoStill";
 
 export const BOARD_FILE = "board.json";
 export const MEDIA_DIR = "media";
@@ -30,6 +31,9 @@ const EXT: Record<string, string> = {
   "image/avif": "avif",
   "image/heic": "heic",
   "image/svg+xml": "svg",
+  "video/mp4": "mp4",
+  "video/quicktime": "mov",
+  "video/webm": "webm",
 };
 
 function extensionOf(file: File) {
@@ -109,10 +113,21 @@ export function folderStore(root: string): BoardStore {
       window.clearTimeout(timer);
       timer = window.setTimeout(flush, 300);
     },
-    async importImage(file, source): Promise<Item> {
+    async importMedia(file, source): Promise<Item> {
       const id = newId("item");
       const name = `${id}.${extensionOf(file)}`;
       await mkdir(join(root, MEDIA_DIR), { recursive: true });
+      if (isVideoFile(file)) {
+        // The video itself, and a still of it beside it for the board to show.
+        const [bytes, { w, h, still }] = await Promise.all([file.arrayBuffer(), videoStill(file)]);
+        await writeFile(join(root, MEDIA_DIR, name), new Uint8Array(bytes));
+        const rel = join(MEDIA_DIR, name);
+        const poster = still ? join(MEDIA_DIR, `${id}.jpg`) : undefined;
+        if (still && poster) await writeFile(join(root, poster), new Uint8Array(await still.arrayBuffer()));
+        const fields = await newImageFields(still, source);
+        const shown = poster ? { poster, posterSrc: resolve(poster) } : {};
+        return { id, kind: "video", file: rel, src: resolve(rel), ...shown, w, h, title: titleFromName(file.name), ...fields };
+      }
       const [bytes, size, fields] = await Promise.all([file.arrayBuffer(), imageSize(file), newImageFields(file, source)]);
       await writeFile(join(root, MEDIA_DIR, name), new Uint8Array(bytes));
       const rel = join(MEDIA_DIR, name);

@@ -2,16 +2,23 @@ import type { CSSProperties, KeyboardEvent, PointerEvent } from "react";
 import { getAt, snapToStep, type Dial, type DialValues } from "./dials";
 
 type Slider = Extract<Dial, { kind: "slider" }>;
-type Props = { name: string; dials: Dial[]; values: DialValues; onChange: (path: string, value: unknown) => void };
+type Props = {
+  name: string;
+  dials: Dial[];
+  values: DialValues;
+  onChange: (path: string, value: unknown) => void;
+  /** The card is being put back: the panel fades away before the card lands. */
+  leaving?: boolean;
+};
 
 /**
  * A live card's dials, beside it while it's open. Each slider is one row:
  * press anywhere on it and drag to set it, the fill showing where it sits in
  * its range. Arrow keys step it, and a double-click puts it back.
  */
-export function DialPanel({ name, dials, values, onChange }: Props) {
+export function DialPanel({ name, dials, values, onChange, leaving = false }: Props) {
   return (
-    <div className="dials" role="group" aria-label={`${name} dials`}>
+    <div className="dials" role="group" aria-label={`${name} dials`} data-leaving={leaving || undefined}>
       <div className="dials-title">{name}</div>
       {dials.map((d) => {
         if (d.kind === "group") return <div key={d.path} className="dials-group">{d.label}</div>;

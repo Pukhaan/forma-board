@@ -2,6 +2,7 @@
 // rests in the grid, and the flight between the two.
 
 import { animate, type Transition } from "motion/react";
+import { isMedia, stillOf } from "../model/items";
 import type { Item } from "../model/types";
 import { planGrid, sizeIn, slotPosition, type GridPlan, type Pose } from "./layout";
 import { MARGINS } from "./motion";
@@ -53,9 +54,10 @@ export function firstFrame(stack: Stack, reduced: boolean) {
  */
 export function warmImages(items: Item[]) {
   return items.flatMap((item) => {
-    if (item.kind !== "image" || !item.src) return [];
+    const still = isMedia(item) ? stillOf(item) : undefined;
+    if (!still) return [];
     const img = new Image();
-    img.src = item.src;
+    img.src = still;
     img.decode().catch(() => {});
     return [img];
   });

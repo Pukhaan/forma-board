@@ -1,6 +1,7 @@
 import type { Node, NodeProps } from "@xyflow/react";
 import { motion } from "motion/react";
-import { asUrl } from "../../model/items";
+import { useState } from "react";
+import { asUrl, isMedia } from "../../model/items";
 import type { CardData } from "../../model/types";
 import { useCanvasUi } from "../context";
 import { LiveCard } from "../live/LiveCard";
@@ -9,6 +10,7 @@ import { useZoomVar } from "../zoom";
 import { ItemFace } from "./Faces";
 import { fitInBox } from "./fit";
 import { SourceMark } from "./SourceMark";
+import { VideoFace } from "./VideoFace";
 import { Ports } from "./Ports";
 
 type CardNodeType = Node<CardData, "card">;
@@ -25,8 +27,11 @@ export function CardNode({ id, data, selected }: NodeProps<CardNodeType>) {
   const isLink = item.kind === "link";
   const isLive = item.kind === "live";
   const title = item.title?.trim();
-  const titled = (item.kind === "image" || isLive) && !!title;
-  const from = item.kind === "image" && item.source ? asUrl(item.source) : null;
+  const titled = (isMedia(item) || isLive) && !!title;
+  const from = isMedia(item) && item.source ? asUrl(item.source) : null;
+  // A video plays, silently, while the pointer is over it.
+  const [hover, setHover] = useState(false);
+  const isVideo = item.kind === "video";
 
   return (
     <motion.div
@@ -44,8 +49,13 @@ export function CardNode({ id, data, selected }: NodeProps<CardNodeType>) {
       {isLive ? (
         <LiveCard id={id} item={item} />
       ) : (
-        <div className="card-media" style={fitInBox(item, isLink ? 200 : 168)}>
-          <ItemFace item={item} />
+        <div
+          className="card-media"
+          style={fitInBox(item, isLink ? 200 : 168)}
+          onPointerEnter={isVideo ? () => setHover(true) : undefined}
+          onPointerLeave={isVideo ? () => setHover(false) : undefined}
+        >
+          {isVideo ? <VideoFace item={item} playing={hover} /> : <ItemFace item={item} />}
           {from && <SourceMark url={from} />}
         </div>
       )}

@@ -150,7 +150,7 @@ export function Canvas({ store, initial }: Props) {
   const addImages = useCallback(
     async (files: File[], source?: string) => {
       const p = centre();
-      const read = await Promise.allSettled(files.map((f) => store.importImage(f, source)));
+      const read = await Promise.allSettled(files.map((f) => store.importMedia(f, source)));
       const items = read.flatMap((r) => (r.status === "fulfilled" ? [r.value] : []));
       if (!items.length) return;
       commit();

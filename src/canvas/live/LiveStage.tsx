@@ -23,7 +23,8 @@ function giveBackKeys(e: PointerEvent<HTMLElement>) {
   }
 }
 
-export function LiveStage({ item }: { item: Item }) {
+/** `leaving`: it is being put back, so the dials step away first instead of shrinking with it. */
+export function LiveStage({ item, leaving = false }: { item: Item; leaving?: boolean }) {
   const frame = useRef<HTMLIFrameElement>(null);
   const dials = useDials(item, frame);
   return (
@@ -34,7 +35,13 @@ export function LiveStage({ item }: { item: Item }) {
         <LiveFrame ref={frame} item={item} mode="open" className="live-frame live-frame-open" />
       </span>
       {dials.panel && (
-        <DialPanel name={dials.panel.name} dials={dials.panel.dials} values={dials.values} onChange={dials.change} />
+        <DialPanel
+          name={dials.panel.name}
+          dials={dials.panel.dials}
+          values={dials.values}
+          onChange={dials.change}
+          leaving={leaving}
+        />
       )}
     </>
   );

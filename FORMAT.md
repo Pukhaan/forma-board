@@ -90,11 +90,12 @@ Every item has a unique `id` (unique within the board) and a `kind`. A missing
 | `image` | `file` or `src`, `w`, `h`, `title` | A picture. |
 | `note` | `text` | Words, written the same way as a `note` node's `text`. |
 | `link` | `url`, `title` | A web page. Without a `title` the app shows the site's name. |
+| `video` | `file` (or `src`), `poster`, `w`, `h`, `title` | A video, e.g. `media/foo.mp4`. `poster` is a still of it, a picture file beside it (`media/foo.jpg`): the board shows the still and plays the video only under the pointer and when opened. It has a `note`, `palette`, `source` and `added` like an image. |
 | `live` | `file` or `src`, `w`, `h`, `title` | A small coded component (an interaction prototype) that runs on the board. See [Live cards](#live-cards). |
 
 | field | |
 | --- | --- |
-| `file` | image: path inside the project folder, e.g. `media/foo.jpg`; live: e.g. `components/stack-fan.html` |
+| `file` | image or video: path inside the project folder, e.g. `media/foo.jpg`; live: e.g. `components/stack-fan.html` |
 | `src` | image or live: a web URL, only when the item isn't a file in the folder |
 | `w`, `h` | image: natural size in pixels, so the board keeps the proportions; live: the shape it is drawn at (4:3 when missing) |
 | `text` | note: the text. The first paragraph (before a blank line) is its heading |

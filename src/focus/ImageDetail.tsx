@@ -3,7 +3,7 @@ import { motion, type Transition } from "motion/react";
 import { useEffect, useEffectEvent, useLayoutEffect, useRef, useState, type MouseEvent } from "react";
 import { useCanvasUi } from "../canvas/context";
 import { openLink } from "../canvas/openLink";
-import { dayLabel, sourceLabel } from "../model/items";
+import { dayLabel, isMedia, sourceLabel, stillOf } from "../model/items";
 import { patchItem } from "../model/operations";
 import type { Item } from "../model/types";
 import { paletteOfSrc } from "../store/readPalette";
@@ -55,15 +55,16 @@ const reading = new Set<string>();
 function usePalette(item: Item, settled: boolean) {
   const { setNodes } = useReactFlow();
   useEffect(() => {
-    if (!settled || item.kind !== "image" || item.palette?.length || !item.src || reading.has(item.id)) return;
+    const still = stillOf(item);
+    if (!settled || !isMedia(item) || item.palette?.length || !still || reading.has(item.id)) return;
     const id = item.id;
     reading.add(id);
-    paletteOfSrc(item.src)
+    paletteOfSrc(still)
       .then((palette) => {
         if (palette?.length) setNodes((ns) => patchItem(ns, id, { palette }));
       })
       .finally(() => reading.delete(id));
-  }, [settled, item.kind, item.palette, item.src, item.id, setNodes]);
+  }, [settled, item, setNodes]);
 }
 
 function Swatches({ item, layout, settled }: { item: Item; layout: DetailLayout; settled: boolean }) {

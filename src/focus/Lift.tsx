@@ -4,7 +4,8 @@ import { useCanvasUi } from "../canvas/context";
 import { LiveStage } from "../canvas/live/LiveStage";
 import { ItemFace } from "../canvas/nodes/Faces";
 import { NoteEditor } from "../canvas/nodes/NoteEditor";
-import { itemShape } from "../model/items";
+import { isMedia, itemShape } from "../model/items";
+import { VideoFace } from "../canvas/nodes/VideoFace";
 import type { Item } from "../model/types";
 import { detailLayout } from "./detail";
 import { ImageDetail } from "./ImageDetail";
@@ -56,7 +57,7 @@ export function Lift({ item, from, to, reduced, spring, fade, onPutBack, onDone 
   const most = live ? Math.min(vw * 0.78, vw - DIALS_SIDE - 2 * LIVE_MARGIN) : vw * 0.78;
   // An image keeps room under it for its note, and at its sides for its
   // palette and where it came from.
-  const detail = item.kind === "image" ? detailLayout({ w: vw, h: vh }, aspect) : null;
+  const detail = isMedia(item) ? detailLayout({ w: vw, h: vh }, aspect) : null;
   const w = detail ? detail.image.w : Math.min(most, vh * 0.78 * aspect, item.kind === "note" ? NOTE_WIDTH : Infinity);
   const h = w / aspect;
   const pose = (r: Rect) => ({ x: r.x + r.w / 2 - vw / 2, y: r.y + r.h / 2 - vh / 2, scale: r.w / w });
@@ -91,7 +92,15 @@ export function Lift({ item, from, to, reduced, spring, fade, onPutBack, onDone 
         transition={reduced ? fade : spring}
         onAnimationComplete={() => (to ? onDone() : setSettled(true))}
       >
-        {live ? <LiveStage item={item} /> : item.kind === "note" ? <NoteSheet item={item} /> : <ItemFace item={item} read />}
+        {live ? (
+          <LiveStage item={item} leaving={!!to} />
+        ) : item.kind === "note" ? (
+          <NoteSheet item={item} />
+        ) : item.kind === "video" ? (
+          <VideoFace item={item} big />
+        ) : (
+          <ItemFace item={item} read />
+        )}
       </motion.div>
       {detail && <ImageDetail item={item} layout={detail} shown={!to} settled={settled} fade={fade} />}
     </div>

@@ -5,6 +5,7 @@ import { parseBoard, serialize, type Board } from "../model/format";
 import { newId } from "../model/operations";
 import { sampleEdges, sampleNodes } from "../model/sample";
 import { imageSize, newImageFields, titleFromName, type BoardStore } from "./types";
+import { isVideoFile, videoStill } from "./videoStill";
 
 const KEY = "forma.board.v1";
 
@@ -41,7 +42,16 @@ export function browserStore(): BoardStore {
         }
       }, 300);
     },
-    async importImage(file, source) {
+    async importMedia(file, source) {
+      if (isVideoFile(file)) {
+        // Kept in the page, so it only lasts as long as the browser keeps it.
+        const [src, { w, h, still }] = await Promise.all([readDataUrl(file), videoStill(file)]);
+        // The still is kept as a data URL too, as its `poster`, so it survives a reload.
+        const poster = still ? await readDataUrl(still) : undefined;
+        const fields = await newImageFields(still, source);
+        const shown = poster ? { poster, posterSrc: poster } : {};
+        return { id: newId("item"), kind: "video", src, ...shown, w, h, title: titleFromName(file.name), ...fields };
+      }
       const [src, size, fields] = await Promise.all([readDataUrl(file), imageSize(file), newImageFields(file, source)]);
       return { id: newId("item"), kind: "image", src, ...size, title: titleFromName(file.name), ...fields };
     },

@@ -11,6 +11,7 @@
 import type { InternalNode } from "@xyflow/react";
 import { clamp } from "../model/geometry";
 import type { Body, Side } from "../model/geometry";
+import { isMedia } from "../model/items";
 import type { CardData, StackData } from "../model/types";
 import { DETAIL_OFF, DETAIL_ON } from "./zoom";
 
@@ -94,7 +95,7 @@ export function bodyOf(n: InternalNode, z: number): Body {
     // Named like a stack: it stays and grows as you zoom out, from its line (17 tall).
     return { x, y, w, h, below: (stackLabelScale(z) - 1) * LINE };
   }
-  if (item?.title && item.kind === "image" && detailAt(z)) {
+  if (item?.title && isMedia(item) && detailAt(z)) {
     // The title grows downward from its line (about 16 tall) under the picture.
     return { x, y, w, h, below: (cardTitleScale(z) - 1) * 16 };
   }

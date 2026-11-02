@@ -1,0 +1,88 @@
+/* Videos: at rest a still with a small play mark; playing, the video lies
+   over the still and shows once it has a frame. */
+.face-video {
+  position: relative;
+  display: block;
+  width: 100%;
+  height: 100%;
+  overflow: hidden;
+  background: var(--card);
+}
+
+.face-video img,
+.face-video video {
+  display: block;
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+}
+
+.face-video-play {
+  position: absolute;
+  inset: 0;
+  opacity: 0;
+  transition: opacity 0.2s var(--ease-out);
+}
+
+.face-video-play[data-on] {
+  opacity: 1;
+}
+
+/* It moves: a small white chip with a play triangle, in the lower right
+   (the lower left is where a source shows). */
+.video-mark {
+  position: absolute;
+  right: 8px;
+  bottom: 8px;
+  display: block;
+  width: 20px;
+  height: 20px;
+  background: var(--card);
+  border-radius: 6px;
+  box-shadow: 0 1px 2px rgba(18, 18, 16, 0.12), 0 2px 6px rgba(18, 18, 16, 0.06);
+  opacity: var(--detail, 1);
+  transition: opacity 0.25s var(--ease-out);
+}
+
+.video-mark svg {
+  display: block;
+  width: 100%;
+  height: 100%;
+  fill: var(--ink);
+}
+
+/* Opened big: the sound button, in the lower right, on a soft dark chip. */
+.video-sound {
+  position: absolute;
+  right: 14px;
+  bottom: 14px;
+  display: block;
+  width: 28px;
+  height: 28px;
+  padding: 0;
+  background: rgba(22, 22, 21, 0.55);
+  -webkit-backdrop-filter: blur(8px);
+  backdrop-filter: blur(8px);
+  border-radius: 8px;
+  cursor: pointer;
+  transition: background 0.15s ease;
+}
+
+.video-sound:hover {
+  background: rgba(22, 22, 21, 0.72);
+}
+
+.video-sound svg {
+  display: block;
+  width: 100%;
+  height: 100%;
+  fill: none;
+  stroke: rgba(245, 245, 243, 0.92);
+  stroke-width: 1.6;
+  stroke-linecap: round;
+  stroke-linejoin: round;
+}
+
+.video-sound .video-sound-body {
+  fill: rgba(245, 245, 243, 0.92);
+}

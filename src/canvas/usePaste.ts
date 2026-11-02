@@ -66,7 +66,7 @@ export function usePaste(options: Options) {
       const { enabled, centre, onImages } = latest.current;
       const data = e.clipboardData;
       if (!enabled || !data || typing(e)) return;
-      const images = Array.from(data.files).filter((f) => f.type.startsWith("image/"));
+      const images = Array.from(data.files).filter((f) => f.type.startsWith("image/") || f.type.startsWith("video/"));
       if (images.length) {
         e.preventDefault();
         onImages(images, imageSource(data));

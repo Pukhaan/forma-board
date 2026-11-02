@@ -48,7 +48,7 @@ function details(item: FileItem): Item {
 }
 
 function itemOut(item: Item): FileItem {
-  const { src, ...rest } = details(item);
+  const { src, posterSrc: _poster, ...rest } = details(item);
   // A file in the project is the truth; only keep `src` for things that aren't files yet.
   return rest.file || !src ? rest : { ...rest, src };
 }
@@ -71,6 +71,13 @@ function itemIn(raw: FileItem, resolve: Resolve): Item | null {
     const src = typeof item.src === "string" && item.src ? item.src : undefined;
     if (!file && !src) return null;
     return { ...item, kind, src: file ? resolve(file) : src };
+  }
+  if (kind === "video") {
+    // A video plays its file (or its `src`); its poster is a picture file beside it.
+    const src = item.file ? resolve(item.file) : item.src;
+    if (!src) return null;
+    const poster = typeof item.poster === "string" && item.poster ? item.poster : undefined;
+    return { ...item, kind, src, ...(poster ? { poster, posterSrc: resolve(poster) } : {}) };
   }
   if (kind !== "image") return null;
   const src = item.file ? resolve(item.file) : item.src;

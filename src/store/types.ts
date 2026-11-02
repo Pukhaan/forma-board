@@ -13,10 +13,11 @@ export interface BoardStore {
   /** Saves soon. Calls close together are merged into one write. */
   save(board: Board): void;
   /**
-   * Brings an image into the project and returns it as an item, dated today,
-   * with its palette and, when known, where it came from (`source`).
+   * Brings an image or a video into the project and returns it as an item,
+   * dated today, with its palette and, when known, where it came from
+   * (`source`). A video also gets a still, its `poster`.
    */
-  importImage(file: File, source?: string): Promise<Item>;
+  importMedia(file: File, source?: string): Promise<Item>;
   /** Called when the board changes outside the app (an AI, an editor). Returns a stop function. */
   watch(onChange: (board: Board) => void): () => void;
 }
@@ -35,7 +36,12 @@ export async function imageSize(file: Blob): Promise<{ w: number; h: number }> {
 
 export const titleFromName = (name: string) => name.replace(/\.[^.]+$/, "").replace(/[-_]+/g, " ").trim();
 
-/** What every newly imported image carries besides its file: the day, its palette, and where it came from. */
-export async function newImageFields(file: Blob, source?: string): Promise<Partial<Item>> {
-  return { ...(await paletteFields(file)), ...(source?.trim() ? { source: source.trim() } : {}), added: isoDay() };
+/**
+ * What every newly imported image or video carries besides its file: the day,
+ * its palette (from `picture`, the image or a video's still), and where it
+ * came from.
+ */
+export async function newImageFields(picture: Blob | null, source?: string): Promise<Partial<Item>> {
+  const palette = picture ? await paletteFields(picture) : {};
+  return { ...palette, ...(source?.trim() ? { source: source.trim() } : {}), added: isoDay() };
 }

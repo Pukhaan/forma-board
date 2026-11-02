@@ -2,7 +2,7 @@ import { motion, useMotionValue, type MotionValue } from "motion/react";
 import { memo, useEffect, type PointerEvent } from "react";
 import { ItemFace } from "../canvas/nodes/Faces";
 import { openLink } from "../canvas/openLink";
-import { hasNote, noteParts } from "../model/items";
+import { hasNote, isMedia, noteParts } from "../model/items";
 import type { Item } from "../model/types";
 import type { Pose, Size } from "./layout";
 
@@ -77,7 +77,7 @@ export const Tile = memo(function Tile({ item, size, start, z, raised, lifted, r
         <ItemFace item={item} />
       </button>
       <div className="ft-caption">
-        <span className="ft-title">{item.kind === "image" ? (item.title ?? "") : ""}</span>
+        <span className="ft-title">{isMedia(item) ? (item.title ?? "") : ""}</span>
         <span className="ft-actions">
           {url !== null && (
             <button className="ft-pill" onPointerDown={(e) => e.stopPropagation()} onClick={() => openLink(url)}>

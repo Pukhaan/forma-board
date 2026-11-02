@@ -1,6 +1,6 @@
 import type { Item } from "../../model/types";
 
-export type StackKind = "image" | "note" | "link" | "live" | "mixed";
+export type StackKind = "image" | "video" | "note" | "link" | "live" | "mixed";
 
 /** What a stack holds: one kind, or a mix. Empty stacks hold nothing yet. */
 export function stackKind(items: Item[]): StackKind | null {
@@ -11,6 +11,7 @@ export function stackKind(items: Item[]): StackKind | null {
 
 const NOUN: Record<StackKind, [string, string]> = {
   image: ["image", "images"],
+  video: ["video", "videos"],
   note: ["note", "notes"],
   link: ["link", "links"],
   live: ["live card", "live cards"],
