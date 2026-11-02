@@ -88,8 +88,13 @@ export function bodyOf(n: InternalNode, z: number): Body {
   if (n.type === "stack") {
     return { x, y, w, h: PILE, below: stackLabelBelow(n.data as StackData, z) };
   }
-  // Only an image card has a title under it; a link and a live card carry theirs inside.
-  if (n.type === "card" && (n.data as CardData).item?.title && (n.data as CardData).item.kind === "image" && detailAt(z)) {
+  // An image or a live card has its title under it; a link carries its own inside.
+  const item = n.type === "card" ? (n.data as CardData).item : undefined;
+  if (item?.title?.trim() && item.kind === "live") {
+    // Named like a stack: it stays and grows as you zoom out, from its line (17 tall).
+    return { x, y, w, h, below: (stackLabelScale(z) - 1) * LINE };
+  }
+  if (item?.title && item.kind === "image" && detailAt(z)) {
     // The title grows downward from its line (about 16 tall) under the picture.
     return { x, y, w, h, below: (cardTitleScale(z) - 1) * 16 };
   }

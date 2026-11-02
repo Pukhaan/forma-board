@@ -462,6 +462,10 @@
   bottom: calc((1 - clamp(1, calc(1 / var(--z, 1)), 1.8)) * 16px * var(--detail, 1));
 }
 
+.card[data-kind="live"][data-titled] > .port.react-flow__handle-bottom {
+  bottom: calc((1 - clamp(1, calc(0.96 / var(--z, 1)), 3.4)) * 17px);
+}
+
 /* Card titles show all the time (they always have: an old hover rule never
    matched). Zoomed out they grow a little, then fade with the detail. */
 .card-title {

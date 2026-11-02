@@ -37,6 +37,19 @@
   cursor: grabbing;
 }
 
+/* Its name, under it like a stack's: it never fades, and zoomed out it grows
+   so you can still read what each one is (body.ts keeps wires clear of it). */
+.card[data-kind="live"] .card-title {
+  font-size: 13px;
+  font-weight: 500;
+  line-height: 17px;
+  letter-spacing: -0.005em;
+  color: var(--ink);
+  white-space: nowrap;
+  scale: clamp(1, calc(0.96 / var(--z, 1)), 3.4);
+  opacity: 1;
+}
+
 /* While it's open big, its card on the board waits hidden underneath. */
 .card[data-lifted] .card-media {
   visibility: hidden;
