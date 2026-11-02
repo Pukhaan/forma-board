@@ -122,6 +122,29 @@ export const NOTE_FADE = 22;
 /** Half a quiet note's width on the board, from its text: 12px type, small padding. */
 export const noteHalfWidth = (text: string) => (Math.min(text.length, 40) * 6.3 + 16) / 2;
 
+/** The narrowest a shortened note gets: a word or two and the ellipsis. */
+export const NOTE_MIN_ROOM = 44;
+
+/**
+ * How wide a resting note may be on the wire from `s` to `t` (its ends on the
+ * two things) before it reaches either of them, or null when it fits whole.
+ * A label is level, so it fits when the gap is wider than the words or tall
+ * enough for the label to sit in it; otherwise it is cut to the gap's width,
+ * keeping `air` clear at each end.
+ */
+export function noteRoom(
+  s: { x: number; y: number },
+  t: { x: number; y: number },
+  width: number,
+  height = 18,
+  air = 18,
+): number | null {
+  const dx = Math.abs(t.x - s.x);
+  const dy = Math.abs(t.y - s.y);
+  if (dx >= width + 2 * air || dy >= height + 2 * air) return null;
+  return Math.max(NOTE_MIN_ROOM, dx - 2 * air);
+}
+
 /**
  * The wire cut in two where it passes its note (centred at the curve's
  * midpoint): the part before, which should fade out toward the note, and the

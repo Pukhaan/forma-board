@@ -1,5 +1,5 @@
 import { describe, expect, it } from "vitest";
-import { anchorOn, aroundNote, splitCubic, wireEnds, wireFade, wirePath } from "./geometry";
+import { anchorOn, aroundNote, splitCubic, wireEnds, wireFade, wirePath, noteRoom, NOTE_MIN_ROOM } from "./geometry";
 
 const r = { x: 0, y: 0, w: 200, h: 100 };
 
@@ -100,5 +100,17 @@ describe("aroundNote", () => {
     const off = [{ x: 0, y: 0 }, { x: 20, y: 0 }, { x: 40, y: 0 }, { x: 600, y: 0 }] as const;
     const cut = aroundNote(off, 150)!;
     expect(cut.after).not.toBeNull();
+  });
+});
+
+describe("noteRoom", () => {
+  it("lets a note sit whole when the gap is wide or tall enough", () => {
+    expect(noteRoom({ x: 0, y: 0 }, { x: 300, y: 0 }, 120)).toBeNull();
+    expect(noteRoom({ x: 0, y: 0 }, { x: 20, y: 200 }, 200)).toBeNull();
+  });
+
+  it("cuts a note to the gap on a short level wire, never below a word or two", () => {
+    expect(noteRoom({ x: 0, y: 0 }, { x: 120, y: 10 }, 200)).toBe(84);
+    expect(noteRoom({ x: 0, y: 0 }, { x: 40, y: 10 }, 200)).toBe(NOTE_MIN_ROOM);
   });
 });

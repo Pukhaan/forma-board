@@ -6,7 +6,7 @@ import {
   type EdgeProps,
 } from "@xyflow/react";
 import { useState } from "react";
-import { aroundNote, cubicPath, NOTE_FADE, noteHalfWidth, wireEnds, wireFade, wirePath, type Cubic } from "../../model/geometry";
+import { aroundNote, cubicPath, NOTE_FADE, noteHalfWidth, noteRoom, wireEnds, wireFade, wirePath, type Cubic } from "../../model/geometry";
 import type { LinkData } from "../../model/types";
 import { bodyOf } from "../body";
 import { useCanvasUi } from "../context";
@@ -46,9 +46,14 @@ export function LinkEdge({ id, source, target, data, selected }: EdgeProps<LinkE
   // grows. At rest it fades out toward the words; hovered (or being written
   // on) it runs solid right up to the pill's edge and stops under it.
   const loudNote = hot || editing;
+  // On a short wire the words would reach the things it connects, so at rest
+  // the note stops where the gap does and ends in an ellipsis; hovered, the
+  // whole note shows as its pill, on top of everything.
+  const room = note ? noteRoom(s, t, noteHalfWidth(note) * 2) : null;
+  const quietHalf = note ? (room ? room / 2 : noteHalfWidth(note)) : 0;
   const cut =
     note && detailShows(zoom, true)
-      ? aroundNote(curve, noteHalfWidth(note) + (loudNote ? PILL_PAD : 0))
+      ? aroundNote(curve, loudNote ? noteHalfWidth(note) + PILL_PAD : quietHalf)
       : null;
   // The note shows as a white pill when the wire is hovered, selected or
   // being written on.
@@ -112,7 +117,11 @@ export function LinkEdge({ id, source, target, data, selected }: EdgeProps<LinkE
               }}
             />
           ) : note ? (
-            <button className="wire-note" onDoubleClick={() => setEditing(true)}>
+            <button
+              className="wire-note"
+              style={room && !loud ? { maxWidth: room } : undefined}
+              onDoubleClick={() => setEditing(true)}
+            >
               {note}
             </button>
           ) : (
