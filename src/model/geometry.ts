@@ -127,7 +127,7 @@ export const noteHalfWidth = (text: string) => (Math.min(text.length, 40) * 6.3 
  * midpoint): the part before, which should fade out toward the note, and the
  * part after, which fades back in. The cut is where the curve leaves a box
  * the size of the note plus a little air, so the line fades as it nears the
- * words whichever way it travels. Null if the wire is too short for it.
+ * words whichever way it travels. A side with no room is null.
  */
 export function aroundNote(curve: Cubic, halfWidth: number, halfHeight = 10) {
   const at = (u: number) => {
@@ -147,8 +147,9 @@ export function aroundNote(curve: Cubic, halfWidth: number, halfHeight = 10) {
   while (a > 0 && inside(a)) a -= 0.004;
   let b = 0.5;
   while (b < 1 && inside(b)) b += 0.004;
-  if (a <= 0.05 || b >= 0.95) return null;
-  const [before] = splitCubic(curve, a);
-  const [, after] = splitCubic(curve, b);
+  // A side with no room left (the note reaches the card) is simply not drawn:
+  // the line never crosses the words, however short the wire.
+  const before = a > 0.05 ? splitCubic(curve, a)[0] : null;
+  const after = b < 0.95 ? splitCubic(curve, b)[1] : null;
   return { before, after };
 }

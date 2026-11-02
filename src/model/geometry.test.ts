@@ -88,14 +88,17 @@ describe("aroundNote", () => {
 
   it("cuts the wire just outside the note on both sides", () => {
     const cut = aroundNote(line, 50)!;
-    expect(cut.before[0]).toEqual({ x: 0, y: 0 });
-    expect(cut.before[3].x).toBeLessThan(300 - 50);
-    expect(cut.before[3].x).toBeGreaterThan(300 - 60);
-    expect(cut.after[0].x).toBeGreaterThan(300 + 50);
-    expect(cut.after[3]).toEqual({ x: 600, y: 0 });
+    expect(cut.before![0]).toEqual({ x: 0, y: 0 });
+    expect(cut.before![3].x).toBeLessThan(300 - 50);
+    expect(cut.before![3].x).toBeGreaterThan(300 - 60);
+    expect(cut.after![0].x).toBeGreaterThan(300 + 50);
+    expect(cut.after![3]).toEqual({ x: 600, y: 0 });
   });
 
-  it("leaves a wire too short for the note whole", () => {
-    expect(aroundNote(line, 290)).toBeNull();
+  it("never draws through the note: a side with no room is left out", () => {
+    expect(aroundNote(line, 290)).toEqual({ before: null, after: null });
+    const off = [{ x: 0, y: 0 }, { x: 20, y: 0 }, { x: 40, y: 0 }, { x: 600, y: 0 }] as const;
+    const cut = aroundNote(off, 150)!;
+    expect(cut.after).not.toBeNull();
   });
 });

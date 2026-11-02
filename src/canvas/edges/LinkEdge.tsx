@@ -77,8 +77,12 @@ export function LinkEdge({ id, source, target, data, selected }: EdgeProps<LinkE
       {!cut && <path d={path} className="wire" stroke={`url(#${gradient})`} data-hot={hot || undefined} />}
       {cut && (
         <>
-          <WirePart id={`${gradient}-a`} curve={cut.before} fadeIn={wireFade(s, t).start} hot={hot} into="end" soft={!loudNote} />
-          <WirePart id={`${gradient}-b`} curve={cut.after} fadeIn={wireFade(s, t).start} hot={hot} into="start" soft={!loudNote} />
+          {cut.before && (
+            <WirePart id={`${gradient}-a`} curve={cut.before} fadeIn={wireFade(s, t).start} hot={hot} into="end" soft={!loudNote} />
+          )}
+          {cut.after && (
+            <WirePart id={`${gradient}-b`} curve={cut.after} fadeIn={wireFade(s, t).start} hot={hot} into="start" soft={!loudNote} />
+          )}
         </>
       )}
       <path
