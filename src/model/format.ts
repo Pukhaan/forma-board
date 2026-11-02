@@ -18,7 +18,7 @@ export type FileNode =
 
 export type FileWire = { id: string; from: string; to: string; note?: string };
 
-export type BoardFile = { weft: number; nodes: FileNode[]; wires: FileWire[] };
+export type BoardFile = { forma: number; nodes: FileNode[]; wires: FileWire[] };
 
 export type Board = { nodes: Node[]; edges: Edge[] };
 
@@ -59,7 +59,7 @@ export function toBoardFile({ nodes, edges }: Board): BoardFile {
     const note = (e.data as LinkData | undefined)?.note;
     return note ? { id: e.id, from: e.source, to: e.target, note } : { id: e.id, from: e.source, to: e.target };
   });
-  return { weft: FORMAT_VERSION, nodes: out, wires };
+  return { forma: FORMAT_VERSION, nodes: out, wires };
 }
 
 export function serialize(board: Board): string {

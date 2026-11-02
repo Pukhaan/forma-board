@@ -6,7 +6,7 @@ import { exists, mkdir } from "@tauri-apps/plugin-fs";
 import { sampleEdges, sampleNodes } from "../model/sample";
 import { BOARD_FILE, join, seedSample } from "../store/folder";
 
-const LAST = "weft.lastProject";
+const LAST = "forma.lastProject";
 
 export const inApp = typeof window !== "undefined" && "__TAURI_INTERNALS__" in window;
 
@@ -33,12 +33,12 @@ export async function pickFolder(title: string): Promise<string | null> {
   return typeof picked === "string" ? picked : null;
 }
 
-/** Where Weft keeps projects it makes for you: Documents/Weft. */
+/** Where Forma keeps projects it makes for you: Documents/Forma. */
 export async function projectsHome(): Promise<string> {
-  return join(await documentDir(), "Weft");
+  return join(await documentDir(), "Forma");
 }
 
-/** Makes the sample project at Documents/Weft/Northwind (or reopens it) and returns its path. */
+/** Makes the sample project at Documents/Forma/Northwind (or reopens it) and returns its path. */
 export async function makeSample(): Promise<string> {
   const root = join(await projectsHome(), "Northwind");
   if (await exists(join(root, BOARD_FILE))) return root;

@@ -90,7 +90,7 @@ export function folderStore(root: string): BoardStore {
           known = text;
           return board;
         }
-        throw new Error(`${BOARD_FILE} in ${folderName(root)} isn't a board this version of Weft can read.`);
+        throw new Error(`${BOARD_FILE} in ${folderName(root)} isn't a board this version of Forma can read.`);
       }
       const board = emptyBoard(root);
       await write(board);

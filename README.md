@@ -1,8 +1,8 @@
-# Weft
+# Forma
 
-A local-first research canvas for designers. In weaving, the weft is the
-thread that runs across and binds everything together; here it is the
-connections between your research.
+A local-first research canvas for designers. Forma is Latin for form: your
+research goes in raw, and the board gives it shape. (It comes from the myth of
+Pygmalion, the sculptor whose statue came to life.)
 
 Inspiration, notes, research and meetings live as plain files in a project
 folder; the app draws them as stacks and connections around the project they

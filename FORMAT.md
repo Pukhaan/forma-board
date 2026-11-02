@@ -1,6 +1,6 @@
-# The Weft project format
+# The Forma project format
 
-A Weft project is a normal folder. Anything that can edit files (you, a script,
+A Forma project is a normal folder. Anything that can edit files (you, a script,
 an AI tool) can change the board, and the app shows the change straight away.
 
 ```
@@ -13,7 +13,7 @@ Northwind/
 
 ```json
 {
-  "weft": 1,
+  "forma": 1,
   "nodes": [
     { "id": "project", "type": "project", "x": -170, "y": -80,
       "title": "Northwind", "brief": "AI shopping assistant for small brands." },

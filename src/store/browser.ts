@@ -6,7 +6,7 @@ import { newId } from "../model/operations";
 import { sampleEdges, sampleNodes } from "../model/sample";
 import { imageSize, titleFromName, type BoardStore } from "./types";
 
-const KEY = "weft.board.v1";
+const KEY = "forma.board.v1";
 
 function readDataUrl(file: Blob): Promise<string> {
   return new Promise((resolve, reject) => {

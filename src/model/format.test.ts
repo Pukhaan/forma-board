@@ -37,7 +37,7 @@ describe("board.json", () => {
 
   it("opens a hand-edited file with a broken entry, minus that entry", () => {
     const text = JSON.stringify({
-      weft: 1,
+      forma: 1,
       nodes: [{ id: "n", type: "note", x: 0, y: 0, text: "hi" }, { type: "note" }, null],
       wires: [{ id: "w", from: "n", to: "missing" }],
     });

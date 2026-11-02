@@ -18,7 +18,7 @@ export function Welcome({ error, busy, onOpen, onSample }: Props) {
         animate={{ opacity: 1, y: 0 }}
         transition={{ type: "spring", stiffness: 300, damping: 30 }}
       >
-        <div className="welcome-mark">Weft</div>
+        <div className="welcome-mark">Forma</div>
         <p className="welcome-lede">
           A board for your research. It lives in a folder on your Mac, so you and your AI can both work on it.
         </p>
@@ -32,7 +32,7 @@ export function Welcome({ error, busy, onOpen, onSample }: Props) {
             Try the sample
           </button>
         </div>
-        <p className="welcome-hint">The sample goes in Documents/Weft. Any empty folder becomes a new project.</p>
+        <p className="welcome-hint">The sample goes in Documents/Forma. Any empty folder becomes a new project.</p>
         {error && <p className="welcome-error">{error}</p>}
       </motion.div>
     </div>
