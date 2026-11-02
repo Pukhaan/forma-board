@@ -102,6 +102,39 @@ describe("board.json", () => {
     expect(board.nodes[1]).toMatchObject({ id: "k", type: "note", data: { text: "hi" } });
   });
 
+  it("round-trips a stack's description, and leaves it out when there is none", () => {
+    const stack = (data: object) => ({ id: "s", type: "stack", position: { x: 0, y: 0 }, data: { title: "Blue", items: [], ...data } });
+    const withLine = { nodes: [stack({ description: "What the brand already owns" })], edges: [] };
+    const file = toBoardFile(withLine);
+    expect(file.nodes[0]).toEqual({ id: "s", x: 0, y: 0, type: "stack", title: "Blue", description: "What the brand already owns", items: [] });
+    expect(parseBoard(JSON.stringify(file))!.nodes).toEqual(withLine.nodes);
+
+    expect(toBoardFile({ nodes: [stack({ description: "  " })], edges: [] }).nodes[0]).not.toHaveProperty("description");
+    const bare = parseBoard(JSON.stringify(toBoardFile({ nodes: [stack({})], edges: [] })))!;
+    expect(bare.nodes[0].data).not.toHaveProperty("description");
+  });
+
+  it("round-trips areas with their size and title", () => {
+    const text = JSON.stringify({
+      forma: 1,
+      nodes: [
+        { id: "a", type: "area", x: -64, y: 32, w: 640, h: 384, title: "Inspiration" },
+        { id: "n", type: "note", x: 0, y: 64, text: "hi" },
+      ],
+      wires: [],
+    });
+    const board = parseBoard(text)!;
+    expect(board.nodes[0]).toMatchObject({ id: "a", type: "area", position: { x: -64, y: 32 }, width: 640, height: 384, data: { title: "Inspiration" } });
+    expect(board.nodes[0].zIndex).toBeLessThan(0);
+    expect(toBoardFile(board).nodes[0]).toEqual({ id: "a", x: -64, y: 32, type: "area", w: 640, h: 384, title: "Inspiration" });
+    expect(serialize(parseBoard(serialize(board))!)).toBe(serialize(board));
+  });
+
+  it("opens an area with a missing size or title at a usable size", () => {
+    const board = parseBoard(JSON.stringify({ forma: 1, nodes: [{ id: "a", type: "area", x: 0, y: 0 }], wires: [] }))!;
+    expect(board.nodes[0]).toMatchObject({ width: 384, height: 256, data: { title: "New area" } });
+  });
+
   it("rejects text that isn't a board", () => {
     expect(parseBoard("not json")).toBeNull();
     expect(parseBoard('{"hello": 1}')).toBeNull();

@@ -23,13 +23,15 @@ export function useStacking() {
 
   const actionFor = useCallback(
     (node: Node) => {
+      // Areas never stack, and nothing stacks into one.
+      if (node.type === "area") return { type: "none" as const };
       const dragged = droppable(node);
       if (!dragged) return { type: "none" as const };
       // While dragging, the internal position lags a frame behind; use the live one.
       dragged.rect.x = node.position.x;
       dragged.rect.y = node.position.y;
       const others = getNodes()
-        .filter((n) => n.id !== node.id)
+        .filter((n) => n.id !== node.id && n.type !== "area")
         .map(droppable)
         .filter((d): d is Droppable => d !== null);
       return resolveDrop(dragged, others);

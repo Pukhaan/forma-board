@@ -28,6 +28,8 @@ export type ProjectData = {
 /** A pile of items sorted under one name. */
 export type StackData = {
   title: string;
+  /** A short line under the title saying what the stack is for. */
+  description?: string;
   items: Item[];
 };
 
@@ -39,6 +41,15 @@ export type CardData = {
 /** A free text note on the canvas. */
 export type NoteData = {
   text: string;
+};
+
+/**
+ * A soft, named zone that groups what sits inside it ("Inspiration", "Plan").
+ * Its size is the node's own width and height, in board units. A thing
+ * belongs to an area when its centre is inside the area's rectangle.
+ */
+export type AreaData = {
+  title: string;
 };
 
 /** A connection. The note is what sits on the wire between two things. */

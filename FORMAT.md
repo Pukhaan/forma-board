@@ -49,18 +49,34 @@ Anything can be stacked: images, notes and links sit in the same stacks.
 ### Nodes
 
 Every node has a unique `id`, a `type`, and a position `x`, `y` (board units,
-y grows downward). Sizes are not stored; the app lays each node out itself.
+y grows downward). Sizes are not stored, except an area's; the app lays each
+other node out itself.
 
 | type | fields | what it is |
 | --- | --- | --- |
 | `project` | `title`, `brief` | The centre of the board. Usually one. |
 | `note` | `text` | Research in words. The first paragraph (before a blank line) is its heading. |
-| `stack` | `title`, `items` | A pile of items under one name. The **last** item is the cover. |
+| `stack` | `title`, `items`, `description` | A pile of items under one name. The **last** item is the cover. `description` is optional: one short line shown under the title, saying what the stack is for. |
 | `card` | `item` | A single loose image or link. |
+| `area` | `title`, `w`, `h` | A soft, named zone that groups things, like "Inspiration" or "Plan". Drawn under everything else. |
 
 A loose note is always a `note` node. When a note node is dropped on a stack
 it becomes a `note` item there, and taking it out makes it a `note` node again.
 A `card` holding a `note` item is read as a `note` node.
+
+### Areas
+
+```json
+{ "id": "area-look", "type": "area", "x": 448, "y": -480, "w": 1088, "h": 768, "title": "Look and feel" }
+```
+
+`x`, `y` is the area's top-left corner and `w`, `h` its size, in board units.
+Keep all four on the 32-unit grid. **A thing belongs to an area when its centre
+is inside the area's rectangle.** Nothing else links them: to put something in
+an area, give it a position whose centre falls inside; to take it out, move it
+outside. When a thing's centre is inside two areas it belongs to the smaller.
+Moving an area in the app moves everything that belongs to it. Areas never
+stack and never take wires.
 
 ### Items
 

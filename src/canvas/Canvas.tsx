@@ -8,6 +8,7 @@ import {
   useReactFlow,
   type Edge,
   type Node,
+  type NodeChange,
   type OnConnect,
   type OnConnectEnd,
 } from "@xyflow/react";
@@ -25,15 +26,19 @@ import { GRID, snapToDots } from "./dots";
 import { hoverNode, leaveNode, trackPointer } from "./gridFx";
 import { ConnectionLine } from "./edges/ConnectionLine";
 import { LinkEdge } from "./edges/LinkEdge";
+import { AreaNode } from "./nodes/AreaNode";
 import { CardNode } from "./nodes/CardNode";
 import { NoteNode } from "./nodes/NoteNode";
 import { ProjectNode } from "./nodes/ProjectNode";
 import { StackNode } from "./nodes/StackNode";
+import { useAreas } from "./useAreas";
 import { usePaste } from "./usePaste";
 import { useStacking } from "./useStacking";
+import { useTidy } from "./useTidy";
+import { useSnapTicks } from "./useSnapTicks";
 import { useUndo } from "./useUndo";
 
-const nodeTypes = { project: ProjectNode, stack: StackNode, card: CardNode, note: NoteNode };
+const nodeTypes = { project: ProjectNode, stack: StackNode, card: CardNode, note: NoteNode, area: AreaNode };
 const edgeTypes = { link: LinkEdge };
 
 function linkEdge(source: string, target: string): Edge {
@@ -50,9 +55,10 @@ type Props = { store: BoardStore; initial: Board };
 export function Canvas({ store, initial }: Props) {
   const [nodes, setNodes, onNodesChange] = useNodesState(initial.nodes);
   const [edges, setEdges, onEdgesChange] = useEdgesState(initial.edges);
-  const { screenToFlowPosition, fitView } = useReactFlow();
+  const { screenToFlowPosition, fitView, getNode } = useReactFlow();
   const { dropTargetId, onNodeDrag, onNodeDragStop } = useStacking();
   const { commit } = useUndo();
+  useSnapTicks(dropTargetId);
   const [tool, setTool] = useState<Tool>("select");
   const [focusId, setFocusId] = useState<string | null>(null);
 
@@ -86,11 +92,12 @@ export function Canvas({ store, initial }: Props) {
       const el = document.elementFromPoint(point.clientX, point.clientY)?.closest(".react-flow__node");
       const to = el?.getAttribute("data-id");
       const from = state.fromNode.id;
-      if (!to || to === from) return;
+      // Areas never take wires.
+      if (!to || to === from || getNode(to)?.type === "area") return;
       commit();
       setEdges((es) => (connected(es, from, to) ? es : [...es, linkEdge(from, to)]));
     },
-    [commit, setEdges],
+    [commit, getNode, setEdges],
   );
 
   // Clicking a stack opens it. It doesn't select it, so nothing is left
@@ -139,6 +146,8 @@ export function Canvas({ store, initial }: Props) {
   );
 
   usePaste({ enabled: !focusId, centre, commit, onImages: addImages });
+  const areas = useAreas({ commit, centre });
+  const tidyUp = useTidy(commit);
 
   const focused = nodes.find((n) => n.id === focusId && n.type === "stack");
 
@@ -174,23 +183,34 @@ export function Canvas({ store, initial }: Props) {
           edges={edges}
           nodeTypes={nodeTypes}
           edgeTypes={edgeTypes}
-          onNodesChange={onNodesChange}
+          onNodesChange={(changes: NodeChange[]) => onNodesChange(areas.filterChanges(changes))}
           onEdgesChange={onEdgesChange}
           onConnect={onConnect}
           onConnectEnd={onConnectEnd}
           onNodeClick={onNodeClick}
-          onNodeMouseEnter={hoverNode}
+          onNodeMouseEnter={(e, n) => n.type !== "area" && hoverNode(e, n)}
           onNodeMouseLeave={leaveNode}
-          onNodeDragStart={commit}
-          onNodeDrag={onNodeDrag}
-          onNodeDragStop={onNodeDragStop}
+          onNodeDragStart={(e, n, ns) => {
+            commit();
+            areas.onDragStart(e, n, ns);
+          }}
+          onNodeDrag={(e, n, ns) => {
+            onNodeDrag(e, n, ns);
+            areas.onDrag(e, n, ns);
+          }}
+          onNodeDragStop={(e, n, ns) => {
+            onNodeDragStop(e, n, ns);
+            areas.onDragStop(e, n, ns);
+          }}
+          onSelectionStart={areas.onSelectionStart}
+          onSelectionEnd={areas.onSelectionEnd}
           onBeforeDelete={async () => {
             commit();
             return true;
           }}
           connectionMode={ConnectionMode.Loose}
           connectionLineComponent={ConnectionLine}
-          connectionRadius={40}
+          connectionRadius={72}
           defaultEdgeOptions={{ type: "link" }}
           panOnScroll
           zoomOnScroll={false}
@@ -209,7 +229,15 @@ export function Canvas({ store, initial }: Props) {
         >
           <DotGrid />
         </ReactFlow>
-        <Toolbar tool={tool} onTool={setTool} onNote={addNote} onImages={addImages} onFit={() => fitView({ padding: 0.18, duration: 500 })} />
+        <Toolbar
+          tool={tool}
+          onTool={setTool}
+          onNote={addNote}
+          onImages={addImages}
+          onArea={areas.addArea}
+          onTidy={tidyUp}
+          onFit={() => fitView({ padding: 0.18, duration: 500 })}
+        />
         <ZoomPill />
         <FocusView
           stack={focused ? { id: focused.id, ...(focused.data as StackData) } : null}

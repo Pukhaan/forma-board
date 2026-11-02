@@ -1,4 +1,4 @@
-import { Hand, ImagePlus, MousePointer2, Scan, StickyNote } from "lucide-react";
+import { Group, Hand, ImagePlus, MousePointer2, Orbit, Scan, StickyNote } from "lucide-react";
 import { useEffect, useRef, type ReactNode } from "react";
 
 export type Tool = "select" | "hand";
@@ -8,6 +8,8 @@ type Props = {
   onTool: (t: Tool) => void;
   onNote: () => void;
   onImages: (files: File[]) => void;
+  onArea: () => void;
+  onTidy: () => void;
   onFit: () => void;
 };
 
@@ -17,7 +19,7 @@ function typing(e: KeyboardEvent) {
 }
 
 /** One small bar for the few things you do on the board. Each tool has a single-key shortcut. */
-export function Toolbar({ tool, onTool, onNote, onImages, onFit }: Props) {
+export function Toolbar({ tool, onTool, onNote, onImages, onArea, onTidy, onFit }: Props) {
   const fileInput = useRef<HTMLInputElement>(null);
 
   useEffect(() => {
@@ -28,11 +30,17 @@ export function Toolbar({ tool, onTool, onNote, onImages, onFit }: Props) {
       else if (k === "h") onTool("hand");
       else if (k === "n") onNote();
       else if (k === "i") fileInput.current?.click();
+      else if (k === "a") {
+        // The new area's name field takes focus at once; keep this key out of it.
+        e.preventDefault();
+        onArea();
+      }
+      else if (k === "t") onTidy();
       else if (k === "f") onFit();
     };
     window.addEventListener("keydown", onKey);
     return () => window.removeEventListener("keydown", onKey);
-  }, [onTool, onNote, onFit]);
+  }, [onTool, onNote, onArea, onTidy, onFit]);
 
   return (
     <div className="toolbar chrome" role="toolbar" aria-label="Board tools">
@@ -49,7 +57,13 @@ export function Toolbar({ tool, onTool, onNote, onImages, onFit }: Props) {
       <ToolButton label="Image" keyHint="I" onClick={() => fileInput.current?.click()}>
         <ImagePlus />
       </ToolButton>
+      <ToolButton label="Area" keyHint="A" onClick={onArea}>
+        <Group />
+      </ToolButton>
       <span className="toolbar-rule" />
+      <ToolButton label="Tidy" keyHint="T" onClick={onTidy}>
+        <Orbit />
+      </ToolButton>
       <ToolButton label="Fit everything" keyHint="F" onClick={onFit}>
         <Scan />
       </ToolButton>

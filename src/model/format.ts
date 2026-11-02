@@ -2,7 +2,8 @@
 // read and edit by hand, so it stays flat and obvious. FORMAT.md documents it.
 
 import type { Edge, Node } from "@xyflow/react";
-import type { CardData, Item, LinkData, NoteData, ProjectData, StackData } from "./types";
+import type { AreaData, CardData, Item, LinkData, NoteData, ProjectData, StackData } from "./types";
+import { areaNode, areaSize, NEW_AREA } from "./operations";
 
 export const FORMAT_VERSION = 1;
 
@@ -13,8 +14,9 @@ type At = { id: string; x: number; y: number };
 export type FileNode =
   | (At & { type: "project"; title: string; brief: string })
   | (At & { type: "note"; text: string })
-  | (At & { type: "stack"; title: string; items: FileItem[] })
-  | (At & { type: "card"; item: FileItem });
+  | (At & { type: "stack"; title: string; description?: string; items: FileItem[] })
+  | (At & { type: "card"; item: FileItem })
+  | (At & { type: "area"; w: number; h: number; title: string });
 
 export type FileWire = { id: string; from: string; to: string; note?: string };
 
@@ -59,9 +61,13 @@ export function toBoardFile({ nodes, edges }: Board): BoardFile {
       out.push({ ...at, type: "note", text: (n.data as NoteData).text });
     } else if (n.type === "stack") {
       const d = n.data as StackData;
-      out.push({ ...at, type: "stack", title: d.title, items: d.items.map(itemOut) });
+      const description = d.description?.trim() ? { description: d.description } : {};
+      out.push({ ...at, type: "stack", title: d.title, ...description, items: d.items.map(itemOut) });
     } else if (n.type === "card") {
       out.push({ ...at, type: "card", item: itemOut((n.data as CardData).item) });
+    } else if (n.type === "area") {
+      const { w, h } = areaSize(n);
+      out.push({ ...at, type: "area", w: round(w), h: round(h), title: (n.data as AreaData).title });
     }
   }
   const wires = edges.map((e) => {
@@ -101,12 +107,15 @@ export function parseBoard(text: string, resolve: Resolve = (f) => f): Board | n
       nodes.push({ ...base, type: "note", data: { text: n.text ?? "" } });
     } else if (n.type === "stack") {
       const items = (Array.isArray(n.items) ? n.items : []).map((i) => itemIn(i, resolve)).filter((i): i is Item => !!i);
-      nodes.push({ ...base, type: "stack", data: { title: n.title ?? "Stack", items } });
+      const description = typeof n.description === "string" && n.description.trim() ? { description: n.description } : {};
+      nodes.push({ ...base, type: "stack", data: { title: n.title ?? "Stack", ...description, items } });
     } else if (n.type === "card") {
       const item = itemIn(n.item, resolve);
       // A loose note is a note node; take a card that holds one as meaning that.
       if (item?.kind === "note") nodes.push({ ...base, type: "note", data: { text: item.text ?? "" } });
       else if (item) nodes.push({ ...base, type: "card", data: { item } });
+    } else if (n.type === "area") {
+      nodes.push(areaNode(n.id, { ...position, w: Number(n.w), h: Number(n.h) }, n.title ?? NEW_AREA));
     }
   }
 

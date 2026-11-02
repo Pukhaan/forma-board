@@ -78,3 +78,22 @@ describe("pushItems", () => {
     expect(pushItems([a], [a, b]).map((i) => i.id)).toEqual(["a", "b"]);
   });
 });
+
+describe("areas and stacking", () => {
+  const area = { id: "a", type: "area", rect: box(-500, -500, 2000, 2000) };
+
+  it("never files anything into an area", () => {
+    const dragged = { id: "c1", type: "card", rect: box(60, 60) };
+    expect(resolveDrop(dragged, [area])).toEqual({ type: "none" });
+  });
+
+  it("looks past an area to what sits on it", () => {
+    const stack = { id: "s1", type: "stack", rect: box(0, 0, 200, 200) };
+    const dragged = { id: "c1", type: "card", rect: box(60, 60) };
+    expect(resolveDrop(dragged, [stack, area])).toEqual({ type: "add-to-stack", stackId: "s1" });
+  });
+
+  it("never stacks an area", () => {
+    expect(resolveDrop({ ...area, rect: box(0, 0) }, [{ id: "s1", type: "stack", rect: box(0, 0, 200, 200) }])).toEqual({ type: "none" });
+  });
+});

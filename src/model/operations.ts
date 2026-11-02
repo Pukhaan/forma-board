@@ -2,8 +2,8 @@
 // calls these; later the file layer and the AI can call the same ones.
 
 import type { Edge, Node } from "@xyflow/react";
-import { NEW_STACK, pushItems, type DropAction } from "./stacking";
-import type { CardData, Item, NoteData, StackData } from "./types";
+import { center, contains, NEW_STACK, pushItems, type DropAction, type Rect } from "./stacking";
+import type { AreaData, CardData, Item, NoteData, StackData } from "./types";
 
 type Graph = { nodes: Node[]; edges: Edge[] };
 
@@ -115,4 +115,112 @@ export function takeOut(g: Graph, stackId: string, itemId: string, at: { x: numb
   });
   const edges = rest.length ? g.edges : g.edges.filter((e) => e.source !== stackId && e.target !== stackId);
   return { nodes: [...nodes, loose], edges };
+}
+
+/** What a fresh area is called until you (or the AI) name it. */
+export const NEW_AREA = "New area";
+
+/** Areas sit under everything else, wires included, even while selected. */
+export const AREA_Z = -2000;
+
+/** The smallest an area can be, so its name always fits. */
+export const AREA_MIN = { w: 128, h: 96 };
+
+/** An area node. Its size lives on the node, so React Flow and the resizer use it directly. */
+export function areaNode(id: string, r: { x: number; y: number; w: number; h: number }, title: string): Node {
+  const w = Number.isFinite(r.w) ? Math.max(AREA_MIN.w, r.w) : 384;
+  const h = Number.isFinite(r.h) ? Math.max(AREA_MIN.h, r.h) : 256;
+  return {
+    id,
+    type: "area",
+    position: { x: r.x, y: r.y },
+    width: w,
+    height: h,
+    zIndex: AREA_Z,
+    dragHandle: ".area-title",
+    data: { title } satisfies AreaData,
+  };
+}
+
+/** An area's size: what was set on it, or what the board measured. */
+export function areaSize(n: Node) {
+  return { w: n.width ?? n.measured?.width ?? 0, h: n.height ?? n.measured?.height ?? 0 };
+}
+
+/** Something on the board with a size, in board units. */
+export type Thing = { id: string; type: string } & Rect;
+
+const snapUp = (v: number, g: number) => Math.ceil(v / g - 1e-9) * g;
+const byId = (a: { id: string }, b: { id: string }) => (a.id < b.id ? -1 : a.id > b.id ? 1 : 0);
+
+/** A thing belongs to an area when its centre is inside the area's rectangle. */
+export function insideArea(area: Rect, thing: Rect) {
+  return contains(area, center(thing));
+}
+
+/** An area around some rects, on the grid, with at least one grid unit of room on every side. */
+export function areaAround(rects: Rect[], grid: number): Rect {
+  const x0 = Math.min(...rects.map((r) => r.x));
+  const y0 = Math.min(...rects.map((r) => r.y));
+  const x1 = Math.max(...rects.map((r) => r.x + r.w));
+  const y1 = Math.max(...rects.map((r) => r.y + r.h));
+  const x = Math.floor((x0 - grid) / grid) * grid + 0;
+  const y = Math.floor((y0 - grid) / grid) * grid + 0;
+  return { x, y, w: snapUp(x1 + grid, grid) - x, h: snapUp(y1 + grid, grid) - y };
+}
+
+/** Which area each thing belongs to: the smallest area its centre is inside. */
+export function areaOwners(nodes: Thing[]) {
+  const areas = nodes.filter((n) => n.type === "area").sort((a, b) => a.w * a.h - b.w * b.h || byId(a, b));
+  const owner = new Map<string, string>();
+  for (const n of nodes) {
+    if (n.type === "area") continue;
+    const a = areas.find((r) => insideArea(r, n));
+    if (a) owner.set(n.id, a.id);
+  }
+  return owner;
+}
+
+/** Top to bottom in rows, left to right within a row: the order you'd read them in. */
+function readingOrder(ns: Thing[]) {
+  const sorted = [...ns].sort((a, b) => a.y - b.y || a.x - b.x || byId(a, b));
+  const rows: Thing[][] = [];
+  let bottom = -Infinity;
+  for (const n of sorted) {
+    if (rows.length && n.y + n.h / 2 < bottom) {
+      rows[rows.length - 1].push(n);
+      bottom = Math.max(bottom, n.y + n.h);
+    } else {
+      rows.push([n]);
+      bottom = n.y + n.h;
+    }
+  }
+  return rows.flatMap((r) => r.sort((a, b) => a.x - b.x || byId(a, b)));
+}
+
+/** Lays an area's members out in rows inside it, about as wide as the area was. */
+export function packArea(area: Thing, members: Thing[], grid: number, gap: number) {
+  const block = { w: area.w, h: area.h, members: [] as { id: string; dx: number; dy: number }[] };
+  if (!members.length) return block;
+  const pad = grid;
+  // About as wide as the area was: a row may run one gap wider, since the gaps here may be wider than the user's.
+  const inner = Math.max(area.w - 2 * pad, ...members.map((m) => m.w)) + gap;
+  let x = 0;
+  let y = 0;
+  let rowH = 0;
+  let right = 0;
+  for (const m of readingOrder(members)) {
+    if (x > 0 && x + m.w > inner) {
+      y = snapUp(y + rowH + gap, grid);
+      x = 0;
+      rowH = 0;
+    }
+    block.members.push({ id: m.id, dx: pad + x, dy: pad + y });
+    right = Math.max(right, x + m.w);
+    rowH = Math.max(rowH, m.h);
+    x = snapUp(x + m.w + gap, grid);
+  }
+  block.w = snapUp(right + 2 * pad, grid);
+  block.h = snapUp(y + rowH + 2 * pad, grid);
+  return block;
 }
