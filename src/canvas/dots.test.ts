@@ -1,67 +1,63 @@
 import { describe, expect, it } from "vitest";
-import { axisDots, dotDiameter, followPan, snapSprite, SPACING, spriteSide } from "./dots";
+import { axisDots, dotStyle, FADE_OUT, FULL, GRID } from "./dots";
 
-describe("followPan", () => {
-  it("starts the pattern from the board's position", () => {
-    expect(followPan({ x: 0, y: 0 }, null, [70, -10, 1])).toEqual({ x: 70 - 2 * SPACING, y: SPACING - 10 });
+/** Board positions of the dots visible on a 1000px-wide strip at a given pan and zoom. */
+const visible = (x: number, zoom: number) => {
+  const { spacing } = dotStyle(zoom);
+  const { first, count } = axisDots(x, spacing, 1000);
+  return Array.from({ length: count }, (_, i) => (first + i) * GRID);
+};
+
+describe("dotStyle", () => {
+  it("spreads the dots apart as you zoom in, and brings them together as you zoom out", () => {
+    expect(dotStyle(1).spacing).toBe(GRID);
+    expect(dotStyle(2).spacing).toBe(GRID * 2);
+    expect(dotStyle(0.5).spacing).toBe(GRID / 2);
   });
 
-  it("slides the dots exactly as far as the board pans", () => {
-    const o = followPan({ x: 5, y: 5 }, [100, 100, 0.8], [112, 95, 0.8]);
-    expect(o).toEqual({ x: 17, y: 0 });
+  it("grows the dots with the zoom, within limits", () => {
+    expect(dotStyle(1).size).toBe(2);
+    expect(dotStyle(4).size).toBe(4);
+    expect(dotStyle(2).size).toBeGreaterThan(dotStyle(1).size);
+    expect(dotStyle(0.01).size).toBe(1);
+    expect(dotStyle(100).size).toBe(5);
   });
 
-  it("keeps the dots still while zooming, even when the view shifts to follow the fingers", () => {
-    const start = { x: 7, y: 9 };
-    let o = start;
-    let prev: readonly [number, number, number] = [0, 0, 1];
-    for (const next of [[-20, -14, 1.1], [-45, -30, 1.25], [-80, -52, 1.5]] as const) {
-      o = followPan(o, prev, next);
-      prev = next;
-    }
-    expect(o).toEqual(start);
+  it("fades the whole grid out only where it would crowd into noise", () => {
+    expect(dotStyle(FULL / GRID).alpha).toBe(1);
+    expect(dotStyle(1).alpha).toBe(1);
+    expect(dotStyle(FADE_OUT / GRID).alpha).toBe(0);
+    const mid = dotStyle((FADE_OUT + FULL) / 2 / GRID).alpha;
+    expect(mid).toBeGreaterThan(0);
+    expect(mid).toBeLessThan(1);
   });
 
-  it("stays within one spacing however far you pan", () => {
-    const o = followPan({ x: 0, y: 0 }, [0, 0, 1], [10_000.5, -9_999.25, 1]);
-    expect(o.x).toBeGreaterThanOrEqual(0);
-    expect(o.x).toBeLessThan(SPACING);
-    expect(o.y).toBeGreaterThanOrEqual(0);
-    expect(o.y).toBeLessThan(SPACING);
+  it("copes with a zoom of zero or nonsense", () => {
+    expect(dotStyle(0).spacing).toBe(GRID);
+    expect(dotStyle(Number.NaN).spacing).toBe(GRID);
   });
 });
 
-describe("axisDots", () => {
+describe("the dots belong to the board", () => {
+  it("only ever shows dots on the board grid, at any pan and zoom", () => {
+    for (const [x, zoom] of [[100, 1], [-337.5, 1.7], [12.25, 0.6], [900, 3.9]]) {
+      for (const p of visible(x, zoom)) expect(Math.abs(p % GRID)).toBe(0);
+    }
+  });
+
+  it("puts each dot exactly where the board puts that point", () => {
+    const x = -337.5;
+    const zoom = 1.7;
+    const { spacing } = dotStyle(zoom);
+    const { first } = axisDots(x, spacing, 1000);
+    const boardX = first * GRID;
+    expect(x + first * spacing).toBeCloseTo(x + boardX * zoom, 9);
+  });
+
   it("covers the screen", () => {
     const { first, count } = axisDots(10, 50, 200);
     expect(first).toBe(0);
     expect(count).toBe(4);
-  });
-
-  it("includes dots just off screen when padded", () => {
     expect(axisDots(-130, 50, 200, 31).first).toBe(2);
-  });
-});
-
-describe("pixel snapping", () => {
-  it("rounds dots to whole device pixels", () => {
-    expect(dotDiameter(2, 2)).toBe(4);
-    expect(dotDiameter(1.5, 1)).toBe(2);
-    expect(dotDiameter(0.2, 1)).toBe(1);
-  });
-
-  it("centres the dot on a pixel corner or centre to match its parity", () => {
-    for (const d of [1, 2, 3, 4]) expect(spriteSide(d) % 2).toBe(d % 2);
-  });
-
-  it("places sprites on whole device pixels within half a pixel of the true spot", () => {
-    for (const dpr of [1, 2, 3]) {
-      for (const css of [0, 0.3, 10.25, 99.77, -12.6]) {
-        const side = spriteSide(dotDiameter(2, dpr));
-        const left = snapSprite(css, dpr, side);
-        expect(Number.isInteger(left)).toBe(true);
-        expect(Math.abs(left + side / 2 - css * dpr)).toBeLessThanOrEqual(0.5);
-      }
-    }
   });
 });

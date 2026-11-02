@@ -1,31 +1,18 @@
 import { useStoreApi } from "@xyflow/react";
 import { useEffect, useRef } from "react";
-import { axisDots, dotDiameter, followPan, snapSprite, SPACING, spriteSide, type Offset } from "./dots";
+import { axisDots, dotStyle } from "./dots";
 
 type Transform = readonly [number, number, number];
 
-/** Draw one dot into a small sprite, centred, so every dot on screen is a pixel-exact copy. */
-function makeSprite(color: string, diameter: number) {
-  const side = spriteSide(diameter);
-  const sprite = document.createElement("canvas");
-  sprite.width = side;
-  sprite.height = side;
-  const ctx = sprite.getContext("2d");
-  if (ctx) {
-    ctx.fillStyle = color;
-    ctx.beginPath();
-    ctx.arc(side / 2, side / 2, diameter / 2, 0, Math.PI * 2);
-    ctx.fill();
-  }
-  return { sprite, side };
-}
-
 /**
- * The dot grid. One canvas, drawn straight from React Flow's store in the same
- * tick the viewport moves, so it never trails the board. Dots keep one size and
- * one spacing at every zoom and sit on whole device pixels, so they stay crisp.
- * Panning slides them with the board; zooming leaves them exactly where they
- * are (see `followPan`).
+ * The dot grid. The dots belong to the board: they sit at fixed board
+ * positions, so zooming spreads them apart or brings them together (and grows
+ * or shrinks them) along with everything else, and no dot ever pops in, pops
+ * out or jumps. Zoomed far out the whole grid fades together, see `dotStyle`.
+ *
+ * One canvas, drawn straight from React Flow's store in the same tick the
+ * viewport moves, so it never trails the board. Dots are drawn at their exact
+ * positions so they glide smoothly while you zoom.
  *
  * Colour and size come from the `--dot` and `--dot-size` tokens.
  */
@@ -41,35 +28,41 @@ export function DotGrid() {
     let width = 0;
     let height = 0;
     let dpr = 1;
-    let dot = makeSprite("transparent", 1);
+    let color = "rgba(0, 0, 0, 0.2)";
+    let base = 2;
     let drawn: Transform | null = null;
-    let offset: Offset = { x: 0, y: 0 };
 
     const draw = (t: Transform) => {
-      offset = followPan(offset, drawn, t);
       drawn = t;
+      const [x, y, zoom] = t;
       ctx.setTransform(1, 0, 0, 1, 0, 0);
       ctx.clearRect(0, 0, canvas.width, canvas.height);
-      const pad = dot.side / dpr;
-      const cols = axisDots(offset.x, SPACING, width, pad);
-      const rows = axisDots(offset.y, SPACING, height, pad);
-      const lefts = new Array<number>(cols.count);
-      for (let c = 0; c < cols.count; c++) {
-        lefts[c] = snapSprite(offset.x + (cols.first + c) * SPACING, dpr, dot.side);
+      const { spacing, size, alpha } = dotStyle(zoom, base);
+      if (alpha < 0.005) return;
+      const r = size / 2;
+      const cols = axisDots(x, spacing, width, r);
+      const rows = axisDots(y, spacing, height, r);
+      ctx.setTransform(dpr, 0, 0, dpr, 0, 0);
+      ctx.globalAlpha = alpha;
+      ctx.fillStyle = color;
+      ctx.beginPath();
+      for (let j = 0; j < rows.count; j++) {
+        const cy = y + (rows.first + j) * spacing;
+        for (let i = 0; i < cols.count; i++) {
+          const cx = x + (cols.first + i) * spacing;
+          ctx.moveTo(cx + r, cy);
+          ctx.arc(cx, cy, r, 0, Math.PI * 2);
+        }
       }
-      for (let r = 0; r < rows.count; r++) {
-        const top = snapSprite(offset.y + (rows.first + r) * SPACING, dpr, dot.side);
-        for (let c = 0; c < cols.count; c++) ctx.drawImage(dot.sprite, lefts[c], top);
-      }
+      ctx.fill();
+      ctx.globalAlpha = 1;
     };
-    // Redraw in place (resize, theme): same transform, so the dots stay put.
     const redraw = () => draw(drawn ?? store.getState().transform);
 
     const readTokens = () => {
       const style = getComputedStyle(canvas);
-      const color = style.getPropertyValue("--dot").trim() || "rgba(0, 0, 0, 0.2)";
-      const size = parseFloat(style.getPropertyValue("--dot-size")) || 2;
-      dot = makeSprite(color, dotDiameter(size, dpr));
+      color = style.getPropertyValue("--dot").trim() || color;
+      base = parseFloat(style.getPropertyValue("--dot-size")) || base;
     };
 
     // Size the backing store to whole device pixels so canvas pixels are screen pixels.
