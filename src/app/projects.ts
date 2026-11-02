@@ -7,6 +7,24 @@ import { sampleEdges, sampleNodes } from "../model/sample";
 import { BOARD_FILE, join, seedSample } from "../store/folder";
 
 const LAST = "forma.lastProject";
+const RECENT = "forma.recentProjects";
+/** How many recent projects the project menu offers. */
+const RECENT_MAX = 6;
+
+/** The recent list with `root` first, each folder once, the oldest let go past `max`. */
+export function withRecent(list: string[], root: string, max = RECENT_MAX): string[] {
+  return [root, ...list.filter((r) => r !== root)].slice(0, max);
+}
+
+/** Folders opened lately, the latest first. */
+export function recentProjects(): string[] {
+  try {
+    const list = JSON.parse(localStorage.getItem(RECENT) ?? "[]");
+    return Array.isArray(list) ? list.filter((r): r is string => typeof r === "string") : [];
+  } catch {
+    return [];
+  }
+}
 
 export const inApp = typeof window !== "undefined" && "__TAURI_INTERNALS__" in window;
 
@@ -20,8 +38,10 @@ export function lastProject(): string | null {
 
 export function rememberProject(root: string | null) {
   try {
-    if (root) localStorage.setItem(LAST, root);
-    else localStorage.removeItem(LAST);
+    if (root) {
+      localStorage.setItem(LAST, root);
+      localStorage.setItem(RECENT, JSON.stringify(withRecent(recentProjects(), root)));
+    } else localStorage.removeItem(LAST);
   } catch {
     // Not remembered; the app just asks again next time.
   }

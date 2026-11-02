@@ -70,7 +70,13 @@ export default function App() {
         <>
           {/* Keyed by folder, so switching projects starts a fresh board (and undo history). */}
           <Canvas key={opened.store.root ?? "browser"} store={opened.store} initial={opened.board} />
-          <ProjectChip name={opened.store.name} root={opened.store.root} onSwitch={openFolder} onClose={close} />
+          <ProjectChip
+            name={opened.store.name}
+            root={opened.store.root}
+            onSwitch={openFolder}
+            onOpen={(root) => void openStore(folderStore(root))}
+            onClose={close}
+          />
         </>
       ) : (
         inApp && <Welcome error={error} busy={busy} onOpen={openFolder} onSample={openSample} />

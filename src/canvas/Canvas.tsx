@@ -257,7 +257,9 @@ export function Canvas({ store, initial }: Props) {
           snapGrid={[GRID, GRID]}
           nodeDragThreshold={3}
           minZoom={0.1}
-          maxZoom={4}
+          // Past 200% WebKit stretches the board's cached raster (it never
+          // re-renders a layer for a transform's scale), so text goes soft.
+          maxZoom={2}
           fitView
           fitViewOptions={{ padding: 0.18 }}
           proOptions={{ hideAttribution: true }}
