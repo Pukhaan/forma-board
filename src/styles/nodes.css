@@ -43,7 +43,7 @@
 
 /* Project: the dark block everything connects back to. */
 .project {
-  width: 340px;
+  width: 352px; /* 11 dots: both edges land on the grid */
   padding: 24px 28px 26px;
   color: #f5f5f3;
   background: var(--ink);
@@ -81,7 +81,7 @@
 
 /* Note: research in words. */
 .note {
-  width: 260px;
+  width: 256px; /* 8 dots: both edges land on the grid */
   padding: 16px 18px 18px;
   background: var(--card);
   border-radius: 12px;

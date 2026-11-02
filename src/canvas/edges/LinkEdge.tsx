@@ -7,7 +7,7 @@ import {
   type InternalNode,
 } from "@xyflow/react";
 import { useState } from "react";
-import { wireEnds, wirePath } from "../../model/geometry";
+import { wireEnds, wireFade, wirePath } from "../../model/geometry";
 import type { LinkData } from "../../model/types";
 import { useCanvasUi } from "../context";
 
@@ -33,6 +33,8 @@ export function LinkEdge({ id, source, target, data, selected }: EdgeProps<LinkE
 
   const [s, t] = wireEnds(rectOf(a), rectOf(b));
   const { path, mid } = wirePath(s, t);
+  const fade = wireFade(s, t);
+  const gradient = `wire-fade-${id}`;
   const note = data?.note;
   const hot = selected || hover;
 
@@ -47,9 +49,16 @@ export function LinkEdge({ id, source, target, data, selected }: EdgeProps<LinkE
 
   return (
     <>
-      <path d={path} className="wire" data-hot={hot || undefined} />
-      <circle cx={s.x} cy={s.y} r={2.5} className="wire-end" data-hot={hot || undefined} />
-      <circle cx={t.x} cy={t.y} r={2.5} className="wire-end" data-hot={hot || undefined} />
+      {/* A thin line that fades in out of one thing and out into the other: no hard ends. */}
+      <defs>
+        <linearGradient id={gradient} gradientUnits="userSpaceOnUse" x1={s.x} y1={s.y} x2={t.x} y2={t.y}>
+          <stop offset={0} className="wire-stop" data-hot={hot || undefined} stopOpacity={0} />
+          <stop offset={fade.start} className="wire-stop" data-hot={hot || undefined} />
+          <stop offset={fade.end} className="wire-stop" data-hot={hot || undefined} />
+          <stop offset={1} className="wire-stop" data-hot={hot || undefined} stopOpacity={0} />
+        </linearGradient>
+      </defs>
+      <path d={path} className="wire" stroke={`url(#${gradient})`} data-hot={hot || undefined} />
       <path
         d={path}
         className="wire-hit"

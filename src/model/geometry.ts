@@ -71,3 +71,18 @@ export function wirePath(s: Anchor, t: Anchor) {
 export function clamp(v: number, min: number, max: number) {
   return Math.min(max, Math.max(min, v));
 }
+
+/** How far a wire takes to fade in from a thing and out into the next, in board units. */
+export const WIRE_FADE = 40;
+
+/**
+ * Where a wire's fade ends and starts again, as fractions of the way from one
+ * end to the other. A wire never touches what it connects: it comes out of
+ * nothing and goes back into nothing. Short wires fade over at most a third of
+ * their length at each end, so they never vanish.
+ */
+export function wireFade(s: { x: number; y: number }, t: { x: number; y: number }, fade = WIRE_FADE) {
+  const length = Math.hypot(t.x - s.x, t.y - s.y);
+  const f = length > 0 ? Math.min(1 / 3, fade / length) : 1 / 3;
+  return { start: f, end: 1 - f };
+}
