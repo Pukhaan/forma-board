@@ -117,6 +117,25 @@ export function takeOut(g: Graph, stackId: string, itemId: string, at: { x: numb
   return { nodes: [...nodes, loose], edges };
 }
 
+/**
+ * Changes one item wherever it is: a loose card or an item in a stack. Nodes
+ * that don't hold it are left as they are.
+ */
+export function patchItem(nodes: Node[], itemId: string, patch: Partial<Item>): Node[] {
+  return nodes.map((n) => {
+    if (n.type === "card") {
+      const { item } = n.data as CardData;
+      return item.id === itemId ? { ...n, data: { ...n.data, item: { ...item, ...patch } } } : n;
+    }
+    if (n.type === "stack") {
+      const { items } = n.data as StackData;
+      if (!items.some((i) => i.id === itemId)) return n;
+      return { ...n, data: { ...n.data, items: items.map((i) => (i.id === itemId ? { ...i, ...patch } : i)) } };
+    }
+    return n;
+  });
+}
+
 /** What a fresh area is called until you (or the AI) name it. */
 export const NEW_AREA = "New area";
 

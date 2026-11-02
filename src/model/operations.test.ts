@@ -1,6 +1,6 @@
 import type { Edge, Node } from "@xyflow/react";
 import { describe, expect, it } from "vitest";
-import { applyDrop, itemsOf, moveWires, nodeFromItem, reorderStack, takeOut } from "./operations";
+import { applyDrop, itemsOf, moveWires, nodeFromItem, patchItem, reorderStack, takeOut } from "./operations";
 import type { Item, StackData } from "./types";
 
 const item = (id: string) => ({ id, kind: "image" as const });
@@ -141,5 +141,18 @@ describe("takeOut", () => {
     const out = takeOut(g, "s1", "a", { x: 0, y: 0 });
     expect(out.nodes.map((n) => n.type)).toEqual(["card", "card"]);
     expect(out.edges).toEqual([]);
+  });
+});
+
+describe("patchItem", () => {
+  it("changes a loose card's item and an item in a stack, and nothing else", () => {
+    const nodes = [card("a"), stack("s", ["b", "c"]), note("n", "hi")];
+    const once = patchItem(nodes, "a", { title: "A" });
+    expect((once[0].data as { item: Item }).item.title).toBe("A");
+    expect(once[1]).toBe(nodes[1]);
+    const twice = patchItem(nodes, "c", { title: "C" });
+    expect(itemsIn(twice[1]).map((i) => i.title)).toEqual([undefined, "C"]);
+    expect(twice[0]).toBe(nodes[0]);
+    expect(twice[2]).toBe(nodes[2]);
   });
 });

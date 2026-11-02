@@ -11,6 +11,8 @@ export type CanvasUi = {
   openLive: (id: string, item: Item, media: HTMLElement) => void;
   /** The card whose live view is open, hidden on the board meanwhile. */
   liveId: string | null;
+  /** Change one item wherever it is (a loose card or in a stack), as one undoable edit. */
+  updateItem: (itemId: string, patch: Partial<Item>) => void;
 };
 
 export const CanvasUiContext = createContext<CanvasUi>({
@@ -18,6 +20,7 @@ export const CanvasUiContext = createContext<CanvasUi>({
   commit: () => {},
   openLive: () => {},
   liveId: null,
+  updateItem: () => {},
 });
 
 export const useCanvasUi = () => useContext(CanvasUiContext);

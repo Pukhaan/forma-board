@@ -156,6 +156,29 @@
   visibility: hidden;
 }
 
+/* An image with a note: a corner of paper peeks out from behind its top
+   right. Sized in percent of the tile, like the pile's (nodes.css), so the
+   two match as a tile flies home. Static, painted once into the tile's own
+   layer: moving the tile never repaints it. */
+.ft[data-note]::before {
+  content: "";
+  position: absolute;
+  top: 0;
+  right: 0;
+  z-index: -1;
+  width: 18%;
+  aspect-ratio: 1;
+  background: var(--paper);
+  border-radius: 2px;
+  box-shadow: var(--paper-shadow);
+  transform: translate(30%, -30%) rotate(8deg);
+  pointer-events: none;
+}
+
+.ft[data-lifted]::before {
+  visibility: hidden;
+}
+
 .ft[data-raised] .ft-media {
   box-shadow: var(--focus-tile-held);
 }

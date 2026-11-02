@@ -15,6 +15,9 @@ function cardRect(id: string): Rect | null {
   return el ? rectOf(el) : null;
 }
 
+const typing = (t: EventTarget | null) =>
+  t instanceof HTMLElement && (t.isContentEditable || t.matches("input, textarea, select"));
+
 /**
  * A live card from the board, opened big: it grows out of its card, with the
  * board blurred behind, the way an image lifts out of an opened stack. Esc or
@@ -37,8 +40,8 @@ function Opened({ open, onDone }: { open: OpenLive; onDone: () => void }) {
       if (e.key === "Escape") {
         e.stopPropagation();
         putBack();
-      } else if (e.key === "Backspace" || e.key === "Delete") {
-        // Not a delete of the card underneath.
+      } else if ((e.key === "Backspace" || e.key === "Delete") && !typing(e.target)) {
+        // Not a delete of the card underneath (typing in a dial still works).
         e.stopPropagation();
       }
     };

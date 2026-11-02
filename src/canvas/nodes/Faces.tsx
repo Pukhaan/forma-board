@@ -58,24 +58,18 @@ export function NoteFace({ item, read = false }: { item: Item; read?: boolean })
 }
 
 /**
- * A live card at rest: its title on a soft surface. It is what shows in a
- * pile, in an opened stack, and on the board until the component runs.
+ * A live card at rest: a soft surface, nothing written on it (its title sits
+ * under the card, like an image's). It is what shows in a pile, in an opened
+ * stack, and on the board until the component runs.
  */
-export function LiveFace({ item }: { item: Item }) {
-  return (
-    <span className="face face-live">
-      <span className="face-in">
-        <span className="face-live-kicker">Live</span>
-        <span className="face-live-title">{item.title?.trim() || "Prototype"}</span>
-      </span>
-    </span>
-  );
+export function LiveFace() {
+  return <span className="face face-live" />;
 }
 
 /** Whatever an item is, drawn to fill its box. */
 export function ItemFace({ item, read }: { item: Item; read?: boolean }) {
   if (item.kind === "note") return <NoteFace item={item} read={read} />;
-  if (item.kind === "live") return <LiveFace item={item} />;
+  if (item.kind === "live") return <LiveFace />;
   if (item.kind === "link") return <LinkFace item={item} />;
   return item.src ? <img src={item.src} alt={item.title ?? ""} draggable={false} /> : null;
 }

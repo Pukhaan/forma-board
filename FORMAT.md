@@ -99,12 +99,23 @@ Every item has a unique `id` (unique within the board) and a `kind`. A missing
 | `w`, `h` | image: natural size in pixels, so the board keeps the proportions; live: the shape it is drawn at (4:3 when missing) |
 | `text` | note: the text. The first paragraph (before a blank line) is its heading |
 | `url` | link: the full address, starting with `https://` or `http://` |
+| `dials` | live: what its [dials](#dials) were last set to, by name. Forma writes it when you tune them |
 | `title` | optional: an image's caption, a link's name, or a live card's name |
+| `note` | optional, image: why it was saved, in plain words. Shown under the image when it is opened; the image gets a corner of paper on the board |
+| `palette` | optional, image: its main colours, strongest first, as `#rrggbb` (at most five). The app works it out once from the picture; remove it to have it worked out again |
+| `source` | optional, image: where it came from. A web address (`https://...`) opens in the browser; anything else, like an author's name, is shown as written |
+| `added` | optional: the day it was put on the board, `YYYY-MM-DD`. The app sets it on images it brings in |
 
 ```json
 { "id": "n1", "kind": "note", "text": "Who buys\n\nSmall brand owners, 28 to 40." }
 { "id": "l1", "kind": "link", "url": "https://linear.app/method", "title": "Linear Method" }
+{ "id": "i1", "kind": "image", "file": "media/i1.jpg", "w": 1200, "h": 900,
+  "note": "The calm blue they pointed at.", "palette": ["#1d3b6f", "#f4f1ea"],
+  "source": "https://www.are.na/block/2931", "added": "2026-11-02" }
 ```
+
+A `note`, `palette`, `source` or `added` that isn't well formed (not text, not
+hex colours, not a date) is dropped; the item itself is kept.
 
 An item missing what its kind needs (a link with no `url`, a live card with
 neither `file` nor `src`), or with a kind the app doesn't know, is skipped.
@@ -131,7 +142,33 @@ it came from, to show how something moves or responds.
   when opened. `w`, `h` only set the shape it is drawn at.
 - On the board it only runs while it is on screen and zoomed in far enough to
   read, and at most four run at once. It takes no pointer there, so it drags
-  like any card; open it (double-click, or its Open pill) to play with it.
+  like any card; a click opens it big to play with.
+- It reads **where it runs** from its address: `#card` on the board, `#open`
+  opened big. On the board it should be quiet: only the thing itself, playing
+  on its own (nobody can hover it there), with no words, hints or controls.
+  Its title is drawn under the card by Forma.
+
+#### Dials
+
+A component can ask Forma for **dials**: sliders and switches shown beside it
+while it is open. It sends its config once, and Forma sends the values back
+every time one changes (and once at the start). What they were last set to is
+kept on the item as `dials`, and handed back whenever the component runs.
+
+```js
+parent.postMessage({ forma: "dials", name: "Stack fan", config: {
+  spread: [1, 0.4, 1.8, 0.05],                 // a slider: default, min, max, step
+  loop: true,                                  // a switch
+  spring: { stiffness: 420, damping: 31 },     // a group (any object)
+} }, "*");
+addEventListener("message", (e) => {
+  if (e.data?.forma === "values") apply(e.data.values);  // { spread: 1.2, loop: true, spring: { … } }
+});
+```
+
+A bare number is a slider too, with a range guessed from its name and size.
+The sample component (`public/live/hello.html` in the app) shows the whole
+pattern, including starting from the defaults when it runs outside Forma.
 
 ### Wires
 

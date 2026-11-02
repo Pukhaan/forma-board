@@ -12,10 +12,10 @@ import {
   type OnConnect,
   type OnConnectEnd,
 } from "@xyflow/react";
-import { useCallback, useEffect, useMemo, useState } from "react";
-import { newId, reorderStack, takeOut } from "../model/operations";
+import { useCallback, useEffect, useMemo, useState, type MouseEvent as ReactMouseEvent } from "react";
+import { newId, patchItem, reorderStack, takeOut } from "../model/operations";
 import type { Board } from "../model/format";
-import type { Item, StackData } from "../model/types";
+import type { CardData, Item, StackData } from "../model/types";
 import type { BoardStore } from "../store/types";
 import { Toolbar, type Tool } from "../chrome/Toolbar";
 import { ZoomPill } from "../chrome/ZoomPill";
@@ -107,13 +107,16 @@ export function Canvas({ store, initial }: Props) {
     [commit, getNode, setEdges],
   );
 
-  // Clicking a stack opens it. It doesn't select it, so nothing is left
-  // highlighted when you close it again.
+  // Clicking a stack opens it, and so does clicking a live card (big). Neither
+  // is selected, so nothing is left highlighted when you close it again.
   const onNodeClick = useCallback(
-    (_: unknown, node: Node) => {
-      if (node.type !== "stack") return;
+    (e: ReactMouseEvent, node: Node) => {
+      const liveItem = node.type === "card" && (node.data as CardData).item.kind === "live";
+      if (node.type !== "stack" && !liveItem) return;
       setNodes((ns) => ns.map((n) => (n.selected ? { ...n, selected: false } : n)));
-      setFocusId(node.id);
+      if (node.type === "stack") return setFocusId(node.id);
+      const media = (e.currentTarget as HTMLElement).querySelector<HTMLElement>(".card-media");
+      if (media) setLive((l) => l ?? { id: node.id, item: (node.data as CardData).item, from: rectOf(media) });
     },
     [setNodes],
   );
@@ -133,9 +136,9 @@ export function Canvas({ store, initial }: Props) {
   }, [centre, commit, setNodes]);
 
   const addImages = useCallback(
-    async (files: File[]) => {
+    async (files: File[], source?: string) => {
       const p = centre();
-      const read = await Promise.allSettled(files.map((f) => store.importImage(f)));
+      const read = await Promise.allSettled(files.map((f) => store.importImage(f, source)));
       const items = read.flatMap((r) => (r.status === "fulfilled" ? [r.value] : []));
       if (!items.length) return;
       commit();
@@ -183,9 +186,16 @@ export function Canvas({ store, initial }: Props) {
   const openLive = useCallback((id: string, item: Item, media: HTMLElement) => {
     setLive((l) => l ?? { id, item, from: rectOf(media) });
   }, []);
+  const updateItem = useCallback(
+    (itemId: string, patch: Partial<Item>) => {
+      commit();
+      setNodes((ns) => patchItem(ns, itemId, patch));
+    },
+    [commit, setNodes],
+  );
   const ui = useMemo(
-    () => ({ dropTargetId, commit, openLive, liveId: live?.id ?? null }),
-    [dropTargetId, commit, openLive, live?.id],
+    () => ({ dropTargetId, commit, openLive, liveId: live?.id ?? null, updateItem }),
+    [dropTargetId, commit, openLive, live?.id, updateItem],
   );
 
   return (

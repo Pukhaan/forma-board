@@ -20,6 +20,16 @@ export type Item = {
   h?: number;
   url?: string;
   text?: string;
+  /** A live card: what its dials were last tuned to, by name (see FORMAT.md). */
+  dials?: Record<string, unknown>;
+  /** An image: why it was saved, in your words. */
+  note?: string;
+  /** An image: its main colours as hex, the strongest first. Worked out by the app once. */
+  palette?: string[];
+  /** An image: where it came from, a web address or plain words like an author's name. */
+  source?: string;
+  /** When it was put on the board, as an ISO date (YYYY-MM-DD). */
+  added?: string;
 };
 
 /** The client or project everything connects back to. */

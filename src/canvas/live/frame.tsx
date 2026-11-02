@@ -1,5 +1,6 @@
-import type { SyntheticEvent } from "react";
+import type { Ref, SyntheticEvent } from "react";
 import type { Item } from "../../model/types";
+import { postValues } from "./dials";
 
 /**
  * Only scripts: no same origin, so a component can't reach the app, the
@@ -7,21 +8,33 @@ import type { Item } from "../../model/types";
  */
 export const LIVE_SANDBOX = "allow-scripts";
 
-/** Shows the frame once its page has loaded, without a re-render. */
-const markLoaded = (e: SyntheticEvent<HTMLIFrameElement>) => {
-  e.currentTarget.dataset.loaded = "";
-};
+/**
+ * Where a component runs. On the board (`card`) it is small and takes no
+ * pointer, so it plays quietly on its own; opened big (`open`) it is the whole
+ * thing. It reads this from its address: `#card` or `#open`.
+ */
+export type LiveMode = "card" | "open";
+
+type Props = { item: Item; mode: LiveMode; className: string; ref?: Ref<HTMLIFrameElement> };
 
 /** A live card's component, running in its own sandboxed frame. */
-export function LiveFrame({ item, className }: { item: Item; className: string }) {
+export function LiveFrame({ item, mode, className, ref }: Props) {
+  // Shows the frame once its page has loaded, without a re-render, and hands
+  // it what its dials were last tuned to.
+  const onLoad = (e: SyntheticEvent<HTMLIFrameElement>) => {
+    const frame = e.currentTarget;
+    frame.dataset.loaded = "";
+    if (item.dials) postValues(frame, item.dials);
+  };
   return (
     <iframe
+      ref={ref}
       className={className}
-      src={item.src}
+      src={`${item.src}#${mode}`}
       sandbox={LIVE_SANDBOX}
       loading="lazy"
-      title={item.title ?? "Live card"}
-      onLoad={markLoaded}
+      aria-label={item.title ?? "Live card"}
+      onLoad={onLoad}
     />
   );
 }

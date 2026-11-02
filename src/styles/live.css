@@ -28,34 +28,13 @@
   pointer-events: none;
 }
 
-/* The one action, quiet, only on hover. */
-.live-open {
-  position: absolute;
-  right: 10px;
-  bottom: 10px;
-  z-index: 1;
-  padding: 4px 11px;
-  font-size: 11.5px;
-  color: var(--ink);
-  background: rgba(255, 255, 255, 0.94);
-  border-radius: 999px;
-  box-shadow: 0 1px 2px rgba(18, 18, 16, 0.08), 0 4px 12px rgba(18, 18, 16, 0.1);
-  opacity: 0;
-  pointer-events: none;
-  transition: opacity 0.18s ease, background 0.15s ease;
+/* A click opens it big, the way a click opens a stack. */
+.card[data-kind="live"] .card-media {
+  cursor: zoom-in;
 }
 
-.card[data-kind="live"]:hover .live-open {
-  opacity: 1;
-  pointer-events: auto;
-}
-
-.react-flow__node.dragging .live-open {
-  opacity: 0;
-}
-
-.live-open:hover {
-  background: #ffffff;
+.react-flow__node.dragging .card[data-kind="live"] .card-media {
+  cursor: grabbing;
 }
 
 /* While it's open big, its card on the board waits hidden underneath. */
@@ -100,4 +79,140 @@
   letter-spacing: -0.01em;
   color: var(--ink);
   white-space: nowrap;
+}
+
+/* Its dials, beside it: a quiet white panel that grows out with the card.
+   Each slider is a row you drag across; the fill shows where it sits. */
+.dials {
+  position: absolute;
+  top: 0;
+  left: calc(100% + 20px);
+  box-sizing: border-box;
+  width: 232px;
+  padding: 10px;
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+  background: var(--card);
+  border-radius: var(--r-chrome);
+  box-shadow: var(--shadow-chrome);
+  font-family: var(--font);
+  user-select: none;
+  -webkit-user-select: none;
+  animation: dials-in 0.36s var(--ease-out) both;
+}
+
+@keyframes dials-in {
+  from {
+    opacity: 0;
+    transform: translateX(-6px);
+  }
+}
+
+.dials-title {
+  padding: 2px 4px 6px;
+  font-size: 12.5px;
+  font-weight: 600;
+  letter-spacing: -0.01em;
+  color: var(--ink);
+}
+
+.dials-group {
+  padding: 8px 4px 2px;
+  font-size: 11px;
+  color: var(--ink-3);
+}
+
+.dial {
+  position: relative;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  height: 30px;
+  padding: 0 10px;
+  overflow: hidden;
+  font: inherit;
+  color: inherit;
+  background: rgba(22, 22, 21, 0.035);
+  border-radius: 8px;
+  outline: none;
+  isolation: isolate;
+}
+
+.dial-slider {
+  cursor: ew-resize;
+  touch-action: none;
+}
+
+/* The fill: a layer scaled from the left, so dragging only moves a transform. */
+.dial-slider::before {
+  content: "";
+  position: absolute;
+  inset: 0;
+  z-index: -1;
+  background: rgba(22, 22, 21, 0.07);
+  transform: scaleX(var(--fill, 0));
+  transform-origin: 0 50%;
+  transition: transform 0.12s var(--ease-out);
+}
+
+.dial-slider[data-dragging]::before {
+  transition: none;
+}
+
+.dial:hover,
+.dial:focus-visible {
+  background: rgba(22, 22, 21, 0.05);
+}
+
+.dial-slider[data-dragging]::before,
+.dial-slider:focus-visible::before {
+  background: rgba(22, 22, 21, 0.1);
+}
+
+.dial-label {
+  font-size: 12px;
+  color: var(--ink-2);
+}
+
+.dial-value {
+  font: 11.5px var(--mono);
+  font-variant-numeric: tabular-nums;
+  color: var(--ink);
+}
+
+.dial-switch {
+  width: 100%;
+  border: 0;
+  cursor: pointer;
+}
+
+.dial-toggle {
+  position: relative;
+  width: 24px;
+  height: 14px;
+  background: rgba(22, 22, 21, 0.14);
+  border-radius: 999px;
+  transition: background-color 0.18s ease;
+}
+
+.dial-toggle::after {
+  content: "";
+  position: absolute;
+  top: 2px;
+  left: 2px;
+  width: 10px;
+  height: 10px;
+  background: #ffffff;
+  border-radius: 50%;
+  box-shadow: 0 1px 2px rgba(18, 18, 16, 0.2);
+  transition: transform 0.2s var(--spring);
+}
+
+.dial-toggle[data-on] {
+  background: var(--ink);
+}
+
+.dial-toggle[data-on]::after {
+  transform: translateX(10px);
 }
