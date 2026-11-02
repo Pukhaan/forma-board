@@ -8,7 +8,9 @@ export type Item = {
   id: string;
   kind: ItemKind;
   title?: string;
-  /** Image file, relative to the project (or a URL during design). */
+  /** Path inside the project folder, when the item is a file there. */
+  file?: string;
+  /** What an <img> shows: the file as a displayable URL, a web URL, or a data URL. */
   src?: string;
   /** Natural size, used to keep the aspect ratio. */
   w?: number;
