@@ -9,6 +9,9 @@ import { DotSwarm } from "./gridFx.swarm";
 
 type Transform = readonly [number, number, number];
 
+/** How far the grid layer reaches past the window on every side, in CSS px. More than the largest spacing. */
+const MARGIN = 160;
+
 /**
  * The dot grid. The dots belong to the board: they sit at fixed board
  * positions, so zooming spreads them apart or brings them together (and grows
@@ -29,27 +32,30 @@ type Transform = readonly [number, number, number];
  */
 export function DotGrid() {
   const store = useStoreApi();
-  const ref = useRef<HTMLCanvasElement>(null);
+  const gridRef = useRef<HTMLCanvasElement>(null);
+  const fxRef = useRef<HTMLCanvasElement>(null);
 
   useEffect(() => {
-    const canvas = ref.current;
-    const ctx = canvas?.getContext("2d");
-    if (!canvas || !ctx) return;
+    const grid = gridRef.current;
+    const fxCanvas = fxRef.current;
+    const ctx = grid?.getContext("2d");
+    const fxCtx = fxCanvas?.getContext("2d");
+    if (!grid || !fxCanvas || !ctx || !fxCtx) return;
+    const wrap = grid.parentElement as HTMLElement;
 
     let width = 0;
     let height = 0;
     let dpr = 1;
     let color = "rgba(0, 0, 0, 0.2)";
+    let canvasColor = "#f5f5f3";
     let base = 2;
     let drawn: Transform | null = null;
-    let ink = readInk(ctx, color);
+    let ink = readInk(fxCtx, color);
     const swarm = new DotSwarm();
     const motion = window.matchMedia("(prefers-reduced-motion: reduce)");
 
-    // One dot drawn into a small tile, repeated across the screen in a single
-    // fill. Far cheaper than drawing every dot, which matters because this
-    // runs on every frame of a pan or zoom. The tile is about one spacing in
-    // device pixels, so the pattern is barely resampled and dots stay crisp.
+    // One dot drawn into a small tile, repeated with a single pattern fill.
+    // The tile is about one spacing in device pixels, so dots stay crisp.
     const tile = document.createElement("canvas");
     const tileCtx = tile.getContext("2d");
     let tileKey = "";
@@ -66,74 +72,115 @@ export function DotGrid() {
       tileCtx.fill();
     };
 
+    // The grid layer is painted once per zoom level, a margin larger than the
+    // window on every side. Panning never repaints it: the grid repeats every
+    // spacing, so moving the canvas by the pan (wrapped to one spacing) is
+    // exactly the same picture. That is a compositor move, almost free,
+    // instead of re-uploading a full-screen Retina image every frame.
+    let painted: { x: number; y: number; spacing: number; size: number; alpha: number } | null = null;
+
+    const paintGrid = (t: Transform) => {
+      const [x, y, zoom] = t;
+      const { spacing, size, alpha } = dotStyle(zoom, base);
+      ctx.setTransform(1, 0, 0, 1, 0, 0);
+      ctx.clearRect(0, 0, grid.width, grid.height);
+      painted = { x, y, spacing, size, alpha };
+      grid.style.transform = "translate3d(0, 0, 0)";
+      if (alpha < 0.005) return;
+      const side = Math.max(4, Math.min(1024, Math.round(spacing * dpr)));
+      const scale = (spacing * dpr) / side;
+      dotTile(side, (size * dpr) / 2 / scale);
+      const pattern = ctx.createPattern(tile, "repeat");
+      if (!pattern) return;
+      // Tile centres on the board grid: shift by half a tile, plus the margin.
+      const ox = (x + MARGIN - spacing / 2) * dpr;
+      const oy = (y + MARGIN - spacing / 2) * dpr;
+      pattern.setTransform(new DOMMatrix([scale, 0, 0, scale, ox, oy]));
+      ctx.globalAlpha = alpha;
+      ctx.fillStyle = pattern;
+      ctx.fillRect(0, 0, grid.width, grid.height);
+      ctx.globalAlpha = 1;
+    };
+
+    const placeGrid = (t: Transform) => {
+      const [x, y, zoom] = t;
+      const look = dotStyle(zoom, base);
+      const p = painted;
+      if (!p || look.spacing !== p.spacing || look.size !== p.size || look.alpha !== p.alpha) return paintGrid(t);
+      const sp = p.spacing;
+      const wrapTo = (d: number) => {
+        let v = ((d % sp) + sp) % sp;
+        if (v > sp / 2) v -= sp;
+        return Math.round(v * dpr) / dpr;
+      };
+      grid.style.transform = `translate3d(${wrapTo(x - p.x)}px, ${wrapTo(y - p.y)}px, 0)`;
+    };
+
+    // The effects layer: only the dots out on loan. Empty (and untouched)
+    // whenever nothing is happening.
+    let fxShown = false;
+    const paintFx = (t: Transform) => {
+      if (!fxShown && swarm.size === 0 && swarm.borrowed.size === 0) return;
+      fxCtx.setTransform(1, 0, 0, 1, 0, 0);
+      fxCtx.clearRect(0, 0, fxCanvas.width, fxCanvas.height);
+      fxShown = swarm.size > 0 || swarm.borrowed.size > 0;
+      if (!fxShown) return;
+      const [x, y, zoom] = t;
+      const { spacing, size, alpha } = dotStyle(zoom, base);
+      fxCtx.setTransform(dpr, 0, 0, dpr, 0, 0);
+      // A dot out on loan leaves its spot empty: cover it with the board colour.
+      if (swarm.borrowed.size > 0 && alpha >= 0.005) {
+        fxCtx.fillStyle = canvasColor;
+        fxCtx.beginPath();
+        const r = size / 2 + 0.75;
+        for (const key of swarm.borrowed) {
+          const { i, j } = dotFromKey(key);
+          const cx = x + i * spacing;
+          const cy = y + j * spacing;
+          fxCtx.moveTo(cx + r, cy);
+          fxCtx.arc(cx, cy, r, 0, Math.PI * 2);
+        }
+        fxCtx.fill();
+      }
+      paintSwarm(fxCtx, swarm, ink, t, size, alpha);
+    };
+
     const draw = (t: Transform) => {
       drawn = t;
-      const [x, y, zoom] = t;
-      ctx.setTransform(1, 0, 0, 1, 0, 0);
-      ctx.clearRect(0, 0, canvas.width, canvas.height);
-      const { spacing, size, alpha } = dotStyle(zoom, base);
-      if (alpha >= 0.005) {
-        const side = Math.max(4, Math.min(1024, Math.round(spacing * dpr)));
-        const scale = (spacing * dpr) / side;
-        dotTile(side, (size * dpr) / 2 / scale);
-        const pattern = ctx.createPattern(tile, "repeat");
-        if (pattern) {
-          // Tile centres land on the board grid: shift by half a tile.
-          pattern.setTransform(new DOMMatrix([scale, 0, 0, scale, (x - spacing / 2) * dpr, (y - spacing / 2) * dpr]));
-          ctx.globalAlpha = alpha;
-          ctx.fillStyle = pattern;
-          ctx.fillRect(0, 0, canvas.width, canvas.height);
-          ctx.globalAlpha = 1;
-        }
-        // Dots out on loan leave their spot empty until they fly back.
-        const out = swarm.borrowed;
-        if (out.size > 0) {
-          ctx.setTransform(dpr, 0, 0, dpr, 0, 0);
-          ctx.globalCompositeOperation = "destination-out";
-          ctx.beginPath();
-          const r = size / 2 + 0.75;
-          for (const key of out) {
-            const { i, j } = dotFromKey(key);
-            const cx = x + i * spacing;
-            const cy = y + j * spacing;
-            ctx.moveTo(cx + r, cy);
-            ctx.arc(cx, cy, r, 0, Math.PI * 2);
-          }
-          ctx.fill();
-          ctx.globalCompositeOperation = "source-over";
-        }
-      }
-      ctx.setTransform(dpr, 0, 0, dpr, 0, 0);
-      paintSwarm(ctx, swarm, ink, t, size, alpha);
+      placeGrid(t);
+      paintFx(t);
     };
-    const redraw = () => draw(drawn ?? store.getState().transform);
+    const redraw = () => {
+      painted = null;
+      fxShown = true;
+      draw(drawn ?? store.getState().transform);
+    };
 
     const readTokens = () => {
-      const style = getComputedStyle(canvas);
+      const style = getComputedStyle(wrap);
       color = style.getPropertyValue("--dot").trim() || color;
-      ink = readInk(ctx, color);
+      canvasColor = style.getPropertyValue("--canvas").trim() || canvasColor;
+      ink = readInk(fxCtx, color);
       base = parseFloat(style.getPropertyValue("--dot-size")) || base;
+      tileKey = "";
     };
 
-    // Size the backing store to whole device pixels so canvas pixels are screen pixels.
-    const resize = (entry?: ResizeObserverEntry) => {
+    // Size both backing stores to whole device pixels so canvas pixels are screen pixels.
+    const resize = () => {
       dpr = window.devicePixelRatio || 1;
-      const box = entry?.devicePixelContentBoxSize?.[0];
-      const rect = canvas.getBoundingClientRect();
+      const rect = wrap.getBoundingClientRect();
       width = rect.width;
       height = rect.height;
-      canvas.width = box ? box.inlineSize : Math.round(width * dpr);
-      canvas.height = box ? box.blockSize : Math.round(height * dpr);
+      fxCanvas.width = Math.round(width * dpr);
+      fxCanvas.height = Math.round(height * dpr);
+      grid.width = Math.round((width + MARGIN * 2) * dpr);
+      grid.height = Math.round((height + MARGIN * 2) * dpr);
       readTokens();
       redraw();
     };
 
-    const resizer = new ResizeObserver((entries) => resize(entries[0]));
-    try {
-      resizer.observe(canvas, { box: "device-pixel-content-box" });
-    } catch {
-      resizer.observe(canvas);
-    }
+    const resizer = new ResizeObserver(() => resize());
+    resizer.observe(wrap);
 
     // Moving the window to a display with another pixel ratio.
     let dprQuery: MediaQueryList | null = null;
@@ -169,7 +216,9 @@ export function DotGrid() {
       const env = sceneEnv(s, GRID, dotStyle(s.transform[2], base).alpha, motion.matches);
       swarm.sync(sceneWants(s, gridFx.get()), env);
       const moving = swarm.step(dt, env);
-      draw(s.transform);
+      drawn = s.transform;
+      placeGrid(s.transform);
+      paintFx(s.transform);
       if (moving) raf = requestAnimationFrame(tick);
       else last = 0;
     };
@@ -199,5 +248,10 @@ export function DotGrid() {
     };
   }, [store]);
 
-  return <canvas ref={ref} className="dots" aria-hidden="true" />;
+  return (
+    <div className="dots" aria-hidden="true">
+      <canvas ref={gridRef} className="dots-grid" />
+      <canvas ref={fxRef} className="dots-fx" />
+    </div>
+  );
 }
