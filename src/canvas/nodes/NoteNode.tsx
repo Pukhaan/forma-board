@@ -1,10 +1,12 @@
 import { useReactFlow, type Node, type NodeProps } from "@xyflow/react";
 import { motion } from "motion/react";
 import { useState } from "react";
+import { asUrl } from "../../model/items";
 import type { NoteData } from "../../model/types";
 import { useCanvasUi } from "../context";
 import { useZoomVar } from "../zoom";
 import { Ports } from "./Ports";
+import { SourceMark } from "./SourceMark";
 
 type NoteNodeType = Node<NoteData, "note">;
 
@@ -20,6 +22,7 @@ export function NoteNode({ id, data, selected }: NodeProps<NoteNodeType>) {
   const [editing, setEditing] = useState(false);
   useZoomVar();
   const [head, ...body] = data.text.split("\n\n");
+  const from = data.source ? asUrl(data.source) : null;
   const text = (
     <>
       <div className="note-head">{head || "Note"}</div>
@@ -36,6 +39,7 @@ export function NoteNode({ id, data, selected }: NodeProps<NoteNodeType>) {
       className="note"
       data-selected={selected || undefined}
       data-target={isTarget || undefined}
+      data-sourced={from ? true : undefined}
       animate={{ scale: isTarget ? 1.04 : 1 }}
       transition={{ type: "spring", stiffness: 420, damping: 30 }}
       onDoubleClick={() => setEditing(true)}
@@ -68,6 +72,7 @@ export function NoteNode({ id, data, selected }: NodeProps<NoteNodeType>) {
           <div className="note-text note-show">{text}</div>
         </>
       )}
+      {from && <SourceMark url={from} />}
       <Ports />
     </motion.div>
   );

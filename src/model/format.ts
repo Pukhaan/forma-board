@@ -14,7 +14,7 @@ export type FileItem = Item;
 type At = { id: string; x: number; y: number };
 export type FileNode =
   | (At & { type: "project"; title: string; brief: string })
-  | (At & { type: "note"; text: string })
+  | (At & { type: "note"; text: string; source?: string })
   | (At & { type: "stack"; title: string; description?: string; items: FileItem[] })
   | (At & { type: "card"; item: FileItem })
   | (At & { type: "area"; w: number; h: number; title: string });
@@ -76,6 +76,12 @@ function itemIn(raw: FileItem, resolve: Resolve): Item | null {
   return { ...item, kind, src };
 }
 
+/** A note node's data, keeping its source only when it says something. */
+function noteData(text: unknown, source: unknown): NoteData {
+  const t = typeof text === "string" ? text : "";
+  return typeof source === "string" && source.trim() ? { text: t, source } : { text: t };
+}
+
 export function toBoardFile({ nodes, edges }: Board): BoardFile {
   const out: FileNode[] = [];
   for (const n of nodes) {
@@ -84,7 +90,8 @@ export function toBoardFile({ nodes, edges }: Board): BoardFile {
       const d = n.data as ProjectData;
       out.push({ ...at, type: "project", title: d.title, brief: d.brief });
     } else if (n.type === "note") {
-      out.push({ ...at, type: "note", text: (n.data as NoteData).text });
+      const { text, source } = n.data as NoteData;
+      out.push({ ...at, type: "note", text, ...(source?.trim() ? { source } : {}) });
     } else if (n.type === "stack") {
       const d = n.data as StackData;
       const description = d.description?.trim() ? { description: d.description } : {};
@@ -130,7 +137,7 @@ export function parseBoard(text: string, resolve: Resolve = (f) => f): Board | n
     if (n.type === "project") {
       nodes.push({ ...base, type: "project", data: { title: n.title ?? "", brief: n.brief ?? "" } });
     } else if (n.type === "note") {
-      nodes.push({ ...base, type: "note", data: { text: n.text ?? "" } });
+      nodes.push({ ...base, type: "note", data: noteData(n.text, n.source) });
     } else if (n.type === "stack") {
       const items = (Array.isArray(n.items) ? n.items : []).map((i) => itemIn(i, resolve)).filter((i): i is Item => !!i);
       const description = typeof n.description === "string" && n.description.trim() ? { description: n.description } : {};
@@ -138,7 +145,7 @@ export function parseBoard(text: string, resolve: Resolve = (f) => f): Board | n
     } else if (n.type === "card") {
       const item = itemIn(n.item, resolve);
       // A loose note is a note node; take a card that holds one as meaning that.
-      if (item?.kind === "note") nodes.push({ ...base, type: "note", data: { text: item.text ?? "" } });
+      if (item?.kind === "note") nodes.push({ ...base, type: "note", data: noteData(item.text, item.source) });
       else if (item) nodes.push({ ...base, type: "card", data: { item } });
     } else if (n.type === "area") {
       nodes.push(areaNode(n.id, { ...position, w: Number(n.w), h: Number(n.h) }, n.title ?? NEW_AREA));

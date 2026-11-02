@@ -7,6 +7,7 @@ import { dayLabel, sourceLabel } from "../model/items";
 import { patchItem } from "../model/operations";
 import type { Item } from "../model/types";
 import { paletteOfSrc } from "../store/readPalette";
+import { SourceMark } from "../canvas/nodes/SourceMark";
 import type { DetailLayout } from "./detail";
 import "../styles/detail.css";
 
@@ -107,6 +108,7 @@ function Facts({ item, layout }: { item: Item; layout: DetailLayout }) {
         <div className="detail-fact">
           <dt>Source</dt>
           <dd>
+            {source.url && <SourceMark url={source.url} />}
             {source.url ? (
               <a
                 href={source.url}

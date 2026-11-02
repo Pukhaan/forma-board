@@ -18,14 +18,18 @@ export function newId(prefix: string) {
 export function itemsOf(node: Node): Item[] {
   if (node.type === "stack") return (node.data as StackData).items;
   if (node.type === "card") return [(node.data as CardData).item];
-  if (node.type === "note") return [{ id: node.id, kind: "note", text: (node.data as NoteData).text }];
+  if (node.type === "note") {
+    const { text, source } = node.data as NoteData;
+    return [{ id: node.id, kind: "note", text, ...(source ? { source } : {}) }];
+  }
   return [];
 }
 
 /** The loose node an item becomes on the board: a note goes back to being a note, anything else a card. */
 export function nodeFromItem(item: Item, at: { x: number; y: number }): Node {
   if (item.kind === "note") {
-    return { id: newId("note"), type: "note", position: at, data: { text: item.text ?? "" } satisfies NoteData };
+    const data: NoteData = item.source ? { text: item.text ?? "", source: item.source } : { text: item.text ?? "" };
+    return { id: newId("note"), type: "note", position: at, data };
   }
   return { id: newId("card"), type: "card", position: at, data: { item } satisfies CardData };
 }

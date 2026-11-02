@@ -1,5 +1,6 @@
 import type { Node, NodeProps } from "@xyflow/react";
 import { motion } from "motion/react";
+import { asUrl } from "../../model/items";
 import type { CardData } from "../../model/types";
 import { useCanvasUi } from "../context";
 import { LiveCard } from "../live/LiveCard";
@@ -7,6 +8,7 @@ import { openLink } from "../openLink";
 import { useZoomVar } from "../zoom";
 import { ItemFace } from "./Faces";
 import { fitInBox } from "./fit";
+import { SourceMark } from "./SourceMark";
 import { Ports } from "./Ports";
 
 type CardNodeType = Node<CardData, "card">;
@@ -24,6 +26,7 @@ export function CardNode({ id, data, selected }: NodeProps<CardNodeType>) {
   const isLive = item.kind === "live";
   const title = item.title?.trim();
   const titled = (item.kind === "image" || isLive) && !!title;
+  const from = item.kind === "image" && item.source ? asUrl(item.source) : null;
 
   return (
     <motion.div
@@ -43,6 +46,7 @@ export function CardNode({ id, data, selected }: NodeProps<CardNodeType>) {
       ) : (
         <div className="card-media" style={fitInBox(item, isLink ? 200 : 168)}>
           <ItemFace item={item} />
+          {from && <SourceMark url={from} />}
         </div>
       )}
       {titled && <div className="card-title">{title}</div>}

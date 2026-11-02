@@ -54,6 +54,8 @@ export type CardData = {
 /** A free text note on the canvas. */
 export type NoteData = {
   text: string;
+  /** Where it came from, when it was brought in (a meeting, an email): a web address or plain text. */
+  source?: string;
 };
 
 /**

@@ -1,12 +1,14 @@
 import { useReactFlow, useUpdateNodeInternals, type Node, type NodeProps } from "@xyflow/react";
 import { useState, type CSSProperties } from "react";
 import { hasNote } from "../../model/items";
+import { sharedSource } from "../../model/source";
 import type { StackData } from "../../model/types";
 import { PILE, titleWidth } from "../body";
 import { useCanvasUi } from "../context";
 import { useZoomVar } from "../zoom";
 import { ItemFace } from "./Faces";
 import { fitInBox } from "./fit";
+import { SourceMark } from "./SourceMark";
 import { Ports } from "./Ports";
 import { countLabel } from "./stackKind";
 
@@ -55,6 +57,7 @@ export function StackNode({ id, data, selected }: NodeProps<StackNodeType>) {
   const isTarget = dropTargetId === id;
   // The last item is the cover; the three before it peek out underneath.
   const shown = data.items.slice(-4).reverse();
+  const shared = sharedSource(data.items);
 
   return (
     <div
@@ -82,6 +85,7 @@ export function StackNode({ id, data, selected }: NodeProps<StackNodeType>) {
                 style={{ ...size, ...pose(i), zIndex: 10 - i }}
               >
                 <ItemFace item={item} />
+                {i === 0 && shared && <SourceMark url={shared} />}
               </div>
             );
           })

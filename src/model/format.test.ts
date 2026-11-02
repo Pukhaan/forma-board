@@ -234,4 +234,20 @@ describe("board.json", () => {
     });
     expect(saved.nodes[0]).toEqual({ id: "c", x: 0, y: 0, type: "card", item: { id: "i", kind: "image", file: "a.jpg" } });
   });
+
+  it("keeps where a loose note came from, and drops an empty one", () => {
+    const text = JSON.stringify({
+      forma: 1,
+      nodes: [
+        { id: "a", type: "note", x: 0, y: 0, text: "Call", source: "https://notes.granola.ai/d/1" },
+        { id: "b", type: "note", x: 0, y: 0, text: "Mine", source: " " },
+      ],
+      wires: [],
+    });
+    const board = parseBoard(text)!;
+    expect(board.nodes[0].data).toEqual({ text: "Call", source: "https://notes.granola.ai/d/1" });
+    expect(board.nodes[1].data).toEqual({ text: "Mine" });
+    expect(toBoardFile(board).nodes[0]).toMatchObject({ source: "https://notes.granola.ai/d/1" });
+    expect(toBoardFile(board).nodes[1]).not.toHaveProperty("source");
+  });
 });

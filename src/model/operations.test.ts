@@ -90,6 +90,13 @@ describe("nodeFromItem", () => {
     expect(n.position).toEqual(at);
   });
 
+  it("keeps where a note came from, in and out of a stack", () => {
+    const source = "https://notes.granola.ai/d/1";
+    const n = nodeFromItem({ id: "n", kind: "note", text: "hi", source }, at);
+    expect(n.data).toEqual({ text: "hi", source });
+    expect(itemsOf({ ...n, data: { text: "hi", source } })[0]).toMatchObject({ kind: "note", source });
+  });
+
   it("puts links and images back as cards", () => {
     const link: Item = { id: "l", kind: "link", url: "https://a.com/" };
     expect(nodeFromItem(link, at)).toMatchObject({ type: "card", data: { item: link } });
