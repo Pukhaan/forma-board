@@ -15,9 +15,9 @@
 .project-chip-button {
   display: flex;
   align-items: center;
-  gap: 7px;
+  gap: 6px;
   height: 28px;
-  padding: 0 8px 0 6px;
+  padding: 0 8px 0 11px;
   font-size: 12.5px;
   font-weight: 550;
   color: var(--ink);
@@ -27,7 +27,7 @@
 
 .project-chip[data-full] .project-chip-button {
   height: 32px;
-  padding: 0 10px 0 8px;
+  padding: 0 10px 0 13px;
   font-size: 13px;
   border-radius: 10px;
 }
@@ -35,20 +35,6 @@
 .project-chip-button:hover,
 .project-chip-button[aria-expanded="true"] {
   background: #ffffff;
-}
-
-.project-chip-mark {
-  flex: none;
-  width: 16px;
-  height: 16px;
-}
-
-.project-chip-mark rect {
-  fill: var(--ink);
-}
-
-.project-chip-mark circle {
-  fill: #f5f5f3;
 }
 
 .project-chip-name {
@@ -100,12 +86,58 @@
   color: var(--ink);
 }
 
-.project-menu-path {
-  overflow: hidden;
+/* The path, and copying it: the whole line is the button, the copy icon at
+   its end. Copied, the line says so in ink for a moment. */
+.project-menu .project-menu-path {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  margin: 0 -6px -4px;
+  padding: 3px 6px 4px;
   font: 11px var(--mono);
   color: var(--ink-3);
+  border-radius: 6px;
+  cursor: copy;
+  transition: color 0.15s ease, background 0.15s ease;
+}
+
+.project-menu .project-menu-path:hover {
+  color: var(--ink-2);
+  background: rgba(22, 22, 21, 0.04);
+}
+
+.project-menu-path[data-copied] {
+  color: var(--ink);
+}
+
+.project-menu-path-text {
+  flex: 1;
+  min-width: 0;
+  overflow: hidden;
   white-space: nowrap;
   text-overflow: ellipsis;
+}
+
+.project-menu-copy {
+  display: grid;
+  flex: none;
+  place-items: center;
+  width: 14px;
+  height: 14px;
+  opacity: 0.55;
+  transition: opacity 0.15s ease;
+}
+
+.project-menu-path:hover .project-menu-copy,
+.project-menu-path[data-copied] .project-menu-copy {
+  opacity: 1;
+}
+
+.project-menu-copy svg {
+  display: block;
+  width: 13px;
+  height: 13px;
+  stroke-width: 2;
 }
 
 .project-menu-group {

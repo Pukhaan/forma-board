@@ -1,5 +1,5 @@
 import { revealItemInDir } from "@tauri-apps/plugin-opener";
-import { ChevronDown } from "lucide-react";
+import { Check, ChevronDown, Copy } from "lucide-react";
 import { AnimatePresence, motion } from "motion/react";
 import { useEffect, useRef, useState } from "react";
 import { inApp, recentProjects } from "../app/projects";
@@ -17,21 +17,29 @@ type Props = {
 /** A folder as people read it: the home folder as ~. */
 const shortPath = (root: string) => root.replace(/^\/Users\/[^/]+/, "~");
 
-/** Forma's mark, small: the five dots that gather into a plus. */
-function Mark() {
+/**
+ * Where the project lives, with a button that copies its full path: what you
+ * hand an AI so it works in exactly this folder. The line itself says so
+ * for a moment once it's copied.
+ */
+function PathRow({ root }: { root: string }) {
+  const [copied, setCopied] = useState(false);
+  const copy = () => {
+    navigator.clipboard
+      .writeText(root)
+      .then(() => {
+        setCopied(true);
+        window.setTimeout(() => setCopied(false), 1600);
+      })
+      .catch(() => {});
+  };
   return (
-    <svg className="project-chip-mark" viewBox="0 0 16 16" aria-hidden>
-      <rect width="16" height="16" rx="4.5" />
-      {[
-        [8, 8],
-        [8, 4.6],
-        [8, 11.4],
-        [4.6, 8],
-        [11.4, 8],
-      ].map(([cx, cy]) => (
-        <circle key={`${cx}-${cy}`} cx={cx} cy={cy} r="1.35" />
-      ))}
-    </svg>
+    <button className="project-menu-path" data-copied={copied || undefined} title={root} onClick={copy}>
+      <span className="project-menu-path-text">{copied ? "Copied the full path" : shortPath(root)}</span>
+      <span className="project-menu-copy" aria-hidden>
+        {copied ? <Check /> : <Copy />}
+      </span>
+    </button>
   );
 }
 
@@ -73,7 +81,6 @@ export function ProjectChip({ name, root, onSwitch, onOpen, onClose }: Props) {
   return (
     <div className="project-chip" data-full={corner || undefined} ref={ref}>
       <button className="project-chip-button chrome" aria-expanded={open} onClick={toggle}>
-        <Mark />
         <span className="project-chip-name">{name}</span>
         <ChevronDown aria-hidden />
       </button>
@@ -89,7 +96,7 @@ export function ProjectChip({ name, root, onSwitch, onOpen, onClose }: Props) {
           >
             <div className="project-menu-head">
               <span className="project-menu-name">{name}</span>
-              <span className="project-menu-path">{root ? shortPath(root) : "Saved in this browser"}</span>
+              {root ? <PathRow root={root} /> : <span className="project-menu-path">Saved in this browser</span>}
             </div>
             {recent.length > 0 && (
               <div className="project-menu-group">
