@@ -76,7 +76,9 @@ export function StackNode({ id, data, selected }: NodeProps<StackNodeType>) {
                 key={item.id}
                 className="stack-card"
                 data-kind={item.kind}
-                data-note={hasNote(item) || undefined}
+                // Only the cover shows its note's paper corner: one is a
+                // sign, three peeking at once is clutter.
+                data-note={(i === 0 && hasNote(item)) || undefined}
                 style={{ ...size, ...pose(i), zIndex: 10 - i }}
               >
                 <ItemFace item={item} />
