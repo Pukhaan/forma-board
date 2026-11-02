@@ -1,8 +1,8 @@
 import { useStoreApi } from "@xyflow/react";
 import { useEffect, useRef } from "react";
-import { axisDots, dotStyle, GRID } from "./dots";
+import { dotStyle, GRID } from "./dots";
 import { gridFx } from "./gridFx";
-import { dotKey } from "./gridFx.math";
+import { dotFromKey } from "./gridFx.math";
 import { paintSwarm, readInk } from "./gridFx.paint";
 import { sceneEnv, sceneWants } from "./gridFx.scene";
 import { DotSwarm } from "./gridFx.swarm";
@@ -46,37 +46,64 @@ export function DotGrid() {
     const swarm = new DotSwarm();
     const motion = window.matchMedia("(prefers-reduced-motion: reduce)");
 
+    // One dot drawn into a small tile, repeated across the screen in a single
+    // fill. Far cheaper than drawing every dot, which matters because this
+    // runs on every frame of a pan or zoom. The tile is about one spacing in
+    // device pixels, so the pattern is barely resampled and dots stay crisp.
+    const tile = document.createElement("canvas");
+    const tileCtx = tile.getContext("2d");
+    let tileKey = "";
+    const dotTile = (side: number, radius: number) => {
+      const key = `${side}|${radius.toFixed(2)}|${color}`;
+      if (key === tileKey || !tileCtx) return;
+      tileKey = key;
+      tile.width = side;
+      tile.height = side;
+      tileCtx.clearRect(0, 0, side, side);
+      tileCtx.fillStyle = color;
+      tileCtx.beginPath();
+      tileCtx.arc(side / 2, side / 2, radius, 0, Math.PI * 2);
+      tileCtx.fill();
+    };
+
     const draw = (t: Transform) => {
       drawn = t;
       const [x, y, zoom] = t;
       ctx.setTransform(1, 0, 0, 1, 0, 0);
       ctx.clearRect(0, 0, canvas.width, canvas.height);
       const { spacing, size, alpha } = dotStyle(zoom, base);
-      ctx.setTransform(dpr, 0, 0, dpr, 0, 0);
       if (alpha >= 0.005) {
-        const r = size / 2;
-        const cols = axisDots(x, spacing, width, r);
-        const rows = axisDots(y, spacing, height, r);
-        // Dots that are out on loan leave their spot empty until they fly back.
+        const side = Math.max(4, Math.min(1024, Math.round(spacing * dpr)));
+        const scale = (spacing * dpr) / side;
+        dotTile(side, (size * dpr) / 2 / scale);
+        const pattern = ctx.createPattern(tile, "repeat");
+        if (pattern) {
+          // Tile centres land on the board grid: shift by half a tile.
+          pattern.setTransform(new DOMMatrix([scale, 0, 0, scale, (x - spacing / 2) * dpr, (y - spacing / 2) * dpr]));
+          ctx.globalAlpha = alpha;
+          ctx.fillStyle = pattern;
+          ctx.fillRect(0, 0, canvas.width, canvas.height);
+          ctx.globalAlpha = 1;
+        }
+        // Dots out on loan leave their spot empty until they fly back.
         const out = swarm.borrowed;
-        const gaps = out.size > 0;
-        ctx.globalAlpha = alpha;
-        ctx.fillStyle = color;
-        ctx.beginPath();
-        for (let j = 0; j < rows.count; j++) {
-          const row = rows.first + j;
-          const cy = y + row * spacing;
-          for (let i = 0; i < cols.count; i++) {
-            const col = cols.first + i;
-            if (gaps && out.has(dotKey(col, row))) continue;
-            const cx = x + col * spacing;
+        if (out.size > 0) {
+          ctx.setTransform(dpr, 0, 0, dpr, 0, 0);
+          ctx.globalCompositeOperation = "destination-out";
+          ctx.beginPath();
+          const r = size / 2 + 0.75;
+          for (const key of out) {
+            const { i, j } = dotFromKey(key);
+            const cx = x + i * spacing;
+            const cy = y + j * spacing;
             ctx.moveTo(cx + r, cy);
             ctx.arc(cx, cy, r, 0, Math.PI * 2);
           }
+          ctx.fill();
+          ctx.globalCompositeOperation = "source-over";
         }
-        ctx.fill();
-        ctx.globalAlpha = 1;
       }
+      ctx.setTransform(dpr, 0, 0, dpr, 0, 0);
       paintSwarm(ctx, swarm, ink, t, size, alpha);
     };
     const redraw = () => draw(drawn ?? store.getState().transform);

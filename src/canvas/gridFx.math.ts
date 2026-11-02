@@ -87,6 +87,11 @@ export function sampleEvenly(curve: Cubic, step: number, start = step, segments 
 
 /** One number per grid dot, so a set of borrowed dots is cheap to check. */
 export const dotKey = (i: number, j: number) => (i + 1048576) * 2097152 + (j + 1048576);
+/** The grid indices back from a `dotKey`. */
+export const dotFromKey = (key: number) => ({
+  i: Math.floor(key / 2097152) - 1048576,
+  j: (key % 2097152) - 1048576,
+});
 
 /**
  * The grid dot nearest to `p` that `free` allows, within `reach`. Grid dots
