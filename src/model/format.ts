@@ -30,13 +30,22 @@ const round = (v: number) => Math.round(v * 10) / 10;
 function itemOut(item: Item): FileItem {
   const { src, ...rest } = item;
   // A file in the project is the truth; only keep `src` for things that aren't files yet.
-  return rest.file ? rest : { ...rest, src };
+  return rest.file || !src ? rest : { ...rest, src };
 }
 
+/**
+ * One stored item, checked for what its kind needs: a note has text, a link
+ * has a url, an image shows its file through the resolver. Anything else is
+ * a broken entry and is skipped.
+ */
 function itemIn(item: FileItem, resolve: Resolve): Item | null {
-  if (!item || typeof item.id !== "string") return null;
+  if (!item || typeof item !== "object" || typeof item.id !== "string") return null;
+  const kind = item.kind ?? "image";
+  if (kind === "note") return { ...item, kind, text: typeof item.text === "string" ? item.text : "" };
+  if (kind === "link") return typeof item.url === "string" && item.url ? { ...item, kind } : null;
+  if (kind !== "image") return null;
   const src = item.file ? resolve(item.file) : item.src;
-  return { ...item, kind: item.kind ?? "image", src };
+  return { ...item, kind, src };
 }
 
 export function toBoardFile({ nodes, edges }: Board): BoardFile {
@@ -95,7 +104,9 @@ export function parseBoard(text: string, resolve: Resolve = (f) => f): Board | n
       nodes.push({ ...base, type: "stack", data: { title: n.title ?? "Stack", items } });
     } else if (n.type === "card") {
       const item = itemIn(n.item, resolve);
-      if (item) nodes.push({ ...base, type: "card", data: { item } });
+      // A loose note is a note node; take a card that holds one as meaning that.
+      if (item?.kind === "note") nodes.push({ ...base, type: "note", data: { text: item.text ?? "" } });
+      else if (item) nodes.push({ ...base, type: "card", data: { item } });
     }
   }
 

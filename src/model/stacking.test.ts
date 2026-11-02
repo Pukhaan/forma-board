@@ -24,7 +24,7 @@ describe("resolveDrop", () => {
     const dragged = { id: "c1", type: "card", rect: box(420, 20) };
     expect(resolveDrop(dragged, [stack, card])).toEqual({
       type: "new-stack",
-      withCardId: "c2",
+      withId: "c2",
     });
   });
 
@@ -36,10 +36,29 @@ describe("resolveDrop", () => {
     });
   });
 
-  it("never stacks onto notes or the project", () => {
-    const note = { id: "n1", type: "note", rect: box(0, 0, 300, 300) };
+  it("never stacks onto the project, or moves it", () => {
+    const project = { id: "p", type: "project", rect: box(0, 0, 300, 300) };
     const dragged = { id: "c1", type: "card", rect: box(50, 50) };
-    expect(resolveDrop(dragged, [note])).toEqual({ type: "none" });
+    expect(resolveDrop(dragged, [project])).toEqual({ type: "none" });
+    const moved = { id: "p", type: "project", rect: box(0, 0) };
+    expect(resolveDrop(moved, [stack])).toEqual({ type: "none" });
+  });
+
+  it("files a note into a stack", () => {
+    const dragged = { id: "n1", type: "note", rect: box(60, 60) };
+    expect(resolveDrop(dragged, [stack])).toEqual({ type: "add-to-stack", stackId: "s1" });
+  });
+
+  it("makes a new stack from a note and a card, either way round, or two notes", () => {
+    const note = { id: "n2", type: "note", rect: box(400, 300, 260, 140) };
+    expect(resolveDrop({ id: "n1", type: "note", rect: box(420, 20) }, [card])).toEqual({ type: "new-stack", withId: "c2" });
+    expect(resolveDrop({ id: "c1", type: "card", rect: box(450, 300) }, [note])).toEqual({ type: "new-stack", withId: "n2" });
+    expect(resolveDrop({ id: "n1", type: "note", rect: box(450, 300) }, [note])).toEqual({ type: "new-stack", withId: "n2" });
+  });
+
+  it("only merges a stack into a stack, never onto a card or note", () => {
+    const note = { id: "n2", type: "note", rect: box(400, 0, 260, 140) };
+    expect(resolveDrop({ id: "s2", type: "stack", rect: box(420, 20) }, [card, note])).toEqual({ type: "none" });
   });
 
   it("prefers the target drawn on top", () => {

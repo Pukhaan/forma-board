@@ -46,6 +46,62 @@ describe("board.json", () => {
     expect(board.edges).toHaveLength(0);
   });
 
+  it("round-trips notes and links, in stacks and on cards", () => {
+    const board = {
+      nodes: [
+        {
+          id: "s",
+          type: "stack",
+          position: { x: 0, y: 0 },
+          data: {
+            title: "Mixed",
+            items: [
+              { id: "i", kind: "image" as const, file: "media/a.jpg", src: "shown:media/a.jpg", w: 300, h: 200 },
+              { id: "n", kind: "note" as const, text: "Founders call\n\nCalm." },
+              { id: "l", kind: "link" as const, url: "https://are.na/", title: "Are.na" },
+            ],
+          },
+        },
+        { id: "c", type: "card", position: { x: 10, y: 0 }, data: { item: { id: "l2", kind: "link" as const, url: "https://linear.app/" } } },
+      ],
+      edges: [],
+    };
+    const file = toBoardFile(board);
+    expect(file.nodes[0]).toMatchObject({
+      items: [
+        { id: "i", kind: "image", file: "media/a.jpg", w: 300, h: 200 },
+        { id: "n", kind: "note", text: "Founders call\n\nCalm." },
+        { id: "l", kind: "link", url: "https://are.na/", title: "Are.na" },
+      ],
+    });
+    expect(file.nodes[1]).toEqual({ id: "c", x: 10, y: 0, type: "card", item: { id: "l2", kind: "link", url: "https://linear.app/" } });
+    const text = JSON.stringify(file);
+    const back = parseBoard(text, (f) => `shown:${f}`)!;
+    expect(back.nodes).toEqual(board.nodes);
+    expect(JSON.stringify(toBoardFile(back))).toBe(text);
+  });
+
+  it("skips items that are broken for their kind, and reads a card holding a note as a note", () => {
+    const text = JSON.stringify({
+      forma: 1,
+      nodes: [
+        {
+          id: "s",
+          type: "stack",
+          x: 0,
+          y: 0,
+          title: "S",
+          items: [{ id: "a", kind: "link" }, { id: "b", kind: "video" }, { id: "c", kind: "note" }],
+        },
+        { id: "k", type: "card", x: 0, y: 0, item: { id: "n", kind: "note", text: "hi" } },
+      ],
+      wires: [],
+    });
+    const board = parseBoard(text)!;
+    expect((board.nodes[0].data as { items: unknown[] }).items).toEqual([{ id: "c", kind: "note", text: "" }]);
+    expect(board.nodes[1]).toMatchObject({ id: "k", type: "note", data: { text: "hi" } });
+  });
+
   it("rejects text that isn't a board", () => {
     expect(parseBoard("not json")).toBeNull();
     expect(parseBoard('{"hello": 1}')).toBeNull();

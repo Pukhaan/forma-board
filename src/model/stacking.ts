@@ -10,7 +10,7 @@ export type DropAction =
   | { type: "none" }
   | { type: "add-to-stack"; stackId: string }
   | { type: "merge-stacks"; stackId: string }
-  | { type: "new-stack"; withCardId: string };
+  | { type: "new-stack"; withId: string };
 
 export type Droppable = { id: string; type: string; rect: Rect };
 
@@ -22,29 +22,31 @@ export function contains(r: Rect, p: { x: number; y: number }) {
   return p.x >= r.x && p.x <= r.x + r.w && p.y >= r.y && p.y <= r.y + r.h;
 }
 
+/** Loose things that can join a stack or start one: a card (image or link) or a note. */
+const LOOSE = new Set(["card", "note"]);
+
+export const isLoose = (type: string) => LOOSE.has(type);
+
 /**
- * Finds what a dragged card or stack should join. The dragged thing joins a
- * target when its centre is over the target, so a light overlap while
- * arranging things never stacks them by accident.
+ * Finds what a dragged card, note or stack should join. The dragged thing
+ * joins a target when its centre is over the target, so a light overlap while
+ * arranging things never stacks them by accident. The project never stacks.
  */
 export function resolveDrop(
   dragged: Droppable,
   others: Droppable[],
 ): DropAction {
-  if (dragged.type !== "card" && dragged.type !== "stack") return { type: "none" };
+  const loose = isLoose(dragged.type);
+  if (!loose && dragged.type !== "stack") return { type: "none" };
   const c = center(dragged.rect);
   // Last in the list is drawn on top, so check from the top down.
   for (let i = others.length - 1; i >= 0; i--) {
     const o = others[i];
     if (o.id === dragged.id || !contains(o.rect, c)) continue;
     if (o.type === "stack") {
-      return dragged.type === "card"
-        ? { type: "add-to-stack", stackId: o.id }
-        : { type: "merge-stacks", stackId: o.id };
+      return loose ? { type: "add-to-stack", stackId: o.id } : { type: "merge-stacks", stackId: o.id };
     }
-    if (o.type === "card" && dragged.type === "card") {
-      return { type: "new-stack", withCardId: o.id };
-    }
+    if (loose && isLoose(o.type)) return { type: "new-stack", withId: o.id };
   }
   return { type: "none" };
 }

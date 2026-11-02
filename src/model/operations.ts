@@ -3,7 +3,7 @@
 
 import type { Edge, Node } from "@xyflow/react";
 import { NEW_STACK, pushItems, type DropAction } from "./stacking";
-import type { CardData, Item, StackData } from "./types";
+import type { CardData, Item, NoteData, StackData } from "./types";
 
 type Graph = { nodes: Node[]; edges: Edge[] };
 
@@ -11,11 +11,23 @@ export function newId(prefix: string) {
   return `${prefix}-${Math.random().toString(36).slice(2, 9)}`;
 }
 
-/** Items a node carries into a stack. */
-function itemsOf(node: Node): Item[] {
+/**
+ * Items a node carries into a stack. A note becomes a note item; it takes the
+ * node's id, which is free again once the node is gone.
+ */
+export function itemsOf(node: Node): Item[] {
   if (node.type === "stack") return (node.data as StackData).items;
   if (node.type === "card") return [(node.data as CardData).item];
+  if (node.type === "note") return [{ id: node.id, kind: "note", text: (node.data as NoteData).text }];
   return [];
+}
+
+/** The loose node an item becomes on the board: a note goes back to being a note, anything else a card. */
+export function nodeFromItem(item: Item, at: { x: number; y: number }): Node {
+  if (item.kind === "note") {
+    return { id: newId("note"), type: "note", position: at, data: { text: item.text ?? "" } satisfies NoteData };
+  }
+  return { id: newId("card"), type: "card", position: at, data: { item } satisfies CardData };
 }
 
 /**
@@ -54,7 +66,7 @@ export function applyDrop(g: Graph, draggedId: string, action: DropAction): Grap
     return { nodes, edges: moveWires(g.edges, [draggedId], action.stackId) };
   }
 
-  const other = g.nodes.find((n) => n.id === action.withCardId);
+  const other = g.nodes.find((n) => n.id === action.withId);
   if (!other) return g;
   const items = [...itemsOf(other), ...itemsOf(dragged)];
   const stack: Node = {
@@ -86,8 +98,8 @@ export function reorderStack(g: Graph, stackId: string, itemIds: string[]): Grap
 }
 
 /**
- * Takes one item out of a stack and puts it on the canvas beside the stack.
- * A stack left empty is removed.
+ * Takes one item out of a stack and puts it on the canvas beside the stack, as
+ * a note or a card. A stack left empty is removed.
  */
 export function takeOut(g: Graph, stackId: string, itemId: string, at: { x: number; y: number }): Graph {
   const stack = g.nodes.find((n) => n.id === stackId);
@@ -96,11 +108,11 @@ export function takeOut(g: Graph, stackId: string, itemId: string, at: { x: numb
   const item = items.find((i) => i.id === itemId);
   if (!item) return g;
   const rest = items.filter((i) => i.id !== itemId);
-  const card: Node = { id: newId("card"), type: "card", position: at, data: { item } satisfies CardData };
+  const loose = nodeFromItem(item, at);
   const nodes = g.nodes.flatMap((n) => {
     if (n.id !== stackId) return [n];
     return rest.length ? [{ ...n, data: { ...n.data, items: rest } }] : [];
   });
   const edges = rest.length ? g.edges : g.edges.filter((e) => e.source !== stackId && e.target !== stackId);
-  return { nodes: [...nodes, card], edges };
+  return { nodes: [...nodes, loose], edges };
 }
