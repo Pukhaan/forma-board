@@ -1,6 +1,7 @@
 // A sample project used while designing: a made-up client, with research
 // already sorted into stacks and connected. The images live in public/sample,
-// which stays out of git.
+// which stays out of git; the live card's component is public/live/hello.html,
+// which is committed.
 
 import type { Edge, Node } from "@xyflow/react";
 import type { Item } from "./types";
@@ -79,6 +80,12 @@ export const sampleNodes: Node[] = [
   { id: "card-robot", type: "card", position: { x: 940, y: 470 }, data: { item: img("42cd816b", 300, 300, "Round robot") } },
   { id: "card-robot-2", type: "card", position: { x: 1150, y: 520 }, data: { item: img("f87f60b0", 300, 300, "Robot in lift") } },
   { id: "card-bunny", type: "card", position: { x: 1040, y: 760 }, data: { item: img("87668d1c", 300, 300, "Bunny") } },
+  {
+    id: "card-live",
+    type: "card",
+    position: { x: 1024, y: 64 },
+    data: { item: { id: "live-hello", kind: "live", src: "/live/hello.html", title: "Soft follow", w: 640, h: 400 } },
+  },
 ];
 
 const link = (id: string, source: string, target: string, note?: string): Edge => ({
@@ -97,4 +104,5 @@ export const sampleEdges: Edge[] = [
   link("e5", "project", "stack-type"),
   link("e6", "note-audience", "stack-pack", "Buy on trust: real product shots"),
   link("e7", "project", "stack-ui"),
+  link("e8", "stack-ui", "card-live", "Motion that stays calm"),
 ];

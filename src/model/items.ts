@@ -10,6 +10,12 @@ export const NOTE_SHAPE: Shape = { w: 152, h: 176 };
 /** A link sits as a landscape card. */
 export const LINK_SHAPE: Shape = { w: 176, h: 124 };
 
+/** A live card's proportions when its file doesn't say: 4:3. */
+export const LIVE_SHAPE: Shape = { w: 640, h: 480 };
+/** How wide a live card sits on the board, and the tallest it gets. */
+export const LIVE_WIDTH = 320;
+export const LIVE_MAX_HEIGHT = 400;
+
 /**
  * The proportions an item is drawn at. Images keep their own; notes and links
  * have a fixed shape, so a pile and an opened stack lay them out the same way.
@@ -17,7 +23,18 @@ export const LINK_SHAPE: Shape = { w: 176, h: 124 };
 export function itemShape(item: Item): Shape {
   if (item.kind === "note") return NOTE_SHAPE;
   if (item.kind === "link") return LINK_SHAPE;
+  if (item.kind === "live" && !(item.w && item.w > 0 && item.h && item.h > 0)) return LIVE_SHAPE;
   return { w: item.w && item.w > 0 ? item.w : 1, h: item.h && item.h > 0 ? item.h : 1 };
+}
+
+/**
+ * A live card's size on the board: LIVE_WIDTH wide, as tall as its shape
+ * makes it, but never taller than LIVE_MAX_HEIGHT (a tall one gets narrower).
+ */
+export function liveSize(item: Item): Shape {
+  const { w, h } = itemShape({ ...item, kind: "live" });
+  const s = Math.min(LIVE_WIDTH / w, LIVE_MAX_HEIGHT / h);
+  return { w: Math.round(w * s), h: Math.round(h * s) };
 }
 
 /** A note's heading (its first paragraph) and the paragraphs after it. */

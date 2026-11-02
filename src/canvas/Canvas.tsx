@@ -15,17 +15,20 @@ import {
 import { useCallback, useEffect, useMemo, useState } from "react";
 import { newId, reorderStack, takeOut } from "../model/operations";
 import type { Board } from "../model/format";
-import type { StackData } from "../model/types";
+import type { Item, StackData } from "../model/types";
 import type { BoardStore } from "../store/types";
 import { Toolbar, type Tool } from "../chrome/Toolbar";
 import { ZoomPill } from "../chrome/ZoomPill";
 import { FocusView } from "../focus/FocusView";
+import { rectOf } from "../focus/Lift";
 import { CanvasUiContext } from "./context";
 import { DotGrid } from "./DotGrid";
 import { GRID, snapToDots } from "./dots";
 import { hoverNode, leaveNode, trackPointer } from "./gridFx";
 import { ConnectionLine } from "./edges/ConnectionLine";
 import { LinkEdge } from "./edges/LinkEdge";
+import { holdLive } from "./live/runner";
+import { LiveView, type OpenLive } from "./live/LiveView";
 import { AreaNode } from "./nodes/AreaNode";
 import { CardNode } from "./nodes/CardNode";
 import { NoteNode } from "./nodes/NoteNode";
@@ -61,6 +64,10 @@ export function Canvas({ store, initial }: Props) {
   useSnapTicks(dropTargetId);
   const [tool, setTool] = useState<Tool>("select");
   const [focusId, setFocusId] = useState<string | null>(null);
+  const [live, setLive] = useState<OpenLive | null>(null);
+
+  // An opened stack covers the board: its live cards rest meanwhile.
+  useEffect(() => (focusId ? holdLive() : undefined), [focusId]);
 
   useEffect(() => store.save({ nodes, edges }), [store, nodes, edges]);
 
@@ -145,7 +152,7 @@ export function Canvas({ store, initial }: Props) {
     [centre, commit, setNodes, store],
   );
 
-  usePaste({ enabled: !focusId, centre, commit, onImages: addImages });
+  usePaste({ enabled: !focusId && !live, centre, commit, onImages: addImages });
   const areas = useAreas({ commit, centre });
   const tidyUp = useTidy(commit);
 
@@ -173,7 +180,13 @@ export function Canvas({ store, initial }: Props) {
     [commit, focusId, setNodes],
   );
 
-  const ui = useMemo(() => ({ dropTargetId, commit }), [dropTargetId, commit]);
+  const openLive = useCallback((id: string, item: Item, media: HTMLElement) => {
+    setLive((l) => l ?? { id, item, from: rectOf(media) });
+  }, []);
+  const ui = useMemo(
+    () => ({ dropTargetId, commit, openLive, liveId: live?.id ?? null }),
+    [dropTargetId, commit, openLive, live?.id],
+  );
 
   return (
     <CanvasUiContext.Provider value={ui}>
@@ -245,6 +258,7 @@ export function Canvas({ store, initial }: Props) {
           onTakeOut={onTakeOut}
           onReorder={onReorder}
         />
+        <LiveView open={live} onDone={() => setLive(null)} />
       </div>
     </CanvasUiContext.Provider>
   );

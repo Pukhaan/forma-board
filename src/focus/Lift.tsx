@@ -1,4 +1,5 @@
 import { motion, type Transition } from "motion/react";
+import { LiveStage } from "../canvas/live/LiveStage";
 import { ItemFace } from "../canvas/nodes/Faces";
 import { itemShape } from "../model/items";
 import type { Item } from "../model/types";
@@ -25,7 +26,9 @@ type Props = {
 
 /**
  * One image or note lifted toward you, everything else pushed back. It grows out of
- * its tile and shrinks back into it, so the tile is hidden while it's up.
+ * its tile and shrinks back into it, so the tile is hidden while it's up. A
+ * live card comes up running and takes the pointer, so you can play with it;
+ * only a click around it puts it back.
  */
 export function Lift({ item, from, to, reduced, spring, fade, onPutBack, onDone }: Props) {
   const vw = window.innerWidth;
@@ -37,6 +40,7 @@ export function Lift({ item, from, to, reduced, spring, fade, onPutBack, onDone 
   const h = w / aspect;
   const pose = (r: Rect) => ({ x: r.x + r.w / 2 - vw / 2, y: r.y + r.h / 2 - vh / 2, scale: r.w / w });
   const up = { x: 0, y: 0, scale: 1, opacity: 1 };
+  const live = item.kind === "live";
 
   return (
     <motion.div
@@ -48,13 +52,15 @@ export function Lift({ item, from, to, reduced, spring, fade, onPutBack, onDone 
     >
       <motion.div
         className="lift-media"
+        data-kind={item.kind}
         style={{ width: w, height: h }}
+        onClick={live ? (e) => e.stopPropagation() : undefined}
         initial={reduced ? { ...up, opacity: 0 } : { ...pose(from), opacity: 1 }}
         animate={to ? (reduced ? { ...up, opacity: 0 } : { ...pose(to), opacity: 1 }) : up}
         transition={reduced ? fade : spring}
         onAnimationComplete={() => to && onDone()}
       >
-        <ItemFace item={item} read />
+        {live ? <LiveStage item={item} /> : <ItemFace item={item} read />}
       </motion.div>
     </motion.div>
   );

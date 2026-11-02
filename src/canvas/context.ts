@@ -1,4 +1,5 @@
 import { createContext, useContext } from "react";
+import type { Item } from "../model/types";
 
 /** Canvas-wide state and actions the nodes and wires use. */
 export type CanvasUi = {
@@ -6,8 +7,17 @@ export type CanvasUi = {
   dropTargetId: string | null;
   /** Remember the board before an edit, so it can be undone. */
   commit: () => void;
+  /** Open a live card big, growing out of `media` (its box on the board). */
+  openLive: (id: string, item: Item, media: HTMLElement) => void;
+  /** The card whose live view is open, hidden on the board meanwhile. */
+  liveId: string | null;
 };
 
-export const CanvasUiContext = createContext<CanvasUi>({ dropTargetId: null, commit: () => {} });
+export const CanvasUiContext = createContext<CanvasUi>({
+  dropTargetId: null,
+  commit: () => {},
+  openLive: () => {},
+  liveId: null,
+});
 
 export const useCanvasUi = () => useContext(CanvasUiContext);

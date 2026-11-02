@@ -37,7 +37,8 @@ function itemOut(item: Item): FileItem {
 
 /**
  * One stored item, checked for what its kind needs: a note has text, a link
- * has a url, an image shows its file through the resolver. Anything else is
+ * has a url, an image shows its file through the resolver, and a live card
+ * runs its file (or its `src`) the same way. Anything else is
  * a broken entry and is skipped.
  */
 function itemIn(item: FileItem, resolve: Resolve): Item | null {
@@ -45,6 +46,13 @@ function itemIn(item: FileItem, resolve: Resolve): Item | null {
   const kind = item.kind ?? "image";
   if (kind === "note") return { ...item, kind, text: typeof item.text === "string" ? item.text : "" };
   if (kind === "link") return typeof item.url === "string" && item.url ? { ...item, kind } : null;
+  if (kind === "live") {
+    // A live card is nothing without its component.
+    const file = typeof item.file === "string" && item.file ? item.file : undefined;
+    const src = typeof item.src === "string" && item.src ? item.src : undefined;
+    if (!file && !src) return null;
+    return { ...item, kind, src: file ? resolve(file) : src };
+  }
   if (kind !== "image") return null;
   const src = item.file ? resolve(item.file) : item.src;
   return { ...item, kind, src };

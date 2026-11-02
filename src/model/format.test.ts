@@ -102,6 +102,55 @@ describe("board.json", () => {
     expect(board.nodes[1]).toMatchObject({ id: "k", type: "note", data: { text: "hi" } });
   });
 
+  it("round-trips live cards, on a card and in a stack", () => {
+    const board = {
+      nodes: [
+        {
+          id: "c",
+          type: "card",
+          position: { x: 0, y: 0 },
+          data: {
+            item: { id: "l", kind: "live" as const, file: "components/stack-fan.html", src: "shown:components/stack-fan.html", title: "Stack fan", w: 640, h: 400 },
+          },
+        },
+        {
+          id: "s",
+          type: "stack",
+          position: { x: 400, y: 0 },
+          data: { title: "Prototypes", items: [{ id: "w", kind: "live" as const, src: "/live/hello.html", title: "Hello" }] },
+        },
+      ],
+      edges: [],
+    };
+    const file = toBoardFile(board);
+    expect(file.nodes[0]).toEqual({
+      id: "c",
+      x: 0,
+      y: 0,
+      type: "card",
+      item: { id: "l", kind: "live", file: "components/stack-fan.html", title: "Stack fan", w: 640, h: 400 },
+    });
+    expect(file.nodes[1]).toMatchObject({ items: [{ id: "w", kind: "live", src: "/live/hello.html", title: "Hello" }] });
+    const text = JSON.stringify(file);
+    const back = parseBoard(text, (f) => `shown:${f}`)!;
+    expect(back.nodes).toEqual(board.nodes);
+    expect(JSON.stringify(toBoardFile(back))).toBe(text);
+  });
+
+  it("skips a live card with neither a file nor a src", () => {
+    const text = JSON.stringify({
+      forma: 1,
+      nodes: [
+        { id: "c", type: "card", x: 0, y: 0, item: { id: "l", kind: "live", title: "Nothing to run" } },
+        { id: "s", type: "stack", x: 0, y: 0, title: "S", items: [{ id: "a", kind: "live", file: "" }, { id: "b", kind: "live", src: "/live/hello.html" }] },
+      ],
+      wires: [],
+    });
+    const board = parseBoard(text)!;
+    expect(board.nodes.map((n) => n.id)).toEqual(["s"]);
+    expect((board.nodes[0].data as { items: { id: string }[] }).items.map((i) => i.id)).toEqual(["b"]);
+  });
+
   it("round-trips a stack's description, and leaves it out when there is none", () => {
     const stack = (data: object) => ({ id: "s", type: "stack", position: { x: 0, y: 0 }, data: { title: "Blue", items: [], ...data } });
     const withLine = { nodes: [stack({ description: "What the brand already owns" })], edges: [] };

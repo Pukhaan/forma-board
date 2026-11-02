@@ -2,6 +2,7 @@
 //
 //   <project>/board.json   the board (see FORMAT.md)
 //   <project>/media/       images
+//   <project>/components/  live cards' components, one HTML file each
 //
 // Writes go to a temporary file first and are then renamed into place, so
 // nothing (an AI, an editor, a crash) ever sees half a board. Changes made
@@ -16,6 +17,7 @@ import { imageSize, titleFromName, type BoardStore } from "./types";
 
 export const BOARD_FILE = "board.json";
 export const MEDIA_DIR = "media";
+export const COMPONENTS_DIR = "components";
 
 export const join = (...parts: string[]) => parts.join("/").replace(/\/+/g, "/");
 export const folderName = (root: string) => root.replace(/\/+$/, "").split("/").pop() || "Project";
@@ -152,17 +154,20 @@ export function folderStore(root: string): BoardStore {
 
 /**
  * Makes the sample project in a folder: copies the sample images into media/
- * and writes a board that points at them. Used by "Try the sample".
+ * and its live card's component into components/, and writes a board that
+ * points at them. Used by "Try the sample".
  */
 export async function seedSample(root: string, sample: Board) {
   await mkdir(join(root, MEDIA_DIR), { recursive: true });
+  await mkdir(join(root, COMPONENTS_DIR), { recursive: true });
   const copied = new Map<string, string>();
   const copy = async (src: string | undefined) => {
-    if (!src?.startsWith("/sample/")) return undefined;
+    const dir = src?.startsWith("/sample/") ? MEDIA_DIR : src?.startsWith("/live/") ? COMPONENTS_DIR : null;
+    if (!src || !dir) return undefined;
     const cached = copied.get(src);
     if (cached) return cached;
     const name = src.split("/").pop()!;
-    const rel = join(MEDIA_DIR, name);
+    const rel = join(dir, name);
     const res = await fetch(src);
     if (!res.ok) return undefined;
     await writeFile(join(root, rel), new Uint8Array(await res.arrayBuffer()));

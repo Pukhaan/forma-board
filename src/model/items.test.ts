@@ -1,5 +1,18 @@
 import { describe, expect, it } from "vitest";
-import { asUrl, faviconUrl, fromPastedText, hostOf, itemShape, linkLabel, noteParts, NOTE_SHAPE } from "./items";
+import {
+  asUrl,
+  faviconUrl,
+  fromPastedText,
+  hostOf,
+  itemShape,
+  linkLabel,
+  LIVE_MAX_HEIGHT,
+  LIVE_SHAPE,
+  LIVE_WIDTH,
+  liveSize,
+  noteParts,
+  NOTE_SHAPE,
+} from "./items";
 
 describe("itemShape", () => {
   it("keeps an image's own proportions", () => {
@@ -11,6 +24,25 @@ describe("itemShape", () => {
     expect(itemShape({ id: "n", kind: "note", text: "hi" })).toEqual(NOTE_SHAPE);
     const link = itemShape({ id: "l", kind: "link", url: "https://a.com" });
     expect(link.w).toBeGreaterThan(link.h);
+  });
+});
+
+describe("live cards", () => {
+  it("keep the shape their file gives, or 4:3", () => {
+    expect(itemShape({ id: "l", kind: "live", src: "/live/a.html", w: 640, h: 400 })).toEqual({ w: 640, h: 400 });
+    expect(itemShape({ id: "l", kind: "live", src: "/live/a.html" })).toEqual(LIVE_SHAPE);
+    expect(LIVE_SHAPE.w / LIVE_SHAPE.h).toBeCloseTo(4 / 3);
+  });
+
+  it("sit a fixed width on the board, with their height from the shape", () => {
+    expect(liveSize({ id: "l", kind: "live", w: 640, h: 400 })).toEqual({ w: LIVE_WIDTH, h: 200 });
+    expect(liveSize({ id: "l", kind: "live" })).toEqual({ w: LIVE_WIDTH, h: 240 });
+  });
+
+  it("get narrower rather than too tall", () => {
+    const tall = liveSize({ id: "l", kind: "live", w: 390, h: 844 });
+    expect(tall.h).toBe(LIVE_MAX_HEIGHT);
+    expect(tall.w).toBeLessThan(LIVE_WIDTH);
   });
 });
 

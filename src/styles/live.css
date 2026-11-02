@@ -1,0 +1,103 @@
+/* Live cards: a small coded component on the board, and opened big. No
+   borders anywhere, only soft shadows. */
+
+/* On the board. The frame lies over the still face and takes no pointer, so
+   the card drags, snaps and stacks like any other. It fades in once its page
+   has loaded. */
+.card-media.live {
+  position: relative;
+  border-radius: var(--r-card);
+}
+
+.live-frame {
+  position: absolute;
+  inset: 0;
+  width: 100%;
+  height: 100%;
+  border: 0;
+  background: var(--card);
+  opacity: 0;
+  transition: opacity 0.4s var(--ease-out);
+}
+
+.live-frame[data-loaded] {
+  opacity: 1;
+}
+
+.card-media.live .live-frame {
+  pointer-events: none;
+}
+
+/* The one action, quiet, only on hover. */
+.live-open {
+  position: absolute;
+  right: 10px;
+  bottom: 10px;
+  z-index: 1;
+  padding: 4px 11px;
+  font-size: 11.5px;
+  color: var(--ink);
+  background: rgba(255, 255, 255, 0.94);
+  border-radius: 999px;
+  box-shadow: 0 1px 2px rgba(18, 18, 16, 0.08), 0 4px 12px rgba(18, 18, 16, 0.1);
+  opacity: 0;
+  pointer-events: none;
+  transition: opacity 0.18s ease, background 0.15s ease;
+}
+
+.card[data-kind="live"]:hover .live-open {
+  opacity: 1;
+  pointer-events: auto;
+}
+
+.react-flow__node.dragging .live-open {
+  opacity: 0;
+}
+
+.live-open:hover {
+  background: #ffffff;
+}
+
+/* While it's open big, its card on the board waits hidden underneath. */
+.card[data-lifted] .card-media {
+  visibility: hidden;
+}
+
+/* In an opened stack it is a card like a note or link. */
+.ft[data-kind="live"] .ft-media {
+  border-radius: var(--r-card);
+  box-shadow: var(--shadow-rest);
+}
+
+/* Opened big: the title above, the component in its own rounded box. */
+.lift-media[data-kind="live"] {
+  position: relative;
+  overflow: visible;
+  background: transparent;
+  border-radius: 0;
+  box-shadow: none;
+  cursor: auto;
+}
+
+.live-stage {
+  position: relative;
+  display: block;
+  width: 100%;
+  height: 100%;
+  overflow: hidden;
+  background: var(--card);
+  border-radius: 14px;
+  box-shadow: 0 4px 12px rgba(18, 18, 16, 0.1), 0 40px 80px rgba(18, 18, 16, 0.22);
+}
+
+.live-stage-title {
+  position: absolute;
+  bottom: 100%;
+  left: 2px;
+  padding-bottom: 14px;
+  font-size: 15px;
+  font-weight: 600;
+  letter-spacing: -0.01em;
+  color: var(--ink);
+  white-space: nowrap;
+}

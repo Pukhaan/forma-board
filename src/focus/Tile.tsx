@@ -33,11 +33,13 @@ type Props = {
 function labelOf(item: Item) {
   if (item.kind === "note") return `Read note: ${noteParts(item.text ?? "").head || "Note"}`;
   if (item.kind === "link") return `Link: ${item.title ?? item.url ?? ""}. Double-click to open.`;
+  if (item.kind === "live") return `Open live card: ${item.title ?? "Prototype"}`;
   return item.title ?? "Open image";
 }
 
 /**
- * One item in an opened stack: an image or a note (click to lift it), or a
+ * One item in an opened stack: an image, a note or a live card (click to lift
+ * it; a live card comes up running), or a
  * link (double-click, or the Open pill, opens it). It owns its motion values, so the first frame
  * is drawn exactly at `start` (on the pile) with no flash of the grid, and
  * hands them up so the stack can fly, reorder and close them together.

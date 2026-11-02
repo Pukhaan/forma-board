@@ -1,0 +1,83 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <title>Soft follow</title>
+    <style>
+      /* A soft blob that follows the pointer, and drifts on its own when the
+         pointer is away. Sized from the viewport, so it reads the same on a
+         small card and opened big. Only a transform moves each frame. */
+      html,
+      body {
+        height: 100%;
+        margin: 0;
+      }
+
+      body {
+        overflow: hidden;
+        background: #f6f5f2;
+        cursor: crosshair;
+      }
+
+      .blob {
+        position: absolute;
+        top: 0;
+        left: 0;
+        width: 60vmin;
+        height: 60vmin;
+        margin: -30vmin 0 0 -30vmin;
+        border-radius: 50%;
+        background: radial-gradient(
+          circle at 40% 38%,
+          rgba(126, 156, 255, 0.95),
+          rgba(180, 140, 255, 0.55) 42%,
+          rgba(255, 190, 170, 0.18) 66%,
+          rgba(255, 190, 170, 0) 72%
+        );
+        will-change: transform;
+      }
+
+      .hint {
+        position: absolute;
+        left: 5vmin;
+        bottom: 4.5vmin;
+        font: 500 max(11px, 3.2vmin) / 1.3 -apple-system, system-ui, sans-serif;
+        color: rgba(22, 22, 21, 0.45);
+      }
+    </style>
+  </head>
+  <body>
+    <div class="blob"></div>
+    <div class="hint">Move the pointer</div>
+    <script>
+      const blob = document.querySelector(".blob");
+      let x = innerWidth / 2;
+      let y = innerHeight / 2;
+      let tx = x;
+      let ty = y;
+      let lastMove = -Infinity;
+
+      addEventListener("pointermove", (e) => {
+        tx = e.clientX;
+        ty = e.clientY;
+        lastMove = performance.now();
+      });
+
+      function frame(now) {
+        // Away from the pointer for a while: a slow loop round the middle.
+        if (now - lastMove > 1500) {
+          const t = now / 1000;
+          tx = innerWidth * (0.5 + 0.22 * Math.sin(t * 0.7));
+          ty = innerHeight * (0.5 + 0.18 * Math.sin(t * 1.1 + 1));
+        }
+        x += (tx - x) * 0.08;
+        y += (ty - y) * 0.08;
+        const stretch = Math.min(0.18, Math.hypot(tx - x, ty - y) / 900);
+        blob.style.transform = `translate(${x.toFixed(1)}px, ${y.toFixed(1)}px) scale(${(1 + stretch).toFixed(3)})`;
+        requestAnimationFrame(frame);
+      }
+      requestAnimationFrame(frame);
+    </script>
+  </body>
+</html>
