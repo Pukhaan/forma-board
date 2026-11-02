@@ -71,8 +71,7 @@
   position: absolute;
   top: -6px;
   right: -6px;
-  display: grid;
-  place-items: center;
+  display: block;
   width: 16px;
   height: 16px;
   padding: 0;
@@ -91,34 +90,30 @@
   background: #55554f;
 }
 
-/* Drawn, like the wire's add button: bold, and centred on even pixels (no
-   button padding to push them off). */
+/* The icons are drawn in their button's own coordinates: each SVG is
+   exactly the button's size and its strokes meet at the button's centre,
+   so layout can't push them off. Round caps, like the wire's add button. */
 .project-file-remove svg,
 .project-file-add svg {
   display: block;
-  width: 8px;
-  height: 8px;
+  width: 100%;
+  height: 100%;
   fill: none;
-  stroke: rgba(245, 245, 243, 0.9);
-  stroke-width: 1.6;
+  stroke: rgba(245, 245, 243, 0.92);
   stroke-linecap: round;
 }
 
-.project-file-add {
-  padding: 0;
-  color: rgba(245, 245, 243, 0.9);
-}
-
 .project-file-remove svg {
-  width: 12px;
-  height: 12px;
-  stroke-width: 2;
+  stroke-width: 1.5;
+}
+
+.project-file-add svg {
+  stroke-width: 1.6;
 }
 
 .project-file-add {
+  display: block;
   padding: 0;
-  display: grid;
-  place-items: center;
   width: 28px;
   height: 28px;
   background: rgba(255, 255, 255, 0.06);
@@ -133,11 +128,6 @@
 
 .project-file-add:hover {
   background: rgba(255, 255, 255, 0.14);
-}
-
-.project-file-add svg {
-  width: 10px;
-  height: 10px;
 }
 
 .project-file-input {

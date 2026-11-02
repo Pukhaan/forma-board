@@ -66,8 +66,9 @@ function WorkingFiles({ id, links }: { id: string; links: string[] }) {
             aria-label={`Take ${workingFileName(url)} off the project`}
             onClick={() => save(links.filter((l) => l !== url))}
           >
-            <svg viewBox="0 0 10 10" aria-hidden>
-              <path d="M2.5 2.5l5 5M7.5 2.5l-5 5" />
+            {/* 16 by 16, the button itself: a 5px cross on its centre. */}
+            <svg viewBox="0 0 16 16" aria-hidden>
+              <path d="M5.5 5.5l5 5M10.5 5.5l-5 5" />
             </svg>
           </button>
         </span>
@@ -82,8 +83,9 @@ function WorkingFiles({ id, links }: { id: string; links: string[] }) {
         />
       ) : (
         <button className="project-file-add" aria-label="Add a working file" onClick={() => setAdding(true)}>
-          <svg viewBox="0 0 10 10" aria-hidden>
-            <path d="M5 1.5v7M1.5 5h7" />
+          {/* 28 by 28, the button itself: a 10px plus on its centre. */}
+          <svg viewBox="0 0 28 28" aria-hidden>
+            <path d="M14 9v10M9 14h10" />
           </svg>
         </button>
       )}
