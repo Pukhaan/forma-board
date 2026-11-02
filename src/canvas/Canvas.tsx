@@ -21,7 +21,7 @@ import { ZoomPill } from "../chrome/ZoomPill";
 import { FocusView } from "../focus/FocusView";
 import { CanvasUiContext } from "./context";
 import { DotGrid } from "./DotGrid";
-import { hoverNode, leaveNode } from "./gridFx";
+import { hoverNode, leaveNode, trackPointer } from "./gridFx";
 import { ConnectionLine } from "./edges/ConnectionLine";
 import { LinkEdge } from "./edges/LinkEdge";
 import { CardNode } from "./nodes/CardNode";
@@ -164,7 +164,7 @@ export function Canvas({ store, initial }: Props) {
 
   return (
     <CanvasUiContext.Provider value={ui}>
-      <div className="board" data-tool={tool}>
+      <div className="board" data-tool={tool} onPointerMove={trackPointer}>
         <ReactFlow
           nodes={nodes}
           edges={edges}

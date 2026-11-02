@@ -11,6 +11,36 @@
   border-radius: 50%;
 }
 
+/* A generous, invisible grab area centred on the dot "+" (which sits 10px
+   out from the edge), so you don't have to hit the tiny dots. The handle
+   itself stays small, so the wire still starts at the "+". */
+.port.react-flow__handle::before {
+  content: "";
+  position: absolute;
+  left: 50%;
+  top: 50%;
+  width: 44px;
+  height: 44px;
+  border-radius: 50%;
+  translate: -50% -50%;
+}
+
+.react-flow__handle-top.port::before {
+  translate: -50% calc(-50% - 10px);
+}
+
+.react-flow__handle-right.port::before {
+  translate: calc(-50% + 10px) -50%;
+}
+
+.react-flow__handle-bottom.port::before {
+  translate: -50% calc(-50% + 10px);
+}
+
+.react-flow__handle-left.port::before {
+  translate: calc(-50% - 10px) -50%;
+}
+
 /* Project: the dark block everything connects back to. */
 .project {
   width: 340px;
