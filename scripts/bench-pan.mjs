@@ -2,6 +2,10 @@
 // headless WebKit, the engine the Mac app runs on, and times every frame while
 // it pans, zooms and opens a stack. Fails (exit 1) if any run averages under
 // 55 fps or drops more than 5% of its frames past 20ms.
+//
+// Options, for measuring a board of your own (say one with live cards):
+//   --board <file>   a board.json to measure instead of scripts/bench/board.json
+//   --zoom <z>       zoom in to about z before each run, and let it settle
 
 import { readFileSync } from "node:fs";
 import { dirname, join } from "node:path";
@@ -13,7 +17,12 @@ import { devServer } from "./bench/server.mjs";
 
 const root = join(dirname(fileURLToPath(import.meta.url)), "..");
 const benchDir = join(root, "scripts", "bench", "media");
-const boardText = readFileSync(join(root, "scripts", "bench", "board.json"), "utf8");
+const arg = (name) => {
+  const i = process.argv.indexOf(`--${name}`);
+  return i > 0 ? process.argv[i + 1] : undefined;
+};
+const boardText = readFileSync(arg("board") ?? join(root, "scripts", "bench", "board.json"), "utf8");
+const ZOOM = Number(arg("zoom")) || null;
 const board = JSON.parse(boardText);
 
 const VIEWPORT = { width: 1440, height: 900 };
@@ -75,7 +84,24 @@ async function openBoard(browser, url) {
   await page.waitForSelector(".react-flow__node-card");
   await page.evaluate(() => Promise.all([...document.images].map((img) => img.decode().catch(() => {}))));
   await page.waitForTimeout(1000);
+  if (ZOOM) await zoomTo(page, ZOOM);
   return { context, page };
+}
+
+const scaleOf = (page) =>
+  page.evaluate(() => Number(document.querySelector(".react-flow__viewport").style.transform.match(/scale\(([\d.]+)/)?.[1] ?? 1));
+
+/** Pinches in (or out) around the middle of the window until the board is at about `z`, then lets it settle. */
+async function zoomTo(page, z) {
+  await page.mouse.move(VIEWPORT.width / 2, VIEWPORT.height / 2);
+  await page.keyboard.down("Control");
+  for (let i = 0; i < 400; i++) {
+    const now = await scaleOf(page);
+    if (Math.abs(now - z) / z < 0.03) break;
+    await page.mouse.wheel(0, now < z ? -6 : 6);
+  }
+  await page.keyboard.up("Control");
+  await page.waitForTimeout(1500);
 }
 
 /** The gaps between frames during one go of a run. */
@@ -86,6 +112,7 @@ async function framesOf(browser, url, run) {
     if (!at) throw new Error(`Couldn't find where to put the pointer for "${run.name}".`);
     await page.mouse.move(at[0], at[1]);
     await page.waitForTimeout(300);
+    live.add(await page.evaluate(() => document.querySelectorAll(".card-media.live iframe").length));
     const frames = page.evaluate(recordFrames, { ms: run.ms, at, motion: run.motion });
     if (run.click) await page.mouse.click(at[0], at[1]);
     return await frames;
@@ -100,6 +127,9 @@ async function measure(browser, url, run) {
   return summarise(gaps);
 }
 
+/** How many live cards were running as runs started. */
+const live = new Set();
+
 const pad = (v, n) => String(v).padStart(n);
 const line = (name, r) =>
   `${name.padEnd(32)}${pad(r.fps.toFixed(0), 4)} fps   95th pct ${pad(r.p95.toFixed(1), 5)} ms   over ${SLOW_MS}ms ${pad((r.slow * 100).toFixed(1), 5)}%   ${r.pass ? "ok" : "TOO SLOW"}`;
@@ -112,12 +142,14 @@ try {
   server = await devServer(root, benchDir);
   const images = boardImages(board).length;
   console.log(`WebKit ${browser.version()}, ${VIEWPORT.width}x${VIEWPORT.height} @2x, ${images} images${made ? ` (${made} drawn)` : ""}`);
-  console.log(`board at ${server.url}${server.reused ? " (your dev server)" : ""}\n`);
+  console.log(`board at ${server.url}${server.reused ? " (your dev server)" : ""}${ZOOM ? `, zoomed to ${ZOOM}` : ""}\n`);
   for (const run of runs) {
     const result = await measure(browser, server.url, run);
     failed ||= !result.pass;
     console.log(line(run.name, result));
   }
+  const lives = [...live].filter((n) => n > 0);
+  if (lives.length) console.log(`\nlive cards running as runs started: ${[...live].join(", ")}`);
 } finally {
   await browser.close();
   await server?.stop();
