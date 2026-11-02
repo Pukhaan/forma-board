@@ -164,37 +164,57 @@ img {
   cursor: pointer;
 }
 
+/* A wire's note. At rest it is quiet: small grey text on a backing the colour
+   of the canvas, so it sits cleanly over the line with no pill and no border.
+   Hover the wire or the note, select the wire, or write on it, and it becomes
+   the white pill. Zoomed out it fades with the board's detail (see nodes.css)
+   and only shows when you hover. */
 .wire-label {
   position: absolute;
   pointer-events: all;
+  opacity: var(--detail, 1);
+}
+
+.wire-label[data-hot] {
+  opacity: 1;
 }
 
 .wire-note,
 .wire-input {
   display: block;
   max-width: 240px;
-  padding: 5px 11px;
   font-size: 12px;
   line-height: 16px;
-  color: var(--ink);
-  background: var(--card);
-  border: 1px solid var(--hairline);
+  border: 1px solid transparent;
   border-radius: 999px;
-  box-shadow: 0 1px 2px rgba(18, 18, 16, 0.06);
   white-space: nowrap;
   overflow: hidden;
   text-overflow: ellipsis;
-  transition: border-color 0.15s ease;
 }
 
-.wire-note[data-hot] {
-  border-color: rgba(22, 22, 21, 0.5);
+.wire-note {
+  padding: 1px 7px;
+  color: var(--ink-2);
+  background: var(--canvas);
+  scale: 0.94;
+  transition: padding 0.18s var(--ease-out), color 0.15s ease, background-color 0.15s ease,
+    border-color 0.15s ease, box-shadow 0.15s ease, scale 0.2s var(--spring);
+}
+
+/* The pill, grown to stay readable when zoomed out. */
+.wire-label[data-hot] .wire-note,
+.wire-input {
+  padding: 5px 11px;
+  color: var(--ink);
+  background: var(--card);
+  border-color: var(--hairline);
+  box-shadow: 0 1px 2px rgba(18, 18, 16, 0.06), 0 4px 12px rgba(18, 18, 16, 0.06);
+  scale: clamp(1, calc(0.9 / var(--z, 1)), 2.4);
 }
 
 .wire-input {
   width: 220px;
   outline: none;
-  border-color: rgba(22, 22, 21, 0.5);
 }
 
 .wire-input::placeholder {

@@ -4,19 +4,15 @@ import {
   useReactFlow,
   type Edge,
   type EdgeProps,
-  type InternalNode,
 } from "@xyflow/react";
 import { useState } from "react";
 import { wireEnds, wireFade, wirePath } from "../../model/geometry";
 import type { LinkData } from "../../model/types";
+import { bodyOf } from "../body";
 import { useCanvasUi } from "../context";
+import { useLabelZoom } from "../zoom";
 
 type LinkEdgeType = Edge<LinkData, "link">;
-
-function rectOf(n: InternalNode) {
-  const { x, y } = n.internals.positionAbsolute;
-  return { x, y, w: n.measured.width ?? 0, h: n.measured.height ?? 0 };
-}
 
 /**
  * A wire between two things. It always runs between the sides that face each
@@ -29,14 +25,21 @@ export function LinkEdge({ id, source, target, data, selected }: EdgeProps<LinkE
   const { commit } = useCanvasUi();
   const [hover, setHover] = useState(false);
   const [editing, setEditing] = useState(false);
+  // The zoom titles are drawn for. It only changes when a zoom comes to rest,
+  // so wires re-render once then, never on every frame of a zoom.
+  const zoom = useLabelZoom();
   if (!a || !b) return null;
 
-  const [s, t] = wireEnds(rectOf(a), rectOf(b));
+  // Ends on the things themselves (a stack's pile), and below any title.
+  const [s, t] = wireEnds(bodyOf(a, zoom), bodyOf(b, zoom));
   const { path, mid } = wirePath(s, t);
   const fade = wireFade(s, t);
   const gradient = `wire-fade-${id}`;
   const note = data?.note;
   const hot = selected || hover;
+  // The note shows as a white pill when the wire is hovered, selected or
+  // being written on. At rest it is quiet grey text, and hidden zoomed out.
+  const loud = hot || editing;
 
   const save = (value: string) => {
     const next = value.trim() || undefined;
@@ -69,6 +72,7 @@ export function LinkEdge({ id, source, target, data, selected }: EdgeProps<LinkE
       <EdgeLabelRenderer>
         <div
           className="wire-label nodrag nopan"
+          data-hot={loud || undefined}
           style={{ transform: `translate(-50%, -50%) translate(${mid.x}px, ${mid.y}px)` }}
           onMouseEnter={() => setHover(true)}
           onMouseLeave={() => setHover(false)}
@@ -85,7 +89,7 @@ export function LinkEdge({ id, source, target, data, selected }: EdgeProps<LinkE
               }}
             />
           ) : note ? (
-            <button className="wire-note" data-hot={hot || undefined} onDoubleClick={() => setEditing(true)}>
+            <button className="wire-note" onDoubleClick={() => setEditing(true)}>
               {note}
             </button>
           ) : (

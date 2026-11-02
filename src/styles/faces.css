@@ -51,6 +51,10 @@
   white-space: pre-line;
   color: var(--ink-2);
   -webkit-line-clamp: 6;
+  /* Zoomed out the lines are grey mush: fade them with the board's detail. */
+  opacity: var(--detail, 1);
+  transition: opacity 0.3s var(--ease-out);
+  will-change: opacity;
 }
 
 /* A note lifted to read: plain sizes, nothing cut off, scrolls if long. */
@@ -126,4 +130,7 @@
   white-space: nowrap;
   text-overflow: ellipsis;
   color: var(--ink-3);
+  opacity: var(--detail, 1);
+  transition: opacity 0.3s var(--ease-out);
+  will-change: opacity;
 }

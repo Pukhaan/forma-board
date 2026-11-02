@@ -3,6 +3,7 @@ import { motion } from "motion/react";
 import { useState } from "react";
 import type { NoteData } from "../../model/types";
 import { useCanvasUi } from "../context";
+import { useZoomVar } from "../zoom";
 import { Ports } from "./Ports";
 
 type NoteNodeType = Node<NoteData, "note">;
@@ -17,7 +18,18 @@ export function NoteNode({ id, data, selected }: NodeProps<NoteNodeType>) {
   const { commit, dropTargetId } = useCanvasUi();
   const isTarget = dropTargetId === id;
   const [editing, setEditing] = useState(false);
+  useZoomVar();
   const [head, ...body] = data.text.split("\n\n");
+  const text = (
+    <>
+      <div className="note-head">{head || "Note"}</div>
+      {body.map((p, i) => (
+        <p key={i} className="note-body">
+          {p}
+        </p>
+      ))}
+    </>
+  );
 
   return (
     <motion.div
@@ -47,12 +59,13 @@ export function NoteNode({ id, data, selected }: NodeProps<NoteNodeType>) {
         />
       ) : (
         <>
-          <div className="note-head">{head || "Note"}</div>
-          {body.map((p, i) => (
-            <p key={i} className="note-body">
-              {p}
-            </p>
-          ))}
+          {/* The hidden copy sizes the note. The one you see sits on top: when
+              zoomed out its heading grows and pushes the fading body down,
+              inside the same box, so the note never changes size. */}
+          <div className="note-text note-size" aria-hidden>
+            {text}
+          </div>
+          <div className="note-text note-show">{text}</div>
         </>
       )}
       <Ports />

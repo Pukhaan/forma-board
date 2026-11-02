@@ -7,11 +7,18 @@ import type { Rect } from "./stacking";
 export type Side = "top" | "right" | "bottom" | "left";
 export type Anchor = { x: number; y: number; side: Side };
 
+/**
+ * What a wire aims at on a thing: its body, plus how far its label reaches
+ * below that (a stack's title under its pile). Wires leave the sides of the
+ * body, and leave the bottom below the label, never through it.
+ */
+export type Body = Rect & { below?: number };
+
 /** Gap between a wire's end and the edge of the thing it touches. */
 const GAP = 6;
 
 /** The point on a rect's edge facing `toward`, with the side it sits on. */
-export function anchorOn(r: Rect, toward: { x: number; y: number }): Anchor {
+export function anchorOn(r: Body, toward: { x: number; y: number }): Anchor {
   const cx = r.x + r.w / 2;
   const cy = r.y + r.h / 2;
   const dx = toward.x - cx;
@@ -28,13 +35,13 @@ export function anchorOn(r: Rect, toward: { x: number; y: number }): Anchor {
     return { x, y: clamp(cy + dy * t, r.y + 12, r.y + r.h - 12), side };
   }
   const side: Side = dy > 0 ? "bottom" : "top";
-  const y = dy > 0 ? r.y + r.h + GAP : r.y - GAP;
+  const y = dy > 0 ? r.y + r.h + (r.below ?? 0) + GAP : r.y - GAP;
   const t = (r.h / 2) / Math.abs(dy);
   return { x: clamp(cx + dx * t, r.x + 12, r.x + r.w - 12), y, side };
 }
 
 /** Both ends of a wire between two rects. */
-export function wireEnds(a: Rect, b: Rect): [Anchor, Anchor] {
+export function wireEnds(a: Body, b: Body): [Anchor, Anchor] {
   const ca = { x: a.x + a.w / 2, y: a.y + a.h / 2 };
   const cb = { x: b.x + b.w / 2, y: b.y + b.h / 2 };
   return [anchorOn(a, cb), anchorOn(b, ca)];

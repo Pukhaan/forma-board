@@ -24,6 +24,22 @@ describe("anchorOn", () => {
   });
 });
 
+describe("a body with a label below it", () => {
+  const stack = { x: 0, y: 0, w: 200, h: 200, below: 60 };
+
+  it("leaves the bottom below the label, never through it", () => {
+    const a = anchorOn(stack, { x: 100, y: 900 });
+    expect(a.side).toBe("bottom");
+    expect(a.y).toBeGreaterThan(260);
+  });
+
+  it("aims the sides at the body itself", () => {
+    const a = anchorOn(stack, { x: 900, y: 100 });
+    expect(a.side).toBe("right");
+    expect(a.y).toBe(100);
+  });
+});
+
 describe("wireEnds", () => {
   it("faces the two rects toward each other", () => {
     const [a, b] = wireEnds(r, { x: 500, y: 0, w: 200, h: 100 });

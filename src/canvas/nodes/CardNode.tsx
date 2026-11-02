@@ -3,6 +3,7 @@ import { motion } from "motion/react";
 import type { CardData } from "../../model/types";
 import { useCanvasUi } from "../context";
 import { openLink } from "../openLink";
+import { useZoomVar } from "../zoom";
 import { ItemFace } from "./Faces";
 import { fitInBox } from "./fit";
 import { Ports } from "./Ports";
@@ -15,6 +16,7 @@ type CardNodeType = Node<CardData, "card">;
  */
 export function CardNode({ id, data, selected }: NodeProps<CardNodeType>) {
   const { dropTargetId } = useCanvasUi();
+  useZoomVar();
   const { item } = data;
   const isLink = item.kind === "link";
   const size = fitInBox(item, isLink ? 200 : 168);
@@ -23,6 +25,7 @@ export function CardNode({ id, data, selected }: NodeProps<CardNodeType>) {
     <motion.div
       className="card"
       data-kind={item.kind}
+      data-titled={(item.title && !isLink) || undefined}
       data-selected={selected || undefined}
       data-target={dropTargetId === id || undefined}
       animate={{ scale: dropTargetId === id ? 1.05 : 1 }}
