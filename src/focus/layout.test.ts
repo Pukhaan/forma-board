@@ -50,6 +50,12 @@ describe("placeAxis", () => {
     expect(placeAxis(200, 1000, 50, 50, 1000).origin).toBe(750);
   });
 
+  it("adds the same room on both sides and opens past it", () => {
+    expect(placeAxis(200, 1000, 50, 50, 500, 300)).toEqual({ sheet: 1600, origin: 700, scroll: 300 });
+    const long = placeAxis(3000, 1000, 50, 50, 0, 300);
+    expect(long).toEqual({ sheet: 3700, origin: 350, scroll: 300 });
+  });
+
   it("gives a long grid a sheet, scrolled toward the anchor", () => {
     const top = placeAxis(3000, 1000, 50, 50, 0);
     expect(top).toEqual({ sheet: 3100, origin: 50, scroll: 0 });
@@ -65,10 +71,18 @@ describe("planGrid", () => {
   it("unfolds a small stack from where it was clicked", () => {
     const top = planGrid(6, viewport, { x: 300, y: 150 }, margins);
     const bottom = planGrid(6, viewport, { x: 1200, y: 800 }, margins);
-    expect(top.origin.y).toBe(margins.top);
-    expect(top.origin.x).toBe(margins.left);
-    expect(bottom.origin.y + bottom.rows * bottom.pitch - bottom.gap).toBe(viewport.h - margins.bottom);
-    expect(top.sheet).toEqual(viewport);
+    // On screen, the grid sits at its sheet position minus the opening scroll.
+    expect(top.origin.y - top.scroll.y).toBe(margins.top);
+    expect(top.origin.x - top.scroll.x).toBe(margins.left);
+    expect(bottom.origin.y - bottom.scroll.y + bottom.rows * bottom.pitch - bottom.gap).toBe(viewport.h - margins.bottom);
+  });
+
+  it("always leaves room to move a small stack around, in every direction", () => {
+    const plan = planGrid(6, viewport, { x: 720, y: 450 }, margins);
+    expect(plan.scroll.x).toBeGreaterThan(0);
+    expect(plan.scroll.y).toBeGreaterThan(0);
+    expect(plan.sheet.w - viewport.w - plan.scroll.x).toBeGreaterThan(0);
+    expect(plan.sheet.h - viewport.h - plan.scroll.y).toBeGreaterThan(0);
   });
 
   it("turns a big stack into a field that scrolls both ways", () => {

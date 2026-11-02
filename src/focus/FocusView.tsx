@@ -22,6 +22,7 @@ import { fitSize, planGrid, slotPosition, stagger, type GridPlan, type Pose } fr
 import { Lift, rectOf, type Rect } from "./Lift";
 import { poseOnPile, readPile, setPileOut, type Pile } from "./pile";
 import { Tile, type TileValues } from "./Tile";
+import { useFieldPan } from "./useFieldPan";
 import { useTileDrag } from "./useTileDrag";
 
 // Motion, tuned by eye. Springs use Motion's visualDuration (seconds until it
@@ -196,6 +197,7 @@ function OpenStack({ stack, onClose, onTakeOut, onReorder }: Omit<Props, "stack"
     drop: DROP_SPRING,
     dragScale: DRAG_SCALE,
   });
+  const { panning, wasDrag, handlers: pan } = useFieldPan(fieldRef, phase === "open" && !lift && !raisedId);
   const raisedRef = useRef<string | null>(null);
   useLayoutEffect(() => {
     raisedRef.current = raisedId;
@@ -313,16 +315,21 @@ function OpenStack({ stack, onClose, onTakeOut, onReorder }: Omit<Props, "stack"
   const takeOut = useCallback((id: string) => latest.current.onTakeOut(id), []);
   const tileDown = useCallback((e: PointerEvent, id: string) => dragDown(e, id), [dragDown]);
   const closeOnEmpty = (e: MouseEvent) => {
-    if (e.target !== e.currentTarget || consumeClick() || phaseRef.current === "closing") return;
+    if (e.target !== e.currentTarget || wasDrag() || consumeClick() || phaseRef.current === "closing") return;
     onClose();
   };
 
   const lifted = lift ? byId.get(lift.id) : undefined;
 
   return (
-    <div className="focus" data-phase={phase} data-dragging={raisedId ? "" : undefined}>
+    <div
+      className="focus"
+      data-phase={phase}
+      data-dragging={raisedId ? "" : undefined}
+      data-panning={panning ? "" : undefined}
+    >
       <motion.div className="focus-veil" style={{ opacity: veil }} />
-      <div className="focus-field" ref={fieldRef} onClick={closeOnEmpty}>
+      <div className="focus-field" ref={fieldRef} onClick={closeOnEmpty} {...pan}>
         <div className="focus-sheet" style={{ width: plan.sheet.w, height: plan.sheet.h }} onClick={closeOnEmpty}>
           {items.map((item, i) => (
             <Tile

@@ -39,6 +39,16 @@
   scrollbar-width: none;
 }
 
+/* Empty space can be grabbed and dragged, like the board. */
+.focus[data-phase="open"] .focus-field {
+  cursor: grab;
+}
+
+.focus[data-panning] .focus-field,
+.focus[data-panning] .ft-media {
+  cursor: grabbing;
+}
+
 .focus-field::-webkit-scrollbar {
   display: none;
 }

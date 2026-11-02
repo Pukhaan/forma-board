@@ -19,7 +19,7 @@ export type GridPlan = {
   pitch: number;
   /** Top-left of the first cell, in sheet coordinates. */
   origin: Point;
-  /** The scrollable sheet everything sits on. Never smaller than the viewport. */
+  /** The scrollable sheet everything sits on: the grid plus room to move around it. */
   sheet: Size;
   /** Where to scroll the sheet to on open, so the grid sits around the anchor. */
   scroll: Point;
@@ -46,21 +46,28 @@ export function chooseColumns(count: number, inner: Size) {
   return clamp(ideal, 1, count);
 }
 
+/** Extra room around the grid, as a share of the window, so the field can always be moved around. */
+export const ROAM = 0.5;
+
 /**
  * One axis of the placement. A grid that fits is centred on the anchor (where
  * the stack was on screen), then pushed back inside the margins. A grid longer
- * than the window gets a sheet to scroll, opened at the same relative spot as
- * the anchor: a stack near the top opens on the top of its grid, one near the
- * bottom on the bottom.
+ * than the window opens at the same relative spot as the anchor: a stack near
+ * the top opens on the top of its grid, one near the bottom on the bottom.
+ *
+ * Either way the sheet has `roam` of free room on both sides, and opens
+ * scrolled past it, so what you see first is the same but you can always drag
+ * or scroll the field in any direction, even when the grid is small.
  */
-export function placeAxis(span: number, viewport: number, before: number, after: number, anchor: number) {
+export function placeAxis(span: number, viewport: number, before: number, after: number, anchor: number, roam = 0) {
+  const room = Math.round(roam);
   const inner = viewport - before - after;
   if (span <= inner) {
     const start = clamp(anchor - span / 2, before, before + inner - span);
-    return { sheet: viewport, origin: Math.round(start), scroll: 0 };
+    return { sheet: viewport + room * 2, origin: Math.round(start) + room, scroll: room };
   }
   const f = clamp((anchor - before) / inner, 0, 1);
-  return { sheet: span + before + after, origin: before, scroll: Math.round(f * (span - inner)) };
+  return { sheet: span + before + after + room * 2, origin: before + room, scroll: Math.round(f * (span - inner)) + room };
 }
 
 export function planGrid(count: number, viewport: Size, anchor: Point, margins: Margins): GridPlan {
@@ -73,8 +80,8 @@ export function planGrid(count: number, viewport: Size, anchor: Point, margins: 
   const n = Math.max(1, count);
   const cols = chooseColumns(n, inner);
   const rows = Math.ceil(n / cols);
-  const x = placeAxis(cols * pitch - gap, viewport.w, margins.left, margins.right, anchor.x);
-  const y = placeAxis(rows * pitch - gap, viewport.h, margins.top, margins.bottom, anchor.y);
+  const x = placeAxis(cols * pitch - gap, viewport.w, margins.left, margins.right, anchor.x, viewport.w * ROAM);
+  const y = placeAxis(rows * pitch - gap, viewport.h, margins.top, margins.bottom, anchor.y, viewport.h * ROAM);
   return {
     count,
     cols,
