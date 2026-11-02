@@ -72,8 +72,30 @@ export function wirePath(s: Anchor, t: Anchor) {
     x: 0.125 * s.x + 0.375 * c1.x + 0.375 * c2.x + 0.125 * t.x,
     y: 0.125 * s.y + 0.375 * c1.y + 0.375 * c2.y + 0.125 * t.y,
   };
-  return { path, mid };
+  const curve: Cubic = [s, c1, c2, t];
+  return { path, mid, curve };
 }
+
+type Pt = { x: number; y: number };
+export type Cubic = readonly [Pt, Pt, Pt, Pt];
+
+const lerp = (a: Pt, b: Pt, u: number) => ({ x: a.x + (b.x - a.x) * u, y: a.y + (b.y - a.y) * u });
+
+/** Splits a cubic bezier at `u` into the part before and the part after. */
+export function splitCubic([p0, p1, p2, p3]: Cubic, u: number): [Cubic, Cubic] {
+  const a = lerp(p0, p1, u);
+  const b = lerp(p1, p2, u);
+  const c = lerp(p2, p3, u);
+  const d = lerp(a, b, u);
+  const e = lerp(b, c, u);
+  const m = lerp(d, e, u);
+  return [
+    [p0, a, d, m],
+    [m, e, c, p3],
+  ];
+}
+
+export const cubicPath = ([a, b, c, d]: Cubic) => `M ${a.x} ${a.y} C ${b.x} ${b.y} ${c.x} ${c.y} ${d.x} ${d.y}`;
 
 export function clamp(v: number, min: number, max: number) {
   return Math.min(max, Math.max(min, v));
@@ -92,4 +114,41 @@ export function wireFade(s: { x: number; y: number }, t: { x: number; y: number 
   const length = Math.hypot(t.x - s.x, t.y - s.y);
   const f = length > 0 ? Math.min(1 / 3, fade / length) : 1 / 3;
   return { start: f, end: 1 - f };
+}
+
+/** How far a wire takes to fade out before its note and back in after it, in board units. */
+export const NOTE_FADE = 22;
+
+/** Half a quiet note's width on the board, from its text: 12px type, small padding. */
+export const noteHalfWidth = (text: string) => (Math.min(text.length, 40) * 6.3 + 16) / 2;
+
+/**
+ * The wire cut in two where it passes its note (centred at the curve's
+ * midpoint): the part before, which should fade out toward the note, and the
+ * part after, which fades back in. The cut is where the curve leaves a box
+ * the size of the note plus a little air, so the line fades as it nears the
+ * words whichever way it travels. Null if the wire is too short for it.
+ */
+export function aroundNote(curve: Cubic, halfWidth: number, halfHeight = 10) {
+  const at = (u: number) => {
+    const [p0, p1, p2, p3] = curve;
+    const v = 1 - u;
+    return {
+      x: v * v * v * p0.x + 3 * v * v * u * p1.x + 3 * v * u * u * p2.x + u * u * u * p3.x,
+      y: v * v * v * p0.y + 3 * v * v * u * p1.y + 3 * v * u * u * p2.y + u * u * u * p3.y,
+    };
+  };
+  const m = at(0.5);
+  const inside = (u: number) => {
+    const p = at(u);
+    return Math.abs(p.x - m.x) < halfWidth + 4 && Math.abs(p.y - m.y) < halfHeight + 4;
+  };
+  let a = 0.5;
+  while (a > 0 && inside(a)) a -= 0.004;
+  let b = 0.5;
+  while (b < 1 && inside(b)) b += 0.004;
+  if (a <= 0.05 || b >= 0.95) return null;
+  const [before] = splitCubic(curve, a);
+  const [, after] = splitCubic(curve, b);
+  return { before, after };
 }

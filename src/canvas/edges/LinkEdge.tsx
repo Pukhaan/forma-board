@@ -6,11 +6,11 @@ import {
   type EdgeProps,
 } from "@xyflow/react";
 import { useState } from "react";
-import { wireEnds, wireFade, wirePath } from "../../model/geometry";
+import { aroundNote, cubicPath, NOTE_FADE, noteHalfWidth, wireEnds, wireFade, wirePath, type Cubic } from "../../model/geometry";
 import type { LinkData } from "../../model/types";
 import { bodyOf } from "../body";
 import { useCanvasUi } from "../context";
-import { useLabelZoom } from "../zoom";
+import { detailShows, useLabelZoom } from "../zoom";
 
 type LinkEdgeType = Edge<LinkData, "link">;
 
@@ -32,13 +32,18 @@ export function LinkEdge({ id, source, target, data, selected }: EdgeProps<LinkE
 
   // Ends on the things themselves (a stack's pile), and below any title.
   const [s, t] = wireEnds(bodyOf(a, zoom), bodyOf(b, zoom));
-  const { path, mid } = wirePath(s, t);
+  const { path, mid, curve } = wirePath(s, t);
   const fade = wireFade(s, t);
   const gradient = `wire-fade-${id}`;
   const note = data?.note;
+  // At rest the line is cut where it passes its note and each part fades
+  // toward the words, as it does at the cards. Plain gradients: cheap to draw.
   const hot = selected || hover;
+  // Only at rest with the note showing; hovered or zoomed out, the whole line.
+  // One version drawn at a time keeps zooming cheap.
+  const cut = note && !editing && !hot && detailShows(zoom, true) ? aroundNote(curve, noteHalfWidth(note)) : null;
   // The note shows as a white pill when the wire is hovered, selected or
-  // being written on. At rest it is quiet grey text, and hidden zoomed out.
+  // being written on.
   const loud = hot || editing;
 
   const save = (value: string) => {
@@ -61,7 +66,13 @@ export function LinkEdge({ id, source, target, data, selected }: EdgeProps<LinkE
           <stop offset={1} className="wire-stop" data-hot={hot || undefined} stopOpacity={0} />
         </linearGradient>
       </defs>
-      <path d={path} className="wire" stroke={`url(#${gradient})`} data-hot={hot || undefined} />
+      {!cut && <path d={path} className="wire" stroke={`url(#${gradient})`} data-hot={hot || undefined} />}
+      {cut && (
+        <>
+          <WirePart id={`${gradient}-a`} curve={cut.before} fadeIn={wireFade(s, t).start} hot={hot} into="end" />
+          <WirePart id={`${gradient}-b`} curve={cut.after} fadeIn={wireFade(s, t).start} hot={hot} into="start" />
+        </>
+      )}
       <path
         d={path}
         className="wire-hit"
@@ -104,6 +115,34 @@ export function LinkEdge({ id, source, target, data, selected }: EdgeProps<LinkE
           )}
         </div>
       </EdgeLabelRenderer>
+    </>
+  );
+}
+
+/**
+ * One side of a wire cut at its note: fades in from its card as the whole wire
+ * does, and fades out toward the note (`into` says which end meets the note).
+ */
+function WirePart({ id, curve, fadeIn, hot, into }: { id: string; curve: Cubic; fadeIn: number; hot: boolean; into: "start" | "end" }) {
+  const [a, , , d] = curve;
+  const length = Math.hypot(d.x - a.x, d.y - a.y) || 1;
+  const toNote = Math.min(0.45, NOTE_FADE / length);
+  const fromCard = Math.min(0.45, fadeIn * 2);
+  // Stops run from the curve's start to its end.
+  const stops =
+    into === "end"
+      ? [[0, 0], [fromCard, 1], [1 - toNote, 1], [1, 0]]
+      : [[0, 0], [toNote, 1], [1 - fromCard, 1], [1, 0]];
+  return (
+    <>
+      <defs>
+        <linearGradient id={id} gradientUnits="userSpaceOnUse" x1={a.x} y1={a.y} x2={d.x} y2={d.y}>
+          {stops.map(([offset, opacity]) => (
+            <stop key={offset} offset={offset} className="wire-stop" data-hot={hot || undefined} stopOpacity={opacity} />
+          ))}
+        </linearGradient>
+      </defs>
+      <path d={cubicPath(curve)} className="wire wire-part" stroke={`url(#${id})`} data-hot={hot || undefined} />
     </>
   );
 }

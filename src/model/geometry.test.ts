@@ -1,5 +1,5 @@
 import { describe, expect, it } from "vitest";
-import { anchorOn, wireEnds, wireFade, wirePath } from "./geometry";
+import { anchorOn, aroundNote, splitCubic, wireEnds, wireFade, wirePath } from "./geometry";
 
 const r = { x: 0, y: 0, w: 200, h: 100 };
 
@@ -70,5 +70,32 @@ describe("wireFade", () => {
     const f = wireFade({ x: 0, y: 0 }, { x: 60, y: 0 }, 40);
     expect(f.start).toBeCloseTo(1 / 3);
     expect(f.end).toBeCloseTo(2 / 3);
+  });
+});
+
+describe("splitCubic", () => {
+  it("meets in the middle of a straight line", () => {
+    const line = [{ x: 0, y: 0 }, { x: 100, y: 0 }, { x: 200, y: 0 }, { x: 300, y: 0 }] as const;
+    const [a, b] = splitCubic(line, 0.5);
+    expect(a[3]).toEqual({ x: 150, y: 0 });
+    expect(b[0]).toEqual({ x: 150, y: 0 });
+    expect(b[3]).toEqual({ x: 300, y: 0 });
+  });
+});
+
+describe("aroundNote", () => {
+  const line = [{ x: 0, y: 0 }, { x: 200, y: 0 }, { x: 400, y: 0 }, { x: 600, y: 0 }] as const;
+
+  it("cuts the wire just outside the note on both sides", () => {
+    const cut = aroundNote(line, 50)!;
+    expect(cut.before[0]).toEqual({ x: 0, y: 0 });
+    expect(cut.before[3].x).toBeLessThan(300 - 50);
+    expect(cut.before[3].x).toBeGreaterThan(300 - 60);
+    expect(cut.after[0].x).toBeGreaterThan(300 + 50);
+    expect(cut.after[3]).toEqual({ x: 600, y: 0 });
+  });
+
+  it("leaves a wire too short for the note whole", () => {
+    expect(aroundNote(line, 290)).toBeNull();
   });
 });

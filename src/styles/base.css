@@ -146,6 +146,10 @@ img {
   stroke-width: 2;
 }
 
+/* At rest a wire with a note is drawn as two parts that fade out toward the
+   note (.wire-part); hovered or zoomed out, as one whole line. LinkEdge draws
+   only one version at a time, so zooming stays cheap. */
+
 .wire-stop[data-hot] {
   stop-color: var(--wire-hot);
 }
@@ -164,8 +168,8 @@ img {
   cursor: pointer;
 }
 
-/* A wire's note. At rest it is quiet: small grey text on a backing the colour
-   of the canvas, so it sits cleanly over the line with no pill and no border.
+/* A wire's note. At rest it is quiet: small grey text with the line fading
+   away around it (see .wire-part), no backing, no pill, no border.
    Hover the wire or the note, select the wire, or write on it, and it becomes
    the white pill. Zoomed out it fades with the board's detail (see nodes.css)
    and only shows when you hover. */
@@ -195,7 +199,7 @@ img {
 .wire-note {
   padding: 1px 7px;
   color: var(--ink-2);
-  background: var(--canvas);
+  background: transparent;
   scale: 0.94;
   transition: padding 0.18s var(--ease-out), color 0.15s ease, background-color 0.15s ease,
     border-color 0.15s ease, box-shadow 0.15s ease, scale 0.2s var(--spring);
