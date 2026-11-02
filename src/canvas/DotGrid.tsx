@@ -1,6 +1,11 @@
 import { useStoreApi } from "@xyflow/react";
 import { useEffect, useRef } from "react";
-import { axisDots, dotStyle } from "./dots";
+import { axisDots, dotStyle, GRID } from "./dots";
+import { gridFx } from "./gridFx";
+import { dotKey } from "./gridFx.math";
+import { paintSwarm, readInk } from "./gridFx.paint";
+import { sceneEnv, sceneWants } from "./gridFx.scene";
+import { DotSwarm } from "./gridFx.swarm";
 
 type Transform = readonly [number, number, number];
 
@@ -15,6 +20,12 @@ type Transform = readonly [number, number, number];
  * positions so they glide smoothly while you zoom.
  *
  * Colour and size come from the `--dot` and `--dot-size` tokens.
+ *
+ * The grid also lends its dots out (see gridFx.*): hover a thing and a few
+ * dots near each side gather into a "+" for its port; pull a wire and dots
+ * along it leave the grid to make the wire. While a dot is out its grid spot
+ * stays empty, and it flies back into it after. A spring loop runs only while
+ * something is moving, then the canvas goes idle again.
  */
 export function DotGrid() {
   const store = useStoreApi();
@@ -31,6 +42,9 @@ export function DotGrid() {
     let color = "rgba(0, 0, 0, 0.2)";
     let base = 2;
     let drawn: Transform | null = null;
+    let ink = readInk(ctx, color);
+    const swarm = new DotSwarm();
+    const motion = window.matchMedia("(prefers-reduced-motion: reduce)");
 
     const draw = (t: Transform) => {
       drawn = t;
@@ -38,30 +52,39 @@ export function DotGrid() {
       ctx.setTransform(1, 0, 0, 1, 0, 0);
       ctx.clearRect(0, 0, canvas.width, canvas.height);
       const { spacing, size, alpha } = dotStyle(zoom, base);
-      if (alpha < 0.005) return;
-      const r = size / 2;
-      const cols = axisDots(x, spacing, width, r);
-      const rows = axisDots(y, spacing, height, r);
       ctx.setTransform(dpr, 0, 0, dpr, 0, 0);
-      ctx.globalAlpha = alpha;
-      ctx.fillStyle = color;
-      ctx.beginPath();
-      for (let j = 0; j < rows.count; j++) {
-        const cy = y + (rows.first + j) * spacing;
-        for (let i = 0; i < cols.count; i++) {
-          const cx = x + (cols.first + i) * spacing;
-          ctx.moveTo(cx + r, cy);
-          ctx.arc(cx, cy, r, 0, Math.PI * 2);
+      if (alpha >= 0.005) {
+        const r = size / 2;
+        const cols = axisDots(x, spacing, width, r);
+        const rows = axisDots(y, spacing, height, r);
+        // Dots that are out on loan leave their spot empty until they fly back.
+        const out = swarm.borrowed;
+        const gaps = out.size > 0;
+        ctx.globalAlpha = alpha;
+        ctx.fillStyle = color;
+        ctx.beginPath();
+        for (let j = 0; j < rows.count; j++) {
+          const row = rows.first + j;
+          const cy = y + row * spacing;
+          for (let i = 0; i < cols.count; i++) {
+            const col = cols.first + i;
+            if (gaps && out.has(dotKey(col, row))) continue;
+            const cx = x + col * spacing;
+            ctx.moveTo(cx + r, cy);
+            ctx.arc(cx, cy, r, 0, Math.PI * 2);
+          }
         }
+        ctx.fill();
+        ctx.globalAlpha = 1;
       }
-      ctx.fill();
-      ctx.globalAlpha = 1;
+      paintSwarm(ctx, swarm, ink, t, size, alpha);
     };
     const redraw = () => draw(drawn ?? store.getState().transform);
 
     const readTokens = () => {
       const style = getComputedStyle(canvas);
       color = style.getPropertyValue("--dot").trim() || color;
+      ink = readInk(ctx, color);
       base = parseFloat(style.getPropertyValue("--dot-size")) || base;
     };
 
@@ -108,14 +131,40 @@ export function DotGrid() {
     const themeWatch = new MutationObserver(onTheme);
     themeWatch.observe(document.documentElement, { attributes: true, attributeFilter: ["class", "data-theme", "style"] });
 
+    // The effect loop: springs step once per frame while anything moves.
+    let raf = 0;
+    let last = 0;
+    const tick = (now: number) => {
+      raf = 0;
+      const s = store.getState();
+      const dt = last ? Math.min(1 / 30, Math.max(0, (now - last) / 1000)) : 1 / 60;
+      last = now;
+      const env = sceneEnv(s, GRID, dotStyle(s.transform[2], base).alpha, motion.matches);
+      swarm.sync(sceneWants(s, gridFx.get()), env);
+      const moving = swarm.step(dt, env);
+      draw(s.transform);
+      if (moving) raf = requestAnimationFrame(tick);
+      else last = 0;
+    };
+    const kick = () => {
+      if (raf) return;
+      const s = store.getState();
+      const fx = gridFx.get();
+      if (swarm.size > 0 || fx.hover !== null || s.connection.inProgress) raf = requestAnimationFrame(tick);
+    };
+
     resize();
     // Same store, same tick as React Flow's own viewport write.
     const unsubscribe = store.subscribe((s) => {
       if (s.transform !== drawn) draw(s.transform);
+      kick();
     });
+    const unsubscribeFx = gridFx.subscribe(kick);
 
     return () => {
       unsubscribe();
+      unsubscribeFx();
+      cancelAnimationFrame(raf);
       resizer.disconnect();
       themeWatch.disconnect();
       scheme.removeEventListener("change", onTheme);

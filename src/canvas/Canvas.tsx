@@ -21,6 +21,7 @@ import { ZoomPill } from "../chrome/ZoomPill";
 import { FocusView } from "../focus/FocusView";
 import { CanvasUiContext } from "./context";
 import { DotGrid } from "./DotGrid";
+import { hoverNode, leaveNode } from "./gridFx";
 import { ConnectionLine } from "./edges/ConnectionLine";
 import { LinkEdge } from "./edges/LinkEdge";
 import { CardNode } from "./nodes/CardNode";
@@ -174,6 +175,8 @@ export function Canvas({ store, initial }: Props) {
           onConnect={onConnect}
           onConnectEnd={onConnectEnd}
           onNodeClick={onNodeClick}
+          onNodeMouseEnter={hoverNode}
+          onNodeMouseLeave={leaveNode}
           onNodeDragStart={commit}
           onNodeDrag={onNodeDrag}
           onNodeDragStop={onNodeDragStop}

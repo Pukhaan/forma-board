@@ -1,24 +1,14 @@
-/* Ports: small rings on each side, shown on hover and while a wire is being pulled. */
+/* Ports: invisible 20px hit areas at each side's midpoint. What you see is a
+   "+" the dot grid gathers there out of its own dots (src/canvas/gridFx.*).
+   A wire starts at the outer edge of the port, 10px out: the "+"'s centre. */
 .port.react-flow__handle {
-  width: 9px;
-  height: 9px;
+  width: 20px;
+  height: 20px;
   min-width: 0;
   min-height: 0;
-  background: var(--card);
-  border: 1.5px solid var(--port);
+  background: transparent;
+  border: none;
   border-radius: 50%;
-  opacity: 0;
-  transition: opacity 0.15s ease, scale 0.2s var(--spring);
-}
-
-.react-flow__node:hover .port,
-.board:has(.react-flow__connectionline) .port {
-  opacity: 1;
-}
-
-/* `scale` on its own, so React Flow's positioning transform stays intact. */
-.port.react-flow__handle:hover {
-  scale: 1.5;
 }
 
 /* Project: the dark block everything connects back to. */
