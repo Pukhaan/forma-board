@@ -90,9 +90,16 @@ export function Canvas({ store, initial }: Props) {
     [commit, setEdges],
   );
 
-  const onNodeClick = useCallback((_: unknown, node: Node) => {
-    if (node.type === "stack") setFocusId(node.id);
-  }, []);
+  // Clicking a stack opens it. It doesn't select it, so nothing is left
+  // highlighted when you close it again.
+  const onNodeClick = useCallback(
+    (_: unknown, node: Node) => {
+      if (node.type !== "stack") return;
+      setNodes((ns) => ns.map((n) => (n.selected ? { ...n, selected: false } : n)));
+      setFocusId(node.id);
+    },
+    [setNodes],
+  );
 
   const centre = useCallback(
     () => screenToFlowPosition({ x: window.innerWidth / 2, y: window.innerHeight / 2 }),

@@ -54,9 +54,9 @@
   opacity: 0.68;
 }
 
+/* Selected things lift a little. Never a border or outline. */
 .project[data-selected] {
-  outline: 2px solid var(--ink);
-  outline-offset: 5px;
+  box-shadow: 0 4px 10px rgba(18, 18, 16, 0.14), 0 30px 60px rgba(18, 18, 16, 0.24);
 }
 
 /* Note: research in words. */
@@ -95,9 +95,9 @@
 }
 
 .note[data-selected],
-.card[data-selected] .card-media {
-  outline: 1.5px solid var(--ink);
-  outline-offset: 4px;
+.card[data-selected] .card-media,
+.stack[data-selected] .stack-card:last-child {
+  box-shadow: var(--shadow-lift);
 }
 
 /* Stack: a pile with its name underneath. */
@@ -117,19 +117,13 @@
   content: "";
   position: absolute;
   inset: -4px;
-  border-radius: 18px;
-  border: 1.5px solid transparent;
+  border-radius: 20px;
   pointer-events: none;
-  transition: border-color 0.15s ease, background 0.15s ease;
+  transition: background 0.2s ease;
 }
 
-.stack[data-selected] .stack-pile::after {
-  border-color: var(--ink);
-}
-
+/* Drop hint: a soft glow behind the pile (it also fans out). No border. */
 .stack[data-target] .stack-pile::after {
-  border-color: rgba(22, 22, 21, 0.4);
-  border-style: dashed;
   background: var(--drop);
 }
 
@@ -207,8 +201,7 @@
 }
 
 .card[data-target] .card-media {
-  outline: 1.5px dashed rgba(22, 22, 21, 0.45);
-  outline-offset: 5px;
+  box-shadow: 0 0 0 10px var(--drop), var(--shadow-lift);
 }
 
 .card-title {
