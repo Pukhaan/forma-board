@@ -116,11 +116,15 @@
   border-radius: 6px;
 }
 
-/* One image. Positioned only by transform, so moving it never lays out. */
+/* One image. Positioned only by transform, so moving it never lays out. Its
+   own layer from the first frame: the flight, a reflow and the close then only
+   move layers the compositor already has. Without it, WebKit repaints every
+   tile, big pictures and all, on each frame they move. */
 .ft {
   position: absolute;
   top: 0;
   left: 0;
+  will-change: transform;
   -webkit-user-select: none;
   user-select: none;
   touch-action: none;

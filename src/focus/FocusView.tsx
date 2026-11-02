@@ -1,12 +1,4 @@
-import {
-  animate,
-  AnimatePresence,
-  motion,
-  useMotionValue,
-  usePresence,
-  useReducedMotion,
-  type Transition,
-} from "motion/react";
+import { animate, AnimatePresence, motion, useMotionValue, usePresence, useReducedMotion } from "motion/react";
 import {
   useCallback,
   useEffect,
@@ -18,51 +10,33 @@ import {
   type PointerEvent,
 } from "react";
 import type { Item } from "../model/types";
-import { planGrid, sizeIn, slotPosition, stagger, type GridPlan, type Pose } from "./layout";
+import { planGrid, sizeIn, slotPosition, stagger } from "./layout";
 import { Lift, rectOf, type Rect } from "./Lift";
-import { poseOnPile, readPile, setPileOut, type Pile } from "./pile";
+import {
+  CLOSE_SPRING,
+  CLOSE_STAGGER,
+  CLOSE_STAGGER_MAX,
+  DEEP_FADE,
+  DEEP_FADE_LEAD,
+  DRAG_SCALE,
+  DROP_SPRING,
+  LIFT_FADE,
+  LIFT_SPRING,
+  MARGINS,
+  OPEN_SPRING,
+  OPEN_STAGGER,
+  OPEN_STAGGER_MAX,
+  PICKUP_SPRING,
+  REDUCED_FADE,
+  REFLOW_SPRING,
+  VEIL_IN,
+  VEIL_OUT,
+} from "./motion";
+import { firstFrame, flyTo, gridOrder, restPose, warmImages, type Stack } from "./opening";
+import { poseOnPile, readPile, setPileOut } from "./pile";
 import { Tile, type TileValues } from "./Tile";
 import { useFieldPan } from "./useFieldPan";
 import { useTileDrag } from "./useTileDrag";
-
-// Motion, tuned by eye. Springs use Motion's visualDuration (seconds until it
-// looks settled, whatever the distance) and bounce (0 is critically damped),
-// so a long flight lands as softly as a short one.
-
-/** Images leaving the pile for the grid. */
-const OPEN_SPRING = { type: "spring", visualDuration: 0.62, bounce: 0.12 } as const;
-/** Gap between images leaving the pile, cover first. */
-const OPEN_STAGGER = 0.034;
-/** The whole deal-out never spreads longer than this, however big the stack. */
-const OPEN_STAGGER_MAX = 0.3;
-/** Images going back onto the pile: a little quicker, no overshoot. */
-const CLOSE_SPRING = { type: "spring", visualDuration: 0.48, bounce: 0.04 } as const;
-/** Gap between images going back, deepest first, cover last. */
-const CLOSE_STAGGER = 0.02;
-const CLOSE_STAGGER_MAX = 0.16;
-/** The board behind blurring and dimming, and clearing again. */
-const VEIL_IN: Transition = { duration: 0.42, ease: [0.22, 1, 0.36, 1] };
-const VEIL_OUT: Transition = { duration: 0.4, ease: [0.4, 0, 0.2, 1] };
-/** Images deeper than the four the pile shows fade in from under it, and out into it. */
-const DEEP_FADE: Transition = { duration: 0.22, ease: "easeOut" };
-/** How long before landing a deep image starts to fade out on close. */
-const DEEP_FADE_LEAD = 0.16;
-/** Others making room while you drag, and anything else that changes slots. */
-const REFLOW_SPRING = { type: "spring", visualDuration: 0.4, bounce: 0.12 } as const;
-/** Picking an image up to drag it, and the size it is held at. */
-const PICKUP_SPRING = { type: "spring", visualDuration: 0.22, bounce: 0.2 } as const;
-const DRAG_SCALE = 1.05;
-/** Letting go: the image settles into its new slot. */
-const DROP_SPRING = { type: "spring", visualDuration: 0.36, bounce: 0.16 } as const;
-/** One image lifted toward you and put back. */
-const LIFT_SPRING = { type: "spring", visualDuration: 0.44, bounce: 0.1 } as const;
-const LIFT_FADE: Transition = { duration: 0.28, ease: [0.22, 1, 0.36, 1] };
-/** prefers-reduced-motion: everything crossfades in place. */
-const REDUCED_FADE: Transition = { duration: 0.2, ease: "easeOut" };
-/** Free space kept around the grid; the top leaves room for the title. */
-const MARGINS = { top: 112, right: 72, bottom: 96, left: 72 };
-
-type Stack = { id: string; title: string; items: Item[] };
 
 type Props = {
   stack: Stack | null;
@@ -82,40 +56,6 @@ type Phase = "opening" | "open" | "closing";
  */
 export function FocusView({ stack, ...props }: Props) {
   return <AnimatePresence>{stack && <OpenStack key={stack.id} stack={stack} {...props} />}</AnimatePresence>;
-}
-
-/** Grid order: the cover first, then down through the pile. */
-const gridOrder = (items: Item[]) => items.map((i) => i.id).reverse();
-
-function restPose(plan: GridPlan, index: number, item: Item): Pose {
-  const size = sizeIn(item, plan.cell);
-  return { ...slotPosition(plan, index, size), scale: 1, rotate: 0, opacity: 1 };
-}
-
-function flyTo(v: TileValues, to: Pose, move: Transition, fade: Transition) {
-  return Promise.all([
-    animate(v.x, to.x, move),
-    animate(v.y, to.y, move),
-    animate(v.scale, to.scale, move),
-    animate(v.rotate, to.rotate, move),
-    animate(v.opacity, to.opacity, fade),
-  ]);
-}
-
-/** Everything the first frame needs, read once off the board. */
-function firstFrame(stack: Stack, reduced: boolean) {
-  const viewport = { w: window.innerWidth, h: window.innerHeight };
-  const pile: Pile | null = readPile(stack.id);
-  const anchor = pile?.centre ?? { x: viewport.w / 2, y: viewport.h / 2 };
-  const order = gridOrder(stack.items);
-  const plan = planGrid(order.length, viewport, anchor, MARGINS);
-  const starts = new Map<string, Pose>();
-  stack.items.forEach((item) => {
-    const i = order.indexOf(item.id);
-    const onPile = !reduced && pile && poseOnPile(i, sizeIn(item, plan.cell), pile, plan.scroll);
-    starts.set(item.id, onPile || { ...restPose(plan, i, item), opacity: 0 });
-  });
-  return { viewport, anchor, scroll: plan.scroll, starts };
 }
 
 function OpenStack({ stack, onClose, onTakeOut, onReorder }: Omit<Props, "stack"> & { stack: Stack }) {
@@ -162,7 +102,8 @@ function OpenStack({ stack, onClose, onTakeOut, onReorder }: Omit<Props, "stack"
   }, []);
 
   // The first frame: sheet scrolled to where the plan put it, the pile on the
-  // board hidden, the images drawn exactly over its cards.
+  // board hidden, the images drawn exactly over its cards, and every image
+  // decoding in the background before it is due to show.
   useLayoutEffect(() => {
     const field = fieldRef.current;
     if (field) {
@@ -170,7 +111,11 @@ function OpenStack({ stack, onClose, onTakeOut, onReorder }: Omit<Props, "stack"
       field.scrollTop = first.scroll.y;
     }
     setPileOut(stack.id, true);
-    return () => setPileOut(stack.id, false);
+    const warm = warmImages(latest.current.stack.items);
+    return () => {
+      warm.length = 0;
+      setPileOut(stack.id, false);
+    };
   }, [first, stack.id]);
 
   useEffect(() => {
