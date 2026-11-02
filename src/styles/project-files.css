@@ -66,25 +66,19 @@
   text-overflow: ellipsis;
 }
 
-/* The whole chip lights up while you're on it, the remove button included. */
-.project-file:hover .project-file-open {
-  background: rgba(255, 255, 255, 0.14);
-}
-
-/* Take it off: a small cross inside the chip's right end, on hover. It sits
-   over the end of the name on the chip's own hover colour, fading into it,
-   so the chip never changes size. */
+/* Take it off: a small round button on the chip's corner, on hover. */
 .project-file-remove {
   position: absolute;
-  top: 4px;
-  right: 4px;
+  top: -6px;
+  right: -6px;
   display: grid;
   place-items: center;
-  width: 20px;
-  height: 20px;
-  background: #373736;
-  border-radius: 6px;
-  box-shadow: -10px 0 8px -2px #373736;
+  width: 16px;
+  height: 16px;
+  padding: 0;
+  background: #3a3a37;
+  border-radius: 50%;
+  box-shadow: 0 1px 3px rgba(0, 0, 0, 0.3);
   opacity: 0;
   transition: opacity 0.15s ease, background 0.15s ease;
 }
@@ -94,11 +88,22 @@
 }
 
 .project-file-remove:hover {
-  background: #4a4a47;
+  background: #55554f;
 }
 
-/* The toolbar's own icons (lucide), centred: no button padding to push them. */
-.project-file-remove,
+/* Drawn, like the wire's add button: bold, and centred on even pixels (no
+   button padding to push them off). */
+.project-file-remove svg,
+.project-file-add svg {
+  display: block;
+  width: 8px;
+  height: 8px;
+  fill: none;
+  stroke: rgba(245, 245, 243, 0.9);
+  stroke-width: 1.6;
+  stroke-linecap: round;
+}
+
 .project-file-add {
   padding: 0;
   color: rgba(245, 245, 243, 0.9);
@@ -111,6 +116,7 @@
 }
 
 .project-file-add {
+  padding: 0;
   display: grid;
   place-items: center;
   width: 28px;
@@ -130,9 +136,8 @@
 }
 
 .project-file-add svg {
-  width: 14px;
-  height: 14px;
-  stroke-width: 1.8;
+  width: 10px;
+  height: 10px;
 }
 
 .project-file-input {
