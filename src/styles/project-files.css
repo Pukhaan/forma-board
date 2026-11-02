@@ -77,7 +77,9 @@
   padding: 0;
   background: #3a3a37;
   border-radius: 50%;
-  box-shadow: 0 1px 3px rgba(0, 0, 0, 0.3);
+  /* An even ring in the card's own colour, as if cut out of the chip: no
+     drop shadow, which sat the circle low and the cross off its centre. */
+  box-shadow: 0 0 0 2px var(--ink);
   opacity: 0;
   transition: opacity 0.15s ease, background 0.15s ease;
 }
