@@ -43,13 +43,15 @@ export function Lift({ item, from, to, reduced, spring, fade, onPutBack, onDone 
   const live = item.kind === "live";
 
   return (
-    <motion.div
-      className="lift"
-      initial={{ opacity: 0 }}
-      animate={{ opacity: to ? 0 : 1 }}
-      transition={fade}
-      onClick={onPutBack}
-    >
+    <div className="lift" onClick={onPutBack}>
+      {/* The veil fades on its own: if the image sat inside it, putting it
+          back would fade the image out before it reached its tile. */}
+      <motion.div
+        className="lift-veil"
+        initial={{ opacity: 0 }}
+        animate={{ opacity: to ? 0 : 1 }}
+        transition={fade}
+      />
       <motion.div
         className="lift-media"
         data-kind={item.kind}
@@ -62,6 +64,6 @@ export function Lift({ item, from, to, reduced, spring, fade, onPutBack, onDone 
       >
         {live ? <LiveStage item={item} /> : <ItemFace item={item} read />}
       </motion.div>
-    </motion.div>
+    </div>
   );
 }
