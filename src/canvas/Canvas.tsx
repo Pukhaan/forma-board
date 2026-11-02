@@ -40,6 +40,10 @@ import { useStacking } from "./useStacking";
 import { useTidy } from "./useTidy";
 import { useSnapTicks } from "./useSnapTicks";
 import { useUndo } from "./useUndo";
+import { detailShows } from "./zoom";
+
+/** Quick to start, gentle to land: how the board glides in to something. */
+const easeOutCubic = (t: number) => 1 - (1 - t) ** 3;
 
 const nodeTypes = { project: ProjectNode, stack: StackNode, card: CardNode, note: NoteNode, area: AreaNode };
 const edgeTypes = { link: LinkEdge };
@@ -58,7 +62,7 @@ type Props = { store: BoardStore; initial: Board };
 export function Canvas({ store, initial }: Props) {
   const [nodes, setNodes, onNodesChange] = useNodesState(initial.nodes);
   const [edges, setEdges, onEdgesChange] = useEdgesState(initial.edges);
-  const { screenToFlowPosition, fitView, getNode } = useReactFlow();
+  const { screenToFlowPosition, fitView, getNode, getZoom } = useReactFlow();
   const { dropTargetId, onNodeDrag, onNodeDragStop } = useStacking();
   const { commit } = useUndo();
   useSnapTicks(dropTargetId);
@@ -109,16 +113,24 @@ export function Canvas({ store, initial }: Props) {
 
   // Clicking a stack opens it, and so does clicking a live card (big). Neither
   // is selected, so nothing is left highlighted when you close it again.
+  // Anything else clicked from too far away to read glides the board in to
+  // it, so a click always does something.
   const onNodeClick = useCallback(
     (e: ReactMouseEvent, node: Node) => {
       const liveItem = node.type === "card" && (node.data as CardData).item.kind === "live";
-      if (node.type !== "stack" && !liveItem) return;
+      if (node.type !== "stack" && !liveItem) {
+        if (!detailShows(getZoom(), false)) {
+          const reduced = window.matchMedia("(prefers-reduced-motion: reduce)").matches;
+          fitView({ nodes: [{ id: node.id }], maxZoom: 1, padding: 0.6, duration: reduced ? 0 : 640, ease: easeOutCubic });
+        }
+        return;
+      }
       setNodes((ns) => ns.map((n) => (n.selected ? { ...n, selected: false } : n)));
       if (node.type === "stack") return setFocusId(node.id);
       const media = (e.currentTarget as HTMLElement).querySelector<HTMLElement>(".card-media");
       if (media) setLive((l) => l ?? { id: node.id, item: (node.data as CardData).item, from: rectOf(media) });
     },
-    [setNodes],
+    [fitView, getZoom, setNodes],
   );
 
   const centre = useCallback(
