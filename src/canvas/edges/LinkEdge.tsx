@@ -12,6 +12,9 @@ import { bodyOf } from "../body";
 import { useCanvasUi } from "../context";
 import { detailShows, useLabelZoom } from "../zoom";
 
+/** How much wider than its quiet text a note's pill is on each side, in board units (padding plus a hair). */
+const PILL_PAD = 8;
+
 type LinkEdgeType = Edge<LinkData, "link">;
 
 /**
@@ -36,12 +39,17 @@ export function LinkEdge({ id, source, target, data, selected }: EdgeProps<LinkE
   const fade = wireFade(s, t);
   const gradient = `wire-fade-${id}`;
   const note = data?.note;
-  // At rest the line is cut where it passes its note and each part fades
-  // toward the words, as it does at the cards. Plain gradients: cheap to draw.
   const hot = selected || hover;
-  // Only at rest with the note showing; hovered or zoomed out, the whole line.
-  // One version drawn at a time keeps zooming cheap.
-  const cut = note && !editing && !hot && detailShows(zoom, true) ? aroundNote(curve, noteHalfWidth(note)) : null;
+  // Zoomed out (notes hidden) it is one whole line. Only one version is drawn
+  // at a time, which keeps zooming cheap.
+  // The line never runs under its note, so nothing flashes while the pill
+  // grows. At rest it fades out toward the words; hovered (or being written
+  // on) it runs solid right up to the pill's edge and stops under it.
+  const loudNote = hot || editing;
+  const cut =
+    note && detailShows(zoom, true)
+      ? aroundNote(curve, noteHalfWidth(note) + (loudNote ? PILL_PAD : 0))
+      : null;
   // The note shows as a white pill when the wire is hovered, selected or
   // being written on.
   const loud = hot || editing;
@@ -69,8 +77,8 @@ export function LinkEdge({ id, source, target, data, selected }: EdgeProps<LinkE
       {!cut && <path d={path} className="wire" stroke={`url(#${gradient})`} data-hot={hot || undefined} />}
       {cut && (
         <>
-          <WirePart id={`${gradient}-a`} curve={cut.before} fadeIn={wireFade(s, t).start} hot={hot} into="end" />
-          <WirePart id={`${gradient}-b`} curve={cut.after} fadeIn={wireFade(s, t).start} hot={hot} into="start" />
+          <WirePart id={`${gradient}-a`} curve={cut.before} fadeIn={wireFade(s, t).start} hot={hot} into="end" soft={!loudNote} />
+          <WirePart id={`${gradient}-b`} curve={cut.after} fadeIn={wireFade(s, t).start} hot={hot} into="start" soft={!loudNote} />
         </>
       )}
       <path
@@ -127,10 +135,25 @@ export function LinkEdge({ id, source, target, data, selected }: EdgeProps<LinkE
  * One side of a wire cut at its note: fades in from its card as the whole wire
  * does, and fades out toward the note (`into` says which end meets the note).
  */
-function WirePart({ id, curve, fadeIn, hot, into }: { id: string; curve: Cubic; fadeIn: number; hot: boolean; into: "start" | "end" }) {
+function WirePart({
+  id,
+  curve,
+  fadeIn,
+  hot,
+  into,
+  soft,
+}: {
+  id: string;
+  curve: Cubic;
+  fadeIn: number;
+  hot: boolean;
+  into: "start" | "end";
+  /** Fade out toward the note (at rest); otherwise end crisply under the pill. */
+  soft: boolean;
+}) {
   const [a, , , d] = curve;
   const length = Math.hypot(d.x - a.x, d.y - a.y) || 1;
-  const toNote = Math.min(0.45, NOTE_FADE / length);
+  const toNote = Math.min(0.45, (soft ? NOTE_FADE : 2) / length);
   const fromCard = Math.min(0.45, fadeIn * 2);
   // Stops run from the curve's start to its end.
   const stops =
