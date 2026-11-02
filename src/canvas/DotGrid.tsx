@@ -167,11 +167,15 @@ export function DotGrid() {
       const need = (v: number) => Math.ceil((v * dpr) / FX_STEP) * FX_STEP;
       const cw = Math.max(fxCanvas.width, need(w));
       const ch = Math.max(fxCanvas.height, need(h));
-      if (fxCanvas.width !== cw || fxCanvas.height !== ch) {
+      // The on-screen size must always match the backing store (it starts at
+      // the browser's default 300x150), or the dots are drawn at the wrong scale.
+      const cssW = `${cw / dpr}px`;
+      const cssH = `${ch / dpr}px`;
+      if (fxCanvas.width !== cw || fxCanvas.height !== ch || fxCanvas.style.width !== cssW || fxCanvas.style.height !== cssH) {
         fxCanvas.width = cw;
         fxCanvas.height = ch;
-        fxCanvas.style.width = `${cw / dpr}px`;
-        fxCanvas.style.height = `${ch / dpr}px`;
+        fxCanvas.style.width = cssW;
+        fxCanvas.style.height = cssH;
       } else {
         fxCtx.setTransform(1, 0, 0, 1, 0, 0);
         fxCtx.clearRect(0, 0, cw, ch);
