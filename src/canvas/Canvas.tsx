@@ -20,6 +20,7 @@ import type { BoardStore } from "../store/types";
 import { Toolbar, type Tool } from "../chrome/Toolbar";
 import { ZoomPill } from "../chrome/ZoomPill";
 import { FocusView } from "../focus/FocusView";
+import { Search } from "../search/SearchPanel";
 import { rectOf } from "../focus/Lift";
 import { CanvasUiContext } from "./context";
 import { DotGrid } from "./DotGrid";
@@ -35,6 +36,7 @@ import { NoteNode } from "./nodes/NoteNode";
 import { ProjectNode } from "./nodes/ProjectNode";
 import { StackNode } from "./nodes/StackNode";
 import { useAreas } from "./useAreas";
+import { useDrop } from "./useDrop";
 import { usePaste } from "./usePaste";
 import { useStacking } from "./useStacking";
 import { useTidy } from "./useTidy";
@@ -168,6 +170,7 @@ export function Canvas({ store, initial }: Props) {
   );
 
   usePaste({ enabled: !focusId && !live, centre, commit, onImages: addImages });
+  const dropOver = useDrop({ store, commit, enabled: !focusId && !live });
   const areas = useAreas({ commit, centre });
   const tidyUp = useTidy(commit);
 
@@ -206,8 +209,8 @@ export function Canvas({ store, initial }: Props) {
     [commit, setNodes],
   );
   const ui = useMemo(
-    () => ({ dropTargetId, commit, openLive, liveId: live?.id ?? null, updateItem }),
-    [dropTargetId, commit, openLive, live?.id, updateItem],
+    () => ({ dropTargetId: dropTargetId ?? dropOver, commit, openLive, liveId: live?.id ?? null, updateItem }),
+    [dropTargetId, dropOver, commit, openLive, live?.id, updateItem],
   );
 
   return (
@@ -276,6 +279,7 @@ export function Canvas({ store, initial }: Props) {
           onFit={() => fitView({ padding: 0.18, duration: 500 })}
         />
         <ZoomPill />
+        <Search enabled={!focusId && !live} onOpenStack={setFocusId} />
         <FocusView
           stack={focused ? { id: focused.id, ...(focused.data as StackData) } : null}
           onClose={() => setFocusId(null)}
