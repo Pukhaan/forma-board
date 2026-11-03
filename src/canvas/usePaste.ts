@@ -12,13 +12,14 @@ type Options = {
   /** The middle of the view, in board units. */
   centre: () => { x: number; y: number };
   commit: () => void;
-  /** Images go through the store, which copies them into the project. `source` is the web address they came from, when the clipboard says. */
+  /** Files (images, videos, documents) go through the store, which copies them into the project. `source` is the web address they came from, when the clipboard says. */
   onImages: (files: File[], source?: string) => void;
 };
 
 /**
- * ⌘V onto the board: an image becomes an image card, a web address a link
- * card, any other text a note. Each lands in the middle of the view, selected,
+ * ⌘V onto the board: an image becomes an image card, a copied file (a PDF,
+ * a Markdown file) a document, a web address a link card, any other text a
+ * note. Each lands in the middle of the view, selected,
  * and ⌘Z takes it back. Text fields keep their own paste.
  */
 export function usePaste(options: Options) {
@@ -45,10 +46,10 @@ export function usePaste(options: Options) {
       const { enabled, centre, onImages } = latest.current;
       const data = e.clipboardData;
       if (!enabled || !data || typing(e)) return;
-      const images = Array.from(data.files).filter((f) => f.type.startsWith("image/") || f.type.startsWith("video/"));
-      if (images.length) {
+      const files = Array.from(data.files);
+      if (files.length) {
         e.preventDefault();
-        onImages(images, imageSource(data));
+        onImages(files, imageSource(data));
         return;
       }
       const pasted = fromPastedText(clipboardText(data));

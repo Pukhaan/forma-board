@@ -265,8 +265,17 @@
 
 .lift-media {
   position: relative;
+  grid-area: 1 / 1;
   overflow: hidden;
   background: var(--card);
   border-radius: var(--r-panel);
+}
+
+/* Lifted toward you: its own layer under the picture (Lift.tsx). A white
+   card has a second one, its tile's soft shadow, which hands over to it. */
+.lift-shadow {
+  grid-area: 1 / 1;
+  border-radius: var(--r-panel);
   box-shadow: var(--shadow-high);
+  pointer-events: none;
 }

@@ -105,11 +105,11 @@ function webImage(url: string, source: string): Promise<Item | null> {
   });
 }
 
-/** What a drop brings: images and videos copied into the project, a link card, or a note. */
+/** What a drop brings: images, videos and documents copied into the project, a link card, or a note. */
 async function itemsFrom(dropped: Dropped, store: BoardStore): Promise<Item[]> {
   if (dropped.kind === "note") return [{ id: newId("note"), kind: "note", text: dropped.text }];
   if (dropped.kind === "link") return [{ id: newId("item"), kind: "link", url: dropped.url }];
-  if (dropped.kind === "media") {
+  if (dropped.kind === "files") {
     const read = await Promise.allSettled(dropped.files.map((f) => store.importMedia(f, dropped.source)));
     return read.flatMap((r) => (r.status === "fulfilled" ? [r.value] : []));
   }
@@ -179,7 +179,7 @@ export function useDrop(options: Options): string | null {
     const mine: Target = {
       over(e) {
         const data = e.dataTransfer;
-        if (!latest.current.enabled || !data || !onBoard(e) || !wouldTake(data.types, Array.from(data.items ?? []))) return false;
+        if (!latest.current.enabled || !data || !onBoard(e) || !wouldTake(data.types)) return false;
         const p = screenToFlowPosition({ x: e.clientX, y: e.clientY });
         const stackId = stackUnder(p, things());
         aim(stackId);

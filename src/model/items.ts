@@ -1,6 +1,7 @@
 // What each kind of item is made of, and how it reads at a glance. Pure, so
 // the board, the pile, the opened stack and the file format all agree.
 
+import { docPicture, docShape } from "./docs";
 import type { Item } from "./types";
 
 export type Shape = { w: number; h: number };
@@ -23,6 +24,7 @@ export const LIVE_MAX_HEIGHT = 400;
 export function itemShape(item: Item): Shape {
   if (item.kind === "note") return NOTE_SHAPE;
   if (item.kind === "link") return LINK_SHAPE;
+  if (item.kind === "doc") return docShape(item);
   if (item.kind === "live" && !(item.w && item.w > 0 && item.h && item.h > 0)) return LIVE_SHAPE;
   return { w: item.w && item.w > 0 ? item.w : 1, h: item.h && item.h > 0 ? item.h : 1 };
 }
@@ -43,6 +45,9 @@ export const isMedia = (item: Item) => item.kind === "image" || item.kind === "v
 
 /** The picture that stands for an item: an image itself, or a video's poster. */
 export const stillOf = (item: Item) => (item.kind === "video" ? item.posterSrc : item.src);
+
+/** The picture an item shows, when it shows one: an image, a video's still, a PDF's first page. */
+export const pictureOf = (item: Item) => (isMedia(item) ? stillOf(item) : docPicture(item));
 
 export const hasNote = (item: Item) => isMedia(item) && !!item.note?.trim();
 

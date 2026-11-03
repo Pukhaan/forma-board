@@ -1,7 +1,7 @@
 // The board kept in a project folder on disk (the Mac app).
 //
 //   <project>/board.json   the board (see FORMAT.md)
-//   <project>/media/       images
+//   <project>/media/       images, videos and documents
 //   <project>/components/  live cards' components, one HTML file each
 //
 // Writes go to a temporary file first and are then renamed into place, so
@@ -12,10 +12,13 @@
 import { convertFileSrc } from "@tauri-apps/api/core";
 import { exists, mkdir, readTextFile, rename, watch, writeFile, writeTextFile } from "@tauri-apps/plugin-fs";
 import { saveOnClose } from "../app/closing";
+import { isDocFile } from "../model/docs";
 import { parseBoard, serialize, type Board } from "../model/format";
 import { newId } from "../model/operations";
 import type { Item } from "../model/types";
+import { importDocToFolder } from "./docs";
 import { keeperFor } from "./keeper";
+import { ensureSkill } from "./skill";
 import { imageSize, newImageFields, titleFromName, type BoardStore } from "./types";
 import { isVideoFile, videoStill } from "./videoStill";
 
@@ -136,6 +139,8 @@ export function folderStore(root: string): BoardStore {
     name: folderName(root),
     root,
     async load() {
+      // The rules for an AI working here go in with every board (never over the user's own copy).
+      void ensureSkill(root);
       if (await exists(boardPath)) {
         const text = await readTextFile(boardPath);
         const board = parseBoard(text, resolve);
@@ -168,6 +173,7 @@ export function folderStore(root: string): BoardStore {
       listener?.(board);
     },
     async importMedia(file, source): Promise<Item> {
+      if (isDocFile(file)) return importDocToFolder(root, file, source);
       const id = newId("item");
       const name = `${id}.${extensionOf(file)}`;
       await mkdir(join(root, MEDIA_DIR), { recursive: true });

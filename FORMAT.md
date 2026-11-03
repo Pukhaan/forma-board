@@ -6,12 +6,13 @@ an AI tool) can change the board, and the app shows the change straight away.
 ```
 Northwind/
   board.json     the board
-  media/         images used on the board
+  media/         images, videos and documents used on the board
+  SKILL.md       the rules for an AI working on the board (the app adds it)
   components/    live cards: small coded components, one HTML file each
 ```
 
-Anything can be stacked: images, notes, links and live cards sit in the same
-stacks.
+Anything can be stacked: images, notes, links, documents and live cards sit in
+the same stacks.
 
 ## board.json
 
@@ -92,10 +93,11 @@ Every item has a unique `id` (unique within the board) and a `kind`. A missing
 | `link` | `url`, `title` | A web page. Without a `title` the app shows the site's name. |
 | `video` | `file` (or `src`), `poster`, `w`, `h`, `title` | A video, e.g. `media/foo.mp4`. `poster` is a still of it, a picture file beside it (`media/foo.jpg`): the board shows the still and plays the video only under the pointer and when opened. It has a `note`, `palette`, `source` and `added` like an image. |
 | `live` | `file` or `src`, `w`, `h`, `title` | A small coded component (an interaction prototype) that runs on the board. See [Live cards](#live-cards). |
+| `doc` | `file`, `title` | A document kept with the research: a PDF, a Markdown or text file, or any other file (a deck, a Figma or Sketch file, a zip). Without a `title` it goes by its file's name. A PDF shows its first page, Markdown and text their first lines, anything else its name. It has a `note`, `source` and `added` like an image. |
 
 | field | |
 | --- | --- |
-| `file` | image or video: path inside the project folder, e.g. `media/foo.jpg`; live: e.g. `components/stack-fan.html` |
+| `file` | image, video or document: path inside the project folder, e.g. `media/foo.jpg`, `media/Brief.pdf`; live: e.g. `components/stack-fan.html` |
 | `src` | image or live: a web URL, only when the item isn't a file in the folder |
 | `w`, `h` | image: natural size in pixels, so the board keeps the proportions; live: the shape it is drawn at (4:3 when missing) |
 | `text` | note: the text. The first paragraph (before a blank line) is its heading |
@@ -113,7 +115,12 @@ Every item has a unique `id` (unique within the board) and a `kind`. A missing
 { "id": "i1", "kind": "image", "file": "media/i1.jpg", "w": 1200, "h": 900,
   "note": "The calm blue they pointed at.", "palette": ["#1d3b6f", "#f4f1ea"],
   "source": "https://www.are.na/block/2931", "added": "2026-11-02" }
+{ "id": "d1", "kind": "doc", "file": "media/Northwind brief.pdf", "added": "2026-11-03" }
 ```
+
+A PDF the app brings in also gets a still of its first page beside it, as
+`poster` (`media/Northwind brief.jpg`), with the page's size as `w`, `h`. Leave
+both out when you add one: the document then shows as a sheet with its name.
 
 A `note`, `palette`, `source` or `added` that isn't well formed (not text, not
 hex colours, not a date) is dropped; the item itself is kept.
@@ -184,6 +191,8 @@ the two things are connected. Direction doesn't matter to the app.
   stack's `items`.
 - To add a link: a `card` whose `item` is a `link`, or a `link` item in a
   stack's `items`.
+- To add a document: put the file in `media/` under its own readable name and
+  reference it from a `card` or a stack's `items` as a `doc`.
 - To add a live card: put its HTML file in `components/` and reference it
   from a `card` or a stack's `items`, like an image. To add a note to a stack: a `note` item in its `items`.
 - To sort: move items between stacks' `items` arrays. To connect: add a wire.

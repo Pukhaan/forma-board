@@ -13,6 +13,8 @@ export type CanvasUi = {
   liveId: string | null;
   /** Change one item wherever it is (a loose card or in a stack), as one undoable edit. */
   updateItem: (itemId: string, patch: Partial<Item>) => void;
+  /** The board's folder, in the Mac app: where a document's file is, to open it in its own app. */
+  root?: string;
 };
 
 export const CanvasUiContext = createContext<CanvasUi>({

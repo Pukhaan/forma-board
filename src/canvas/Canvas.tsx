@@ -24,6 +24,8 @@ import { Search } from "../search/SearchPanel";
 import { rectOf } from "../focus/Lift";
 import { CanvasUiContext } from "./context";
 import { DotGrid } from "./DotGrid";
+import { EmptyHint } from "./EmptyHint";
+import { onlyProject } from "./hint";
 import { GRID, snapToDots } from "./dots";
 import { hoverNode, leaveNode, trackPointer } from "./gridFx";
 import { ConnectionLine } from "./edges/ConnectionLine";
@@ -77,7 +79,19 @@ export function Canvas({ store, initial }: Props) {
   useEffect(() => (focusId ? holdLive() : undefined), [focusId]);
 
   useEffect(() => store.save({ nodes, edges }), [store, nodes, edges]);
-  const arrive = useChanges(store, nodes, edges);
+  const { arrive, opened, closed } = useChanges(store, nodes, edges);
+  // Opening a stack shows what's new inside it; closing it counts it all seen.
+  const openStack = useCallback(
+    (id: string) => {
+      setFocusId(id);
+      opened(id);
+    },
+    [opened],
+  );
+  const closeStack = useCallback(() => {
+    if (focusId) closed(focusId);
+    setFocusId(null);
+  }, [closed, focusId]);
 
   // Someone else changed the board (an AI, an editor): show it, and let ⌘Z take it back.
   useEffect(
@@ -133,11 +147,11 @@ export function Canvas({ store, initial }: Props) {
         return;
       }
       setNodes((ns) => ns.map((n) => (n.selected ? { ...n, selected: false } : n)));
-      if (node.type === "stack") return setFocusId(node.id);
+      if (node.type === "stack") return openStack(node.id);
       const media = (e.currentTarget as HTMLElement).querySelector<HTMLElement>(".card-media");
       if (media) setLive((l) => l ?? { id: node.id, item: (node.data as CardData).item, from: rectOf(media) });
     },
-    [fitView, getZoom, setNodes],
+    [fitView, getZoom, openStack, setNodes],
   );
 
   const centre = useCallback(
@@ -214,8 +228,8 @@ export function Canvas({ store, initial }: Props) {
     [commit, setNodes],
   );
   const ui = useMemo(
-    () => ({ dropTargetId: dropTargetId ?? dropOver, commit, openLive, liveId: live?.id ?? null, updateItem }),
-    [dropTargetId, dropOver, commit, openLive, live?.id, updateItem],
+    () => ({ dropTargetId: dropTargetId ?? dropOver, commit, openLive, liveId: live?.id ?? null, updateItem, root: store.root }),
+    [dropTargetId, dropOver, commit, openLive, live?.id, updateItem, store.root],
   );
 
   return (
@@ -273,6 +287,7 @@ export function Canvas({ store, initial }: Props) {
           proOptions={{ hideAttribution: true }}
         >
           <DotGrid />
+          <EmptyHint board={store.root ?? "browser"} projectId={nodes[0]?.id ?? ""} bare={onlyProject(nodes)} />
         </ReactFlow>
         <Toolbar
           tool={tool}
@@ -284,10 +299,10 @@ export function Canvas({ store, initial }: Props) {
           onFit={() => fitView({ padding: 0.18, duration: 500 })}
         />
         <ZoomPill />
-        <Search enabled={!focusId && !live} onOpenStack={setFocusId} />
+        <Search enabled={!focusId && !live} onOpenStack={openStack} />
         <FocusView
           stack={focused ? { id: focused.id, ...(focused.data as StackData) } : null}
-          onClose={() => setFocusId(null)}
+          onClose={closeStack}
           onTakeOut={onTakeOut}
           onReorder={onReorder}
         />

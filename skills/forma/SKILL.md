@@ -44,8 +44,9 @@ The board is the user's thinking. Treat everything already on it as theirs.
 
 ```
 board.json     the board
-media/         images and videos (and video stills)
+media/         images, videos and documents (and their stills)
 components/    live cards: small coded components, one HTML file each
+SKILL.md       these rules (the app adds it; leave it be)
 ```
 
 - The full format reference is `FORMAT.md` in Forma's repository
@@ -87,7 +88,8 @@ components/    live cards: small coded components, one HTML file each
   `h`, optional `title`, `note`, `source`, `added`), `video` (`file`,
   `poster`, `w`, `h`, the same optional fields), `link` (`url`, `title`),
   `note` (`text`, optional `source`), `live` (`file` in `components/`,
-  `title`, `w`, `h`).
+  `title`, `w`, `h`), `doc` (`file`: a PDF, Markdown, text or any other
+  file; optional `title`, `note`, `source`, `added`).
 - **Wires:** `from`, `to` (node ids) and an optional `note`: why they connect.
 - Positions are board units, y grows downward, on a 32-unit grid. Ids are
   unique across the whole board.
@@ -121,6 +123,10 @@ components/    live cards: small coded components, one HTML file each
   as a picture beside it for `poster` (for example with
   `ffmpeg -ss 0.5 -i in.mp4 -frames:v 1 media/name.jpg`), and set `w`, `h` from
   the video. Without a poster the app shows its first frame.
+- **A document** (a PDF, a brief in Markdown, a deck): copy the file into
+  `media/` under its own readable name (add " 2" if the name is taken), then
+  add a `doc` item with `file` and `added`, in a `card` or a stack. Leave
+  `poster` out: the app shows it without one.
 - **A link:** a `card` with a `link` item, or a `link` item in a stack.
 - **Into a stack:** append to its `items` (the end is the top of the pile).
   Moving the user's things between stacks counts as a change: ask first.

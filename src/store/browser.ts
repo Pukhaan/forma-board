@@ -2,9 +2,11 @@
 // app (for design work in a normal browser tab).
 
 import { saveOnClose } from "../app/closing";
+import { isDocFile } from "../model/docs";
 import { parseBoard, serialize, type Board } from "../model/format";
 import { newId } from "../model/operations";
 import { sampleEdges, sampleNodes } from "../model/sample";
+import { importDocToBrowser } from "./docs";
 import { imageSize, newImageFields, titleFromName, type BoardStore } from "./types";
 import { isVideoFile, videoStill } from "./videoStill";
 
@@ -53,6 +55,7 @@ export function browserStore(): BoardStore {
     },
     flush,
     async importMedia(file, source) {
+      if (isDocFile(file)) return importDocToBrowser(file, source);
       if (isVideoFile(file)) {
         // Kept in the page, so it only lasts as long as the browser keeps it.
         const [src, { w, h, still }] = await Promise.all([readDataUrl(file), videoStill(file)]);

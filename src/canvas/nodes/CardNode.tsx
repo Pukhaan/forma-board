@@ -1,6 +1,7 @@
 import type { Node, NodeProps } from "@xyflow/react";
 import { motion } from "motion/react";
 import { useState } from "react";
+import { docPicture, docTitle } from "../../model/docs";
 import { asUrl, isMedia } from "../../model/items";
 import type { CardData } from "../../model/types";
 import { useCanvasUi } from "../context";
@@ -16,18 +17,21 @@ import { Ports } from "./Ports";
 type CardNodeType = Node<CardData, "card">;
 
 /**
- * A single loose item: an image, a link (double-click opens it), or a live
- * card (a click opens it big, like a stack). Drop it on a stack to file it,
- * or on another card or note to start a stack.
+ * A single loose item: an image, a link (double-click opens it), a document
+ * (double-click opens it big to read), or a live card (a click opens it big,
+ * like a stack). Drop it on a stack to file it, or on another card or note to
+ * start a stack.
  */
 export function CardNode({ id, data, selected }: NodeProps<CardNodeType>) {
-  const { dropTargetId, liveId } = useCanvasUi();
+  const { dropTargetId, liveId, openLive } = useCanvasUi();
   useZoomVar();
   const { item } = data;
   const isLink = item.kind === "link";
   const isLive = item.kind === "live";
-  const title = item.title?.trim();
-  const titled = (isMedia(item) || isLive) && !!title;
+  const isDoc = item.kind === "doc";
+  // A PDF shown as its first page is named under it, like a picture; other documents carry their name on the sheet.
+  const title = isDoc ? docTitle(item) : item.title?.trim();
+  const titled = (isMedia(item) || isLive || (isDoc && !!docPicture(item))) && !!title;
   const from = isMedia(item) && item.source ? asUrl(item.source) : null;
   // A video plays, silently, while the pointer is over it.
   const [hover, setHover] = useState(false);
@@ -43,7 +47,16 @@ export function CardNode({ id, data, selected }: NodeProps<CardNodeType>) {
       data-lifted={liveId === id || undefined}
       animate={{ scale: dropTargetId === id ? 1.05 : 1 }}
       transition={{ type: "spring", stiffness: 420, damping: 30 }}
-      onDoubleClick={isLink ? () => openLink(item.url ?? "") : undefined}
+      onDoubleClick={
+        isLink
+          ? () => openLink(item.url ?? "")
+          : isDoc
+            ? (e) => {
+                const media = e.currentTarget.querySelector<HTMLElement>(".card-media");
+                if (media) openLive(id, item, media);
+              }
+            : undefined
+      }
       title={isLink ? item.url : undefined}
     >
       {isLive ? (
@@ -51,7 +64,7 @@ export function CardNode({ id, data, selected }: NodeProps<CardNodeType>) {
       ) : (
         <div
           className="card-media"
-          style={fitInBox(item, isLink ? 200 : 168)}
+          style={fitInBox(item, isLink || isDoc ? 200 : 168)}
           onPointerEnter={isVideo ? () => setHover(true) : undefined}
           onPointerLeave={isVideo ? () => setHover(false) : undefined}
         >

@@ -55,8 +55,9 @@ function itemOut(item: Item): FileItem {
 
 /**
  * One stored item, checked for what its kind needs: a note has text, a link
- * has a url, an image shows its file through the resolver, and a live card
- * runs its file (or its `src`) the same way. Anything else is
+ * has a url, an image shows its file through the resolver, a live card
+ * runs its file (or its `src`) the same way, and a document needs its file.
+ * Anything else is
  * a broken entry and is skipped.
  */
 function itemIn(raw: FileItem, resolve: Resolve): Item | null {
@@ -75,6 +76,13 @@ function itemIn(raw: FileItem, resolve: Resolve): Item | null {
   if (kind === "video") {
     // A video plays its file (or its `src`); its poster is a picture file beside it.
     const src = item.file ? resolve(item.file) : item.src;
+    if (!src) return null;
+    const poster = typeof item.poster === "string" && item.poster ? item.poster : undefined;
+    return { ...item, kind, src, ...(poster ? { poster, posterSrc: resolve(poster) } : {}) };
+  }
+  if (kind === "doc") {
+    // A document is its file (or, not yet copied in, its address); a PDF may have a still of its first page.
+    const src = typeof item.file === "string" && item.file ? resolve(item.file) : typeof item.src === "string" && item.src ? item.src : undefined;
     if (!src) return null;
     const poster = typeof item.poster === "string" && item.poster ? item.poster : undefined;
     return { ...item, kind, src, ...(poster ? { poster, posterSrc: resolve(poster) } : {}) };

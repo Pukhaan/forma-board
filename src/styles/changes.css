@@ -1,43 +1,59 @@
-/* Since you last looked (src/canvas/useChanges.ts, glow.ts): a thing that
-   changed while the board was closed gets one small blue dot pinned just
-   outside its top-right corner (a stack's cover, a wire's note). The size of
-   a port's "+" dots, whatever the zoom. It stays until the thing has been on
-   screen a moment, or pointed at, then fades. glow.ts sets --seen-x and
-   --seen-y to the corner, in board units. Live changes need nothing here:
-   the dot grid ripples (gridFx.ripple.ts). */
+/* What your AI changed (src/canvas/useChanges.ts, glow.ts), now or while
+   the board was closed, gets one small blue dot just outside its top-right
+   corner (a stack's cover, a wire's note), the size of a port's "+" dots. It
+   stays until you point at the thing, or open the stack, then fades; inside
+   an opened stack, the new items carry it. On the board the dots are drawn
+   in a layer of their own over it, at screen size, so they stay sharp at any
+   zoom; glow.ts moves each to its corner. */
 
-.react-flow__node[data-unseen]::after,
-.wire-label[data-unseen]::after {
-  --z: inherit;
-  --d: calc(5px / var(--z, 1));
-  --out: calc(5px / var(--z, 1));
-  content: "";
+.seen-dots {
   position: absolute;
-  left: calc(var(--seen-x, 100%) + var(--out) - var(--d) / 2);
-  top: calc(var(--seen-y, 0px) - var(--out) - var(--d) / 2);
-  width: var(--d);
-  height: var(--d);
+  inset: 0;
+  z-index: 4;
+  overflow: hidden;
+  pointer-events: none;
+}
+
+.seen-dot,
+.ft[data-unseen]::after {
+  position: absolute;
+  width: 5px;
+  height: 5px;
   border-radius: 50%;
   /* The one accent Forma allows itself: David's choice, so what's new is
      seen at a glance. The blue of the research it sits among (the stack
      fan's blue card, the blue triangle). */
   background: #2f6bff;
-  box-shadow: 0 0 0 calc(1.5px / var(--z, 1)) var(--canvas);
+  box-shadow: 0 0 0 1.5px var(--canvas);
   pointer-events: none;
 }
 
-[data-unseen="pinned"]::after {
+.seen-dot {
+  top: -2.5px;
+  left: -2.5px;
+}
+
+.ft[data-unseen]::after {
+  content: "";
+  top: -7.5px;
+  left: calc(100% + 2.5px);
+}
+
+.seen-dot[data-state="pinned"],
+.ft[data-unseen="pinned"]::after {
   animation: seen-pin 0.5s 0.4s var(--spring) backwards;
 }
 
-[data-unseen="fading"]::after {
+.seen-dot[data-state="fading"],
+.ft[data-unseen="fading"]::after {
   animation: seen-fade 1.2s var(--ease-out) both;
 }
 
+/* `scale`, not `transform`: a board dot's transform is where it sits. */
 @keyframes seen-pin {
   from {
     opacity: 0;
-    transform: scale(0.4);
+    scale: 0.4;
   }
 }
 
@@ -48,7 +64,8 @@
 }
 
 @media (prefers-reduced-motion: reduce) {
-  [data-unseen="pinned"]::after {
+  .seen-dot[data-state="pinned"],
+  .ft[data-unseen="pinned"]::after {
     animation-name: seen-appear;
   }
 }

@@ -22,21 +22,22 @@ describe("files from Finder", () => {
     expect(isMediaFile(file("brief.pdf", "application/pdf"))).toBe(false);
   });
 
-  it("keeps the images and videos of a mixed drop and leaves the rest out", () => {
+  it("takes every file of a mixed drop: pictures, videos and documents", () => {
     const d = readDrop(drop([file("a.png", "image/png"), file("b.pdf", "application/pdf"), file("c.mp4", "video/mp4")]));
-    expect(d?.kind).toBe("media");
-    expect(d?.kind === "media" && d.files.map((f) => f.name)).toEqual(["a.png", "c.mp4"]);
+    expect(d?.kind).toBe("files");
+    expect(d?.kind === "files" && d.files.map((f) => f.name)).toEqual(["a.png", "b.pdf", "c.mp4"]);
   });
 
-  it("is nothing when only other files come, not a note of their paths", () => {
-    expect(readDrop(drop([file("b.pdf", "application/pdf")], { "text/uri-list": "file:///b.pdf", "text/plain": "/b.pdf" }))).toBeNull();
+  it("takes documents as files, not a note of their paths", () => {
+    const d = readDrop(drop([file("b.pdf", "application/pdf")], { "text/uri-list": "file:///b.pdf", "text/plain": "/b.pdf" }));
+    expect(d).toEqual({ kind: "files", files: [expect.objectContaining({ name: "b.pdf" })], source: undefined });
   });
 });
 
 describe("from a browser", () => {
   it("keeps where a dragged picture came from beside its file", () => {
     const d = readDrop(drop([file("cat.jpg", "image/jpeg")], { "text/uri-list": "https://site.com/page" }));
-    expect(d).toMatchObject({ kind: "media", source: "https://site.com/page" });
+    expect(d).toMatchObject({ kind: "files", source: "https://site.com/page" });
   });
 
   it("fetches a picture that comes only as an address, keeping the page it links to as its source", () => {
@@ -74,17 +75,11 @@ describe("from a browser", () => {
 });
 
 describe("while a drag moves", () => {
-  it("turns away files that all say they are something else", () => {
-    expect(wouldTake(["Files"], [{ kind: "file", type: "application/pdf" }])).toBe(false);
-    expect(wouldTake(["Files"], [{ kind: "file", type: "application/pdf" }, { kind: "file", type: "image/png" }])).toBe(true);
-  });
-
-  it("gives files with no type yet the benefit of the doubt, and takes text and links", () => {
-    expect(wouldTake(["Files"], [{ kind: "file", type: "" }])).toBe(true);
-    expect(wouldTake(["Files"], [])).toBe(true);
-    expect(wouldTake(["text/plain"], [])).toBe(true);
-    expect(wouldTake(["text/uri-list"], [])).toBe(true);
-    expect(wouldTake(["application/x-moz-whatever"], [])).toBe(false);
+  it("takes any file, and text and links", () => {
+    expect(wouldTake(["Files"])).toBe(true);
+    expect(wouldTake(["text/plain"])).toBe(true);
+    expect(wouldTake(["text/uri-list"])).toBe(true);
+    expect(wouldTake(["application/x-moz-whatever"])).toBe(false);
   });
 });
 
@@ -111,6 +106,7 @@ describe("where it lands", () => {
     expect(landedSize({ id: "n", kind: "note", text: "Hi" })).toEqual({ w: 256, h: 120 });
     expect(landedSize({ id: "i", kind: "image", w: 1200, h: 600 })).toEqual({ w: 168, h: 84 });
     expect(landedSize({ id: "l", kind: "link", url: "https://a.com" }).w).toBe(200);
+    expect(landedSize({ id: "d", kind: "doc", file: "media/a.md" })).toEqual({ w: 152, h: 200 });
   });
 });
 

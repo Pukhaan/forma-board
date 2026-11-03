@@ -1,11 +1,12 @@
 // The canvas model. Plain data so the same shapes can be written to and read
 // from a project folder later (by the app, or by an AI editing the files).
 
-export type ItemKind = "image" | "video" | "link" | "note" | "live";
+export type ItemKind = "image" | "video" | "link" | "note" | "live" | "doc";
 
 /**
- * One piece of material: an image, a saved link, a short text note, or a live
- * card (a small coded component, one HTML file, that runs on the board).
+ * One piece of material: an image, a saved link, a short text note, a live
+ * card (a small coded component, one HTML file, that runs on the board), or a
+ * document kept with the research (a PDF, a Markdown or text file, any file).
  */
 export type Item = {
   id: string;
@@ -15,7 +16,7 @@ export type Item = {
   file?: string;
   /** What an <img> (or a live card's frame, or a video) shows: the file as a displayable URL, a web URL, or a data URL. */
   src?: string;
-  /** A video: a still of it, a picture file in the project, shown wherever it isn't playing. */
+  /** A video, or a PDF: a still of it (its first page), a picture file in the project, shown on the board. */
   poster?: string;
   /** The poster as a displayable URL (worked out on load, never saved). */
   posterSrc?: string;

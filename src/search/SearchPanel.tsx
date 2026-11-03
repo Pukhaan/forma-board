@@ -1,6 +1,7 @@
 import { useReactFlow } from "@xyflow/react";
 import { AnimatePresence, motion } from "motion/react";
 import { useCallback, useEffect, useMemo, useRef, useState, type KeyboardEvent } from "react";
+import { docTextNow, itemsOn, readAll } from "../canvas/docText";
 import { Favicon } from "../canvas/nodes/Faces";
 import { indexBoard, search, type Marked, type Result, type Target, type Thumb } from "./search";
 import { useGoTo } from "./useGoTo";
@@ -57,7 +58,17 @@ const SHOWN = 8;
 
 function Panel({ onClose, onGo }: { onClose: () => void; onGo: (target: Target) => void }) {
   const { getNodes, getEdges } = useReactFlow();
-  const [index] = useState(() => indexBoard(getNodes(), getEdges()));
+  const [index, setIndex] = useState(() => indexBoard(getNodes(), getEdges(), docTextNow));
+  // Documents not read yet (deep in a stack) are read now, and searched as soon as they arrive.
+  useEffect(() => {
+    let live = true;
+    void readAll(itemsOn(getNodes())).then((fresh) => {
+      if (live && fresh) setIndex(indexBoard(getNodes(), getEdges(), docTextNow));
+    });
+    return () => {
+      live = false;
+    };
+  }, [getNodes, getEdges]);
   const [query, setQuery] = useState("");
   const [active, setActive] = useState(0);
   const results = useMemo(() => search(index, query, SHOWN), [index, query]);

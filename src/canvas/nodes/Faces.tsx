@@ -1,6 +1,7 @@
 import { useState, type SyntheticEvent } from "react";
 import { faviconUrls, hostOf, linkLabel, noteParts } from "../../model/items";
 import type { Item } from "../../model/types";
+import { DocFace } from "./DocFace";
 import { VideoFace } from "./VideoFace";
 
 /**
@@ -76,5 +77,6 @@ export function ItemFace({ item, read }: { item: Item; read?: boolean }) {
   if (item.kind === "live") return <LiveFace />;
   if (item.kind === "link") return <LinkFace item={item} />;
   if (item.kind === "video") return <VideoFace item={item} />;
+  if (item.kind === "doc") return <DocFace item={item} />;
   return item.src ? <img src={item.src} alt={item.title ?? ""} draggable={false} /> : null;
 }

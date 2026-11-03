@@ -109,11 +109,27 @@ describe("since last seen", () => {
       (nodeOf(f, "c1") as { item: { title?: string } }).item.title = "Robot";
       f.wires.push({ id: "w2", from: "n1", to: "c1" });
     });
-    expect(unseen(seen, now)).toEqual({ nodes: ["n2", "c1"], wires: ["w2"] });
+    expect(unseen(seen, now)).toEqual({ nodes: ["n2", "c1"], wires: ["w2"], items: [] });
+  });
+
+  it("names the items in a stack that are new or different", () => {
+    const seen = prints(board());
+    const now = board((f) => {
+      const items = (nodeOf(f, "s1") as { items: Record<string, unknown>[] }).items;
+      items[1] = { ...items[1], text: "Navy and white" };
+      items.push({ id: "i4", kind: "link", url: "https://are.na" });
+    });
+    expect(unseen(seen, now)).toEqual({ nodes: ["s1"], wires: [], items: ["i4", "i2"] });
+  });
+
+  it("finds no items new against prints kept before items were", () => {
+    const { items: _items, ...old } = prints(board());
+    const now = board((f) => (nodeOf(f, "s1") as { items: unknown[] }).items.push({ id: "i4", kind: "note", text: "x" }));
+    expect(unseen(old, now).items).toEqual([]);
   });
 
   it("finds nothing on a board that only moved", () => {
-    expect(unseen(prints(board()), board((f) => (nodeOf(f, "n1").y = 999)))).toEqual({ nodes: [], wires: [] });
+    expect(unseen(prints(board()), board((f) => (nodeOf(f, "n1").y = 999)))).toEqual({ nodes: [], wires: [], items: [] });
   });
 
   it("keeps what is still waiting to be seen as it was last seen", () => {
@@ -123,7 +139,7 @@ describe("since last seen", () => {
       (nodeOf(f, "project") as { brief: string }).brief = "Changed too";
       f.nodes.push({ id: "n2", type: "note", x: 0, y: 900, text: "New" });
     });
-    const kept = remember(before, prints(later), { nodes: new Set(["n1", "n2"]), wires: new Set() });
+    const kept = remember(before, prints(later), { nodes: new Set(["n1", "n2"]), wires: new Set(), items: new Set() });
     expect(kept.nodes.n1).toBe(before.nodes.n1);
     expect("n2" in kept.nodes).toBe(false);
     expect(kept.nodes.project).toBe(prints(later).nodes.project);
@@ -135,6 +151,7 @@ describe("since last seen", () => {
     const kept = remember(prints(board()), prints(board((f) => (f.nodes = f.nodes.filter((n) => n.id !== "n1")))), {
       nodes: new Set(),
       wires: new Set(),
+      items: new Set(),
     });
     expect("n1" in kept.nodes).toBe(false);
   });

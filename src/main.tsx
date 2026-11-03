@@ -13,6 +13,7 @@ import "./styles/live.css";
 import "./styles/source.css";
 import "./styles/project-files.css";
 import "./styles/video.css";
+import "./styles/docs.css";
 import "./styles/project.css";
 import "./styles/home.css";
 import App from "./App";

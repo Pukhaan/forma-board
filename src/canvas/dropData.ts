@@ -4,6 +4,7 @@
 
 import type { Node } from "@xyflow/react";
 import { fitInBox } from "./nodes/fit";
+import { isPictureOrVideo } from "../model/docs";
 import { asUrl, fromPastedText } from "../model/items";
 import { itemsOf } from "../model/operations";
 import { pushItems, resolveDrop, type Droppable } from "../model/stacking";
@@ -18,19 +19,15 @@ export type DropData = {
 };
 
 export type Dropped =
-  | { kind: "media"; files: File[]; source?: string }
+  | { kind: "files"; files: File[]; source?: string }
   | { kind: "image-url"; url: string; source?: string }
   | { kind: "link"; url: string }
   | { kind: "note"; text: string };
 
 const IMAGE_EXT = /\.(jpe?g|png|gif|webp|avif|heic|heif|svg)$/i;
-const VIDEO_EXT = /\.(mp4|mov|m4v|webm)$/i;
 
-/** An image or a video the board can hold, by its type or, when the type is missing, its name. */
-export function isMediaFile(file: { name: string; type: string }) {
-  if (file.type.startsWith("image/") || file.type.startsWith("video/")) return true;
-  return IMAGE_EXT.test(file.name) || VIDEO_EXT.test(file.name);
-}
+/** An image or a video, by its type or, when the type is missing, its name. Any other file is a document. */
+export const isMediaFile = isPictureOrVideo;
 
 const firstListed = (data: DropData) =>
   data.getData("text/uri-list").split(/\r?\n/).find((l) => l && !l.startsWith("#"));
@@ -80,16 +77,14 @@ const looksLikeImage = (url: string) => {
 };
 
 /**
- * What a drop is. Files win: any images and videos among them (the rest are
- * left out quietly, and a drop of only other files is nothing). A picture
- * dragged off a page with no file of its own is fetched by its address. A
- * link becomes a link card and any other text a note, as when pasted.
+ * What a drop is. Files win: images and videos, and any other file as a
+ * document (a PDF, a Markdown file, a deck). A picture dragged off a page
+ * with no file of its own is fetched by its address. A link becomes a link
+ * card and any other text a note, as when pasted.
  */
 export function readDrop(data: DropData): Dropped | null {
   const files = Array.from(data.files);
-  const media = files.filter(isMediaFile);
-  if (media.length) return { kind: "media", files: media, source: imageSource(data) };
-  if (files.length) return null;
+  if (files.length) return { kind: "files", files, source: imageSource(data) };
 
   const listed = firstListed(data);
   const plain = data.getData("text/plain").trim();
@@ -108,15 +103,12 @@ export function readDrop(data: DropData): Dropped | null {
 
 /**
  * Whether a drag going on now could land on the board. While it moves only
- * the kinds of what is carried can be read, not the things themselves: files
- * whose types all say they are something else (a PDF, a folder of code) are
- * turned away; files with no type yet are given the benefit of the doubt.
+ * the kinds of what is carried can be read, not the things themselves. Any
+ * file is taken (what isn't a picture or a video is a document); otherwise
+ * text, links and pictures off a page.
  */
-export function wouldTake(types: ReadonlyArray<string>, files: ReadonlyArray<{ kind: string; type: string }>) {
-  if (types.includes("Files")) {
-    const typed = files.filter((f) => f.kind === "file" && f.type);
-    return typed.length === 0 || typed.some((f) => isMediaFile({ name: "", type: f.type }));
-  }
+export function wouldTake(types: ReadonlyArray<string>) {
+  if (types.includes("Files")) return true;
   return types.some((t) => t === "text/uri-list" || t === "text/plain" || t === "text/html");
 }
 
@@ -126,10 +118,10 @@ export function stackUnder(p: { x: number; y: number }, things: Droppable[]): st
   return action.type === "add-to-stack" ? action.stackId : null;
 }
 
-/** How big each thing is on the board once it lands: an image or video card fits a 168 box, a link 200, a note is 256 wide. */
+/** How big each thing is on the board once it lands: an image or video card fits a 168 box, a link or a document 200, a note is 256 wide. */
 export function landedSize(item: Item): { w: number; h: number } {
   if (item.kind === "note") return { w: 256, h: 120 };
-  const { width, height } = fitInBox(item, item.kind === "link" ? 200 : 168);
+  const { width, height } = fitInBox(item, item.kind === "link" || item.kind === "doc" ? 200 : 168);
   return { w: width, h: height };
 }
 

@@ -15,8 +15,15 @@ import { toBoardFile, type Board } from "../model/format";
 
 type XY = { x: number; y: number };
 
-/** One board's content, by id, as short hashes: what "last seen" remembers. */
-export type Prints = { nodes: Record<string, string>; wires: Record<string, string> };
+/**
+ * One board's content, by id, as short hashes: what "last seen" remembers.
+ * `items` are the things inside stacks, so an opened stack can say which of
+ * its items are new. Prints stored before items were kept have none.
+ */
+export type Prints = { nodes: Record<string, string>; wires: Record<string, string>; items?: Record<string, string> };
+
+/** What is marked as new and not looked at yet, by id. */
+export type Waiting = { nodes: Set<string>; wires: Set<string>; items: Set<string> };
 
 export type BoardDiff = {
   /** Node ids. */
@@ -46,21 +53,25 @@ function printsOf(board: Board) {
   const file = toBoardFile(board);
   const nodes: Record<string, string> = {};
   const items: Record<string, string> = {};
+  const stacked: Record<string, string> = {};
   for (const node of file.nodes) {
     const { x: _x, y: _y, ...content } = node;
     nodes[node.id] = hash(JSON.stringify(content));
     const held = node.type === "stack" ? node.items : node.type === "card" ? [node.item] : [];
-    for (const item of held) items[item.id] = hash(JSON.stringify(item));
+    for (const item of held) {
+      items[item.id] = hash(JSON.stringify(item));
+      if (node.type === "stack") stacked[item.id] = items[item.id];
+    }
   }
   const wires: Record<string, string> = {};
   for (const w of file.wires) wires[w.id] = hash(JSON.stringify([w.from, w.to, w.note ?? ""]));
-  return { nodes, items, wires };
+  return { nodes, items, stacked, wires };
 }
 
 /** The prints to remember a board by. */
 export function prints(board: Board): Prints {
-  const { nodes, wires } = printsOf(board);
-  return { nodes, wires };
+  const { nodes, wires, stacked } = printsOf(board);
+  return { nodes, wires, items: stacked };
 }
 
 type Compared = { added: string[]; changed: string[]; removed: string[] };
@@ -98,12 +109,17 @@ export function diffBoards(before: Board, after: Board): BoardDiff {
   };
 }
 
-/** What is new or different on `board` since it looked like `seen`: node ids and wire ids. */
-export function unseen(seen: Prints, board: Board): { nodes: string[]; wires: string[] } {
+/**
+ * What is new or different on `board` since it looked like `seen`: node ids,
+ * wire ids, and the ids of items in stacks. Prints from before items were
+ * kept find no items new.
+ */
+export function unseen(seen: Prints, board: Board): { nodes: string[]; wires: string[]; items: string[] } {
   const now = prints(board);
   const n = compare(seen.nodes, now.nodes);
   const w = compare(seen.wires, now.wires);
-  return { nodes: [...n.added, ...n.changed], wires: [...w.added, ...w.changed] };
+  const i = seen.items ? compare(seen.items, now.items ?? {}) : { added: [], changed: [] };
+  return { nodes: [...n.added, ...n.changed], wires: [...w.added, ...w.changed], items: [...i.added, ...i.changed] };
 }
 
 /**
@@ -111,7 +127,7 @@ export function unseen(seen: Prints, board: Board): { nodes: string[]; wires: st
  * to be seen, which keep what they were last seen as (or stay unknown, if
  * they are new). So closing the board before looking keeps them new.
  */
-export function remember(prev: Prints, now: Prints, waiting: { nodes: Set<string>; wires: Set<string> }): Prints {
+export function remember(prev: Prints, now: Prints, waiting: Waiting): Prints {
   const keep = (was: Record<string, string>, is: Record<string, string>, ids: Set<string>) => {
     const out: Record<string, string> = {};
     for (const id in is) {
@@ -120,7 +136,11 @@ export function remember(prev: Prints, now: Prints, waiting: { nodes: Set<string
     }
     return out;
   };
-  return { nodes: keep(prev.nodes, now.nodes, waiting.nodes), wires: keep(prev.wires, now.wires, waiting.wires) };
+  return {
+    nodes: keep(prev.nodes, now.nodes, waiting.nodes),
+    wires: keep(prev.wires, now.wires, waiting.wires),
+    items: keep(prev.items ?? now.items ?? {}, now.items ?? {}, waiting.items),
+  };
 }
 
 /** Reads stored prints back, or null for anything that isn't them. */
@@ -130,7 +150,8 @@ export function readPrints(text: string | null): Prints | null {
     const raw = JSON.parse(text) as Partial<Prints> | null;
     const isMap = (m: unknown): m is Record<string, string> =>
       !!m && typeof m === "object" && Object.values(m).every((v) => typeof v === "string");
-    return raw && isMap(raw.nodes) && isMap(raw.wires) ? { nodes: raw.nodes, wires: raw.wires } : null;
+    if (!raw || !isMap(raw.nodes) || !isMap(raw.wires)) return null;
+    return isMap(raw.items) ? { nodes: raw.nodes, wires: raw.wires, items: raw.items } : { nodes: raw.nodes, wires: raw.wires };
   } catch {
     return null;
   }

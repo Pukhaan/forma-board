@@ -1,8 +1,8 @@
 // How things that changed outside the app show it: the DOM side of
 // useChanges.ts (the grid's ripple is gridFx.ripple.ts). It only sets an
 // attribute, or starts an opacity and scale animation, on elements React
-// Flow has already drawn, so nothing re-renders for it. styles/changes.css
-// draws the "since you last looked" dot.
+// Flow has already drawn, so nothing re-renders for it. The "new" dots on the
+// board live in a layer of their own above it; styles/changes.css draws them.
 
 /** How long the "since you last looked" dot takes to fade once seen. changes.css matches it. */
 const SEEN_OUT_MS = 1200;
@@ -20,6 +20,8 @@ export const edgeEl = (root: HTMLElement, id: string) =>
   root.querySelector<SVGGElement>(`.react-flow__edge[data-id="${CSS.escape(id)}"]`);
 export const labelEl = (root: HTMLElement, id: string) =>
   root.querySelector<HTMLElement>(`.wire-label[data-wire="${CSS.escape(id)}"]`);
+/** An item's tile in the opened stack. */
+export const tileEl = (id: string) => document.querySelector<HTMLElement>(`.focus .ft[data-id="${CSS.escape(id)}"]`);
 
 /** Calls `then` with the element once it is drawn, looking for it each frame for a little while. */
 export function whenDrawn<E extends Element>(find: () => E | null, then: (el: E) => void, tries = FRAMES) {
@@ -46,17 +48,59 @@ export function settle(wrapper: HTMLElement) {
   else el.animate([{ opacity: 0, scale: "0.985" }, { opacity: 1, scale: "1" }], { duration: 420, easing: easeOut });
 }
 
-/** The corner the dot is pinned to: a stack's cover card, a wire's note, or the thing itself. */
-function cornerOf(el: HTMLElement) {
-  const target =
-    el.querySelector<HTMLElement>(".stack-card:last-child") ??
-    el.querySelector<HTMLElement>(".wire-note") ??
-    el.querySelector<HTMLElement>(".card-media") ??
-    el;
-  const z = parseFloat(getComputedStyle(el).getPropertyValue("--z")) || 1;
-  const box = el.getBoundingClientRect();
-  const r = target.getBoundingClientRect();
-  return { x: (r.right - box.left) / z, y: (r.top - box.top) / z };
+/** What the dot is pinned to the corner of: a stack's cover card, a wire's note, or the thing itself. */
+const cornerOf = (el: HTMLElement) =>
+  el.querySelector<HTMLElement>(".stack-card:last-child") ??
+  el.querySelector<HTMLElement>(".wire-note") ??
+  el.querySelector<HTMLElement>(".card-media") ??
+  el;
+
+/** How far out from the corner the dot sits, in screen pixels. */
+const OUT = 5;
+
+/**
+ * The board's dots are drawn in their own layer over the board, at screen
+ * size, and follow what they are pinned to. Inside the board they would be
+ * drawn into its layer, which WebKit paints once and then scales as you zoom:
+ * a dot that small turns into a blurred square.
+ */
+let layer: HTMLElement | null = null;
+const dots = new Map<HTMLElement, HTMLElement>();
+let placing = 0;
+
+/** Starts the dots' layer inside the board's element; returns what takes it away. */
+export function seenLayer(root: HTMLElement) {
+  const el = document.createElement("div");
+  el.className = "seen-dots";
+  el.setAttribute("aria-hidden", "true");
+  root.appendChild(el);
+  layer = el;
+  return () => {
+    cancelAnimationFrame(placing);
+    placing = 0;
+    el.remove();
+    if (layer === el) layer = null;
+    dots.clear();
+  };
+}
+
+/** Moves every dot to its thing's corner on the next frame, once the board has moved there. */
+export function placeSeen() {
+  if (!layer || !dots.size || placing) return;
+  placing = requestAnimationFrame(() => {
+    placing = 0;
+    if (!layer) return;
+    const o = layer.getBoundingClientRect();
+    for (const [el, dot] of dots) {
+      if (!el.isConnected) {
+        dot.remove();
+        dots.delete(el);
+        continue;
+      }
+      const r = cornerOf(el).getBoundingClientRect();
+      dot.style.transform = `translate(${r.right - o.left + OUT}px, ${r.top - o.top - OUT}px)`;
+    }
+  });
 }
 
 /**
@@ -69,21 +113,37 @@ export function boardRectOf(el: HTMLElement, root: HTMLElement, [tx, ty, z]: rea
   return { x: (r.left - o.left - tx) / z, y: (r.top - o.top - ty) / z, w: r.width / z, h: r.height / z };
 }
 
-/** A small ink dot on its top-right corner, until it has been seen. */
+/**
+ * A small blue dot just off its top-right corner, until it has been seen.
+ * On the board it goes in the dots' layer; a tile in an opened stack is
+ * drawn at full size, so it carries its own (changes.css).
+ */
 export function pinSeen(el: HTMLElement) {
   window.clearTimeout(timers.get(el));
-  const { x, y } = cornerOf(el);
-  el.style.setProperty("--seen-x", `${x}px`);
-  el.style.setProperty("--seen-y", `${y}px`);
   el.dataset.unseen = "pinned";
+  if (el.classList.contains("ft") || !layer) return;
+  let dot = dots.get(el);
+  if (!dot) {
+    dot = document.createElement("span");
+    dot.className = "seen-dot";
+    layer.appendChild(dot);
+    dots.set(el, dot);
+  }
+  dot.dataset.state = "pinned";
+  placeSeen();
 }
 
 /** Seen: the dot fades away. */
 export function unpinSeen(el: HTMLElement) {
   if (el.dataset.unseen !== "pinned") return;
   el.dataset.unseen = "fading";
+  const dot = dots.get(el);
+  if (dot) dot.dataset.state = "fading";
   later(el, SEEN_OUT_MS + 100, () => {
-    if (el.dataset.unseen === "fading") delete el.dataset.unseen;
+    if (el.dataset.unseen !== "fading") return;
+    delete el.dataset.unseen;
+    dots.get(el)?.remove();
+    dots.delete(el);
   });
 }
 
@@ -122,49 +182,4 @@ export function fadeOut(el: HTMLElement | null) {
   const end = reduced() ? { opacity: 0, transform: at } : { opacity: 0, transform: `${at} scale(0.96)` };
   ghost.animate([{ opacity: 1, transform: at }, end], { duration: 380, easing: easeOut, fill: "forwards" }).onfinish = () =>
     ghost.remove();
-}
-
-/**
- * Watches the things marked "since you last looked" and calls `seen` for
- * each once it has been on screen for a while with the board at rest.
- */
-export function watchSeen(seen: (el: HTMLElement) => void, resting: () => boolean, dwellMs = 2600) {
-  const armed = new Map<Element, number>();
-  const disarm = (el: Element) => {
-    window.clearTimeout(armed.get(el));
-    armed.delete(el);
-  };
-  const arm = (el: HTMLElement, ms: number) => {
-    armed.set(
-      el,
-      window.setTimeout(() => {
-        // Not while the window is hidden, or the board is still moving.
-        if (document.hidden || !resting()) return arm(el, 700);
-        armed.delete(el);
-        io.unobserve(el);
-        seen(el);
-      }, ms),
-    );
-  };
-  const io = new IntersectionObserver(
-    (entries) => {
-      for (const e of entries) {
-        if (e.isIntersecting) {
-          if (!armed.has(e.target)) arm(e.target as HTMLElement, dwellMs);
-        } else disarm(e.target);
-      }
-    },
-    { threshold: 0.5 },
-  );
-  return {
-    watch: (el: HTMLElement) => io.observe(el),
-    forget: (el: Element) => {
-      disarm(el);
-      io.unobserve(el);
-    },
-    stop: () => {
-      for (const t of armed.values()) window.clearTimeout(t);
-      io.disconnect();
-    },
-  };
 }

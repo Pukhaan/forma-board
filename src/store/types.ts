@@ -14,9 +14,10 @@ export interface BoardStore {
   /** Saves soon. Calls close together are merged into one write. */
   save(board: Board): void;
   /**
-   * Brings an image or a video into the project and returns it as an item,
-   * dated today, with its palette and, when known, where it came from
-   * (`source`). A video also gets a still, its `poster`.
+   * Brings an image, a video or a document into the project and returns it
+   * as an item, dated today, with its palette and, when known, where it came
+   * from (`source`). A video also gets a still, its `poster`, and so does a
+   * PDF (its first page). Any file that isn't a picture or a video is a document.
    */
   importMedia(file: File, source?: string): Promise<Item>;
   /** Called when the board changes outside the app (an AI, an editor). Returns a stop function. */

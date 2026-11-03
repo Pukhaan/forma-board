@@ -2,7 +2,9 @@
 // an index, and every keystroke is a quick pass over it.
 
 import type { Edge, Node } from "@xyflow/react";
-import { asUrl, hostOf, isMedia, noteParts, stillOf } from "../model/items";
+import { docFileName, docTitle, isMarkdown } from "../model/docs";
+import { markdownWords } from "../model/markdown";
+import { asUrl, hostOf, noteParts, pictureOf } from "../model/items";
 import type { AreaData, CardData, Item, LinkData, NoteData, ProjectData, StackData } from "../model/types";
 
 /** Where a find takes you: a thing on the board, an item in a stack, or a wire's two ends. */
@@ -193,10 +195,19 @@ const where = (source: string | undefined) => {
   return field(url ? bare(url) : source, "where");
 };
 
-const KIND_WORD: Record<Item["kind"], string> = { image: "image", video: "video", link: "link", note: "note", live: "live card" };
+const KIND_WORD: Record<Item["kind"], string> = { image: "image", video: "video", link: "link", note: "note", live: "live card", doc: "document" };
+
+/** How much of a document's words are searched: its opening, which says what it is. */
+const DOC_WORDS = 4000;
+
+/**
+ * The words of Markdown and text documents, by their address, as far as they
+ * have been read (canvas/docText.ts reads them). Passed in, so this stays pure.
+ */
+export type DocWords = (src: string | undefined) => string | undefined;
 
 function itemThumb(item: Item): Thumb {
-  const still = isMedia(item) ? stillOf(item) : undefined;
+  const still = pictureOf(item);
   if (still) return { still };
   if (item.kind === "link" && item.url) return { site: item.url };
   const source = item.source ? asUrl(item.source) : null;
@@ -204,7 +215,12 @@ function itemThumb(item: Item): Thumb {
 }
 
 /** An item's words: its name first, then what it says, then where it came from. */
-function itemFields(item: Item): Field[] {
+function itemFields(item: Item, docWords: DocWords): Field[] {
+  if (item.kind === "doc") {
+    const read = docWords(item.src)?.slice(0, DOC_WORDS);
+    const text = read && isMarkdown(item) ? markdownWords(read) : read;
+    return [...field(docTitle(item), "name"), ...field(item.note, "words"), ...field(text, "words"), ...field(docFileName(item), "where"), ...where(item.source)];
+  }
   if (item.kind === "note") {
     const { head, body } = noteParts(item.text ?? "");
     return [...field(head, "name"), ...field(body.join(" "), "words"), ...where(item.source)];
@@ -218,7 +234,7 @@ function itemFields(item: Item): Field[] {
 }
 
 /** Everything on the board with words on it, ready to search. Stack items are their own entries. */
-export function indexBoard(nodes: Node[], edges: Edge[]): Entry[] {
+export function indexBoard(nodes: Node[], edges: Edge[], docWords: DocWords = () => undefined): Entry[] {
   const out: Entry[] = [];
   const push = (e: Omit<Entry, "order">) => {
     if (e.fields.length) out.push({ ...e, order: out.length });
@@ -251,7 +267,7 @@ export function indexBoard(nodes: Node[], edges: Edge[]): Entry[] {
         push({
           key: `${node.id}/${item.id}`,
           target: { kind: "item", nodeId: node.id, itemId: item.id },
-          fields: itemFields(item),
+          fields: itemFields(item, docWords),
           meta: d.title?.trim() ? `in ${d.title.trim()}` : "in a stack",
           thumb: itemThumb(item),
           added: item.added ?? "",
@@ -260,7 +276,7 @@ export function indexBoard(nodes: Node[], edges: Edge[]): Entry[] {
     } else if (node.type === "card") {
       const item = (node.data as CardData).item;
       if (!item) continue;
-      push({ key: node.id, target: at, fields: itemFields(item), meta: KIND_WORD[item.kind], thumb: itemThumb(item), added: item.added ?? "" });
+      push({ key: node.id, target: at, fields: itemFields(item, docWords), meta: KIND_WORD[item.kind], thumb: itemThumb(item), added: item.added ?? "" });
     } else if (node.type === "area") {
       const d = node.data as AreaData;
       push({ key: node.id, target: at, fields: field(d.title, "name"), meta: "area", thumb: null, added: "" });

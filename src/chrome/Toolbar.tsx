@@ -54,7 +54,7 @@ export function Toolbar({ tool, onTool, onNote, onImages, onArea, onTidy, onFit 
       <ToolButton label="Note" keyHint="N" onClick={onNote}>
         <StickyNote />
       </ToolButton>
-      <ToolButton label="Image" keyHint="I" onClick={() => fileInput.current?.click()}>
+      <ToolButton label="Image or file" keyHint="I" onClick={() => fileInput.current?.click()}>
         <ImagePlus />
       </ToolButton>
       <ToolButton label="Area" keyHint="A" onClick={onArea}>
@@ -70,7 +70,6 @@ export function Toolbar({ tool, onTool, onNote, onImages, onArea, onTidy, onFit 
       <input
         ref={fileInput}
         type="file"
-        accept="image/*,video/*"
         multiple
         hidden
         onChange={(e) => {

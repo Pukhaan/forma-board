@@ -23,6 +23,7 @@ describe("stackKind", () => {
 describe("countLabel", () => {
   it("says how many, and of what", () => {
     expect(countLabel(of("image", "image", "image"))).toBe("3 images");
+    expect(countLabel(of("doc"))).toBe("1 document");
     expect(countLabel(of("note"))).toBe("1 note");
     expect(countLabel(of("link", "link"))).toBe("2 links");
     expect(countLabel(of("image", "link", "note"))).toBe("3 mixed");

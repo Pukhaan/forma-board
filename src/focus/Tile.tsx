@@ -2,6 +2,7 @@ import { motion, useMotionValue, type MotionValue } from "motion/react";
 import { memo, useEffect, type PointerEvent } from "react";
 import { ItemFace } from "../canvas/nodes/Faces";
 import { openLink } from "../canvas/openLink";
+import { docTitle } from "../model/docs";
 import { hasNote, isMedia, noteParts } from "../model/items";
 import type { Item } from "../model/types";
 import type { Pose, Size } from "./layout";
@@ -34,11 +35,12 @@ function labelOf(item: Item) {
   if (item.kind === "note") return `Read note: ${noteParts(item.text ?? "").head || "Note"}`;
   if (item.kind === "link") return `Link: ${item.title ?? item.url ?? ""}. Double-click to open.`;
   if (item.kind === "live") return `Open live card: ${item.title ?? "Prototype"}`;
+  if (item.kind === "doc") return `Open ${docTitle(item)}`;
   return item.title ?? "Open image";
 }
 
 /**
- * One item in an opened stack: an image, a note or a live card (click to lift
+ * One item in an opened stack: an image, a note, a document or a live card (click to lift
  * it; a live card comes up running), or a
  * link (double-click, or the Open pill, opens it). It owns its motion values, so the first frame
  * is drawn exactly at `start` (on the pile) with no flash of the grid, and
@@ -78,7 +80,7 @@ export const Tile = memo(function Tile({ item, size, start, z, raised, lifted, r
         <ItemFace item={item} />
       </button>
       <div className="ft-caption">
-        <span className="ft-title">{isMedia(item) ? (item.title ?? "") : ""}</span>
+        <span className="ft-title">{isMedia(item) ? (item.title ?? "") : item.kind === "doc" ? docTitle(item) : ""}</span>
         <span className="ft-actions">
           {url !== null && (
             <button className="ft-pill" onPointerDown={(e) => e.stopPropagation()} onClick={() => openLink(url)}>
