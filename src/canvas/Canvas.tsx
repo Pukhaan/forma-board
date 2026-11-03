@@ -12,7 +12,7 @@ import {
   type OnConnect,
   type OnConnectEnd,
 } from "@xyflow/react";
-import { useCallback, useEffect, useMemo, useState, type MouseEvent as ReactMouseEvent } from "react";
+import { startTransition, useCallback, useEffect, useMemo, useState, type MouseEvent as ReactMouseEvent } from "react";
 import { newId, patchItem, reorderStack, takeOut } from "../model/operations";
 import type { Board } from "../model/format";
 import type { CardData, Item, StackData } from "../model/types";
@@ -85,8 +85,10 @@ export function Canvas({ store, initial }: Props) {
       store.watch((board) => {
         commit();
         const shown = arrive(board);
-        setNodes(shown.nodes);
-        setEdges(shown.edges);
+        startTransition(() => {
+          setNodes(shown.nodes);
+          setEdges(shown.edges);
+        });
       }),
     [store, commit, arrive, setNodes, setEdges],
   );

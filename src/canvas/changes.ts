@@ -135,3 +135,17 @@ export function readPrints(text: string | null): Prints | null {
     return null;
   }
 }
+
+type Measured = { id: string; type?: string; measured?: { width?: number; height?: number } };
+
+/**
+ * A node that arrived from the folder, keeping the size it was measured at
+ * on screen (the file never has it). Without it React Flow takes a changed
+ * node for a new one: it hides it and every wire to it until it has measured
+ * it again, and WebKit then paints its whole pile afresh, about 110ms for ten
+ * renamed stacks. A node that is now another kind is measured again.
+ */
+export function keepMeasured<N extends Measured>(next: N, was: N | undefined): N {
+  if (!was?.measured || next.measured || was.type !== next.type) return next;
+  return { ...next, measured: was.measured };
+}

@@ -2,7 +2,7 @@ import { useReactFlow, useStoreApi, type Edge, type Node } from "@xyflow/react";
 import { useCallback, useEffect, useEffectEvent, useRef } from "react";
 import type { Board } from "../model/format";
 import type { BoardStore } from "../store/types";
-import { diffBoards, prints, readPrints, remember, unseen, type Prints } from "./changes";
+import { diffBoards, keepMeasured, prints, readPrints, remember, unseen, type Prints } from "./changes";
 import { ripple } from "./gridFx.ripple";
 import { boardRectOf, drawWire, edgeEl, fadeOut, labelEl, nodeEl, pinSeen, settle, unpinSeen, watchSeen, whenDrawn } from "./glow";
 import "../styles/changes.css";
@@ -218,15 +218,18 @@ export function useChanges(store: BoardStore, nodes: Node[], edges: Edge[]) {
       const glides = paths.size > 0 && paths.size <= GLIDE_MAX && !reduced();
       if (glides) glideTo(paths);
       // What didn't change stays the very same object, so React Flow only
-      // draws again what did (and keeps what you had selected).
+      // draws again what did (and keeps what you had selected). What did
+      // change keeps its measured size, so React Flow doesn't hide and
+      // measure it, and its wires, all over again.
       const touched = new Set([...d.added, ...d.changed, ...d.moved]);
       const wired = new Set([...d.wires.added, ...d.wires.changed]);
       const wiresWere = new Map(before.edges.map((e) => [e.id, e]));
       return {
         nodes: board.nodes.map((n) => {
+          const old = was.get(n.id);
           const p = glides ? paths.get(n.id) : undefined;
-          if (p) return { ...n, position: p.from };
-          return touched.has(n.id) ? n : (was.get(n.id) ?? n);
+          if (p) return { ...keepMeasured(n, old), position: p.from };
+          return touched.has(n.id) ? keepMeasured(n, old) : (old ?? n);
         }),
         edges: board.edges.map((e) => (wired.has(e.id) ? e : (wiresWere.get(e.id) ?? e))),
       };

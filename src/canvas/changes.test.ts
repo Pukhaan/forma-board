@@ -1,6 +1,6 @@
 import { describe, expect, it } from "vitest";
 import { parseBoard, type Board, type BoardFile } from "../model/format";
-import { diffBoards, prints, readPrints, remember, unseen } from "./changes";
+import { diffBoards, keepMeasured, prints, readPrints, remember, unseen } from "./changes";
 
 const base: BoardFile = {
   forma: 1,
@@ -145,5 +145,22 @@ describe("since last seen", () => {
     expect(readPrints(null)).toBeNull();
     expect(readPrints("not json")).toBeNull();
     expect(readPrints(JSON.stringify({ nodes: { a: 1 }, wires: {} }))).toBeNull();
+  });
+});
+
+describe("keepMeasured", () => {
+  type N = { id: string; type: string; measured?: { width: number; height: number } };
+  const was: N = { id: "s1", type: "stack", measured: { width: 200, height: 229 } };
+  const node = (id: string, type: string): N => ({ id, type });
+
+  it("keeps the size a changed node was measured at", () => {
+    expect(keepMeasured(node("s1", "stack"), was).measured).toEqual({ width: 200, height: 229 });
+  });
+
+  it("leaves a new node, a node of another kind, and a measured one alone", () => {
+    expect(keepMeasured(node("s2", "stack"), undefined).measured).toBeUndefined();
+    expect(keepMeasured(node("s1", "note"), was).measured).toBeUndefined();
+    const measured: N = { id: "s1", type: "stack", measured: { width: 1, height: 1 } };
+    expect(keepMeasured(measured, was)).toBe(measured);
   });
 });
