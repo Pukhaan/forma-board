@@ -1,7 +1,8 @@
 import { ReactFlowProvider } from "@xyflow/react";
-import { useEffect, useState } from "react";
+import { useEffect, useEffectEvent, useState } from "react";
 import { listenForQuit } from "./app/closing";
 import { inApp, pickFolder, rememberProject } from "./app/projects";
+import { boardToReopen, rememberOpen } from "./app/reopen";
 import { Veil } from "./app/Veil";
 import { Canvas } from "./canvas/Canvas";
 import { ProjectChip } from "./chrome/ProjectChip";
@@ -19,6 +20,9 @@ import { folderStore } from "./store/folder";
 const homeParam = new URLSearchParams(window.location.search).get("home");
 const source: HomeSource | null = inApp ? appSource : homeParam !== null ? devSource(homeParam) : null;
 
+/** Set once the board open before a reload has been gone back into. */
+let reopened = false;
+
 export default function App() {
   const [opened, setOpened] = useState<Opened | null>(null);
   /** The veil over the board: uncovering it as it arrives, covering it as it leaves. */
@@ -27,6 +31,8 @@ export default function App() {
   const [from, setFrom] = useState<string | null>(null);
   /** Why a board didn't open, said on the home. */
   const [notice, setNotice] = useState<string | null>(null);
+  /** The board being gone back into after a reload (see reopen.ts); nothing shows meanwhile. */
+  const [reopening, setReopening] = useState(() => (inApp ? boardToReopen() : null));
 
   // Quitting or closing the window saves everything first (see closing.ts).
   useEffect(() => listenForQuit(), []);
@@ -39,7 +45,10 @@ export default function App() {
   }, []);
 
   const enter = (next: Opened) => {
-    if (next.store.root) rememberProject(next.store.root);
+    if (next.store.root) {
+      rememberProject(next.store.root);
+      rememberOpen(next.store.root);
+    }
     setNotice(null);
     setOpened(next);
     setVeil("in");
@@ -55,13 +64,24 @@ export default function App() {
       setNotice(e instanceof Error ? e.message : `Couldn't open ${store.name}.`);
       setFrom(null);
       setOpened(null);
+      rememberOpen(null);
     }
   };
+
+  // After a reload, straight back into the board that was open.
+  const back = useEffectEvent((root: string) => void switchTo(root).finally(() => setReopening(null)));
+  useEffect(() => {
+    // Once per page load, though development runs effects twice.
+    if (!reopening || reopened) return;
+    reopened = true;
+    back(reopening);
+  }, []);
 
   const veilDone = () => {
     if (veil === "out") {
       setFrom(opened?.store.root ?? "browser");
       setOpened(null);
+      rememberOpen(null);
     }
     setVeil(null);
   };
@@ -85,7 +105,7 @@ export default function App() {
           />
         </>
       ) : (
-        source && <Home source={source} from={from} notice={notice} onEnter={enter} />
+        source && !reopening && <Home source={source} from={from} notice={notice} onEnter={enter} />
       )}
     </ReactFlowProvider>
   );
