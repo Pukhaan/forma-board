@@ -36,6 +36,7 @@ import { NoteNode } from "./nodes/NoteNode";
 import { ProjectNode } from "./nodes/ProjectNode";
 import { StackNode } from "./nodes/StackNode";
 import { useAreas } from "./useAreas";
+import { useChanges } from "./useChanges";
 import { useDrop } from "./useDrop";
 import { usePaste } from "./usePaste";
 import { useStacking } from "./useStacking";
@@ -76,16 +77,18 @@ export function Canvas({ store, initial }: Props) {
   useEffect(() => (focusId ? holdLive() : undefined), [focusId]);
 
   useEffect(() => store.save({ nodes, edges }), [store, nodes, edges]);
+  const arrive = useChanges(store, nodes, edges);
 
   // Someone else changed the board (an AI, an editor): show it, and let ⌘Z take it back.
   useEffect(
     () =>
       store.watch((board) => {
         commit();
-        setNodes(board.nodes);
-        setEdges(board.edges);
+        const shown = arrive(board);
+        setNodes(shown.nodes);
+        setEdges(shown.edges);
       }),
-    [store, commit, setNodes, setEdges],
+    [store, commit, arrive, setNodes, setEdges],
   );
 
   const onConnect: OnConnect = useCallback(

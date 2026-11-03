@@ -55,8 +55,19 @@ export function browserStore(): BoardStore {
       const [src, size, fields] = await Promise.all([readDataUrl(file), imageSize(file), newImageFields(file, source)]);
       return { id: newId("item"), kind: "image", src, ...size, title: titleFromName(file.name), ...fields };
     },
-    watch() {
-      return () => {};
+    watch(onChange) {
+      // No folder here. In development a page can stand in for an AI editing
+      // board.json: window.__formaExternal(text or object) arrives as if the
+      // file had changed on disk.
+      if (!import.meta.env.DEV) return () => {};
+      const page = window as { __formaExternal?: (file: unknown) => void };
+      page.__formaExternal = (file) => {
+        const board = parseBoard(typeof file === "string" ? file : JSON.stringify(file));
+        if (board) onChange(board);
+      };
+      return () => {
+        delete page.__formaExternal;
+      };
     },
   };
 }
