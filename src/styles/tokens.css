@@ -3,7 +3,9 @@
    DESIGN.md says when to use each. The scale, in short:
 
    Colour   ink, a warm off-white, white, and greys made of ink. Nothing else:
-            colour only ever comes from the research itself.
+            colour only ever comes from the research itself. The one
+            exception is the blue "new since you last looked" dot
+            (changes.css), and it is used nowhere else.
             text: --ink, --ink-2 (secondary), --ink-3 (quiet)
             ink tints: --fill-1 (a resting band), --fill-2 (hover), --fill-3 (pressed)
    Radius   --r-xs 4 (icons inside chips)    --r-sm 6 (marks, thumbnails, keys)

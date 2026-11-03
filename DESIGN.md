@@ -46,6 +46,12 @@ Colour only ever comes from the research: pictures, palettes, a site's icon,
 a live component. Not for states, errors, AI, or decoration.
 *Why: a designer's research has to be the only colour on the board.*
 
+The single, deliberate exception is the "new since you last looked" dot: one
+small blue dot (#2f6bff, with a thin ring of the canvas colour, in
+`src/styles/changes.css`). It is the one accent Forma allows itself, David's
+choice, so what's new is seen at a glance. That blue is used nowhere else, and
+doesn't spread to anything else unless David asks.
+
 ## The dot grid is Forma's own material
 
 The dots, and the five-dot plus (the app icon's mark), are what Forma is
