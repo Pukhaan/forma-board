@@ -1,6 +1,7 @@
 // Where grid dots are wanted right now: a "+" at each port of the thing under
-// the pointer, and a line of dots along the wire being pulled. Read from React
-// Flow's store and the grid-effect state on every frame; no React involved.
+// the pointer, one where a drag from outside would land, and a line of dots
+// along the wire being pulled. Read from React Flow's store and the
+// grid-effect state on every frame; no React involved.
 
 import type { InternalNode, ReactFlowState } from "@xyflow/react";
 import { wirePath } from "../model/geometry";
@@ -77,6 +78,9 @@ export function sceneWants(s: ReactFlowState, fx: GridFxState): Map<string, Want
       addPlus(wants, hovered.id, side, portCentreOf(hovered, side, labelZoom(), PORT_OUT), active, zoom, order);
     });
   }
+
+  // Something dragged in from outside: a "+" on the dot where it would land.
+  if (fx.drop) addPlus(wants, "drop", "top", fx.drop, false, zoom, 0);
 
   if (conn.inProgress && from && fromSide) {
     // The port you pulled from stays lit, and the wire runs out of its centre.

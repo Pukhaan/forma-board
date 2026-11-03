@@ -10,9 +10,11 @@ export type GridFxState = {
   hover: string | null;
   /** The port under the pointer: its "+" grows a little. */
   port: { node: string; side: Side } | null;
+  /** Where something dragged in from outside would land, on a dot: a "+" gathers there. */
+  drop: { x: number; y: number } | null;
 };
 
-let state: GridFxState = { hover: null, port: null };
+let state: GridFxState = { hover: null, port: null, drop: null };
 const listeners = new Set<() => void>();
 
 export const gridFx = {
@@ -90,4 +92,11 @@ export const trackPointer = (e: { clientX: number; clientY: number }) => {
 export const hoverPort = (node: string, side: Side) => set({ port: { node, side } });
 export const leavePort = (node: string, side: Side) => {
   if (state.port?.node === node && state.port.side === side) set({ port: null });
+};
+
+/** For a drag from outside the app: the dot it would land on, or null once it leaves or lands. */
+export const dropAt = (p: { x: number; y: number } | null) => {
+  const was = state.drop;
+  if (was === p || (was && p && was.x === p.x && was.y === p.y)) return;
+  set({ drop: p });
 };

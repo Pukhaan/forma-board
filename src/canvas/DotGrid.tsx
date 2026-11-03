@@ -289,7 +289,7 @@ export function DotGrid() {
       if (raf) return;
       const s = store.getState();
       const fx = gridFx.get();
-      if (swarm.size > 0 || fx.hover !== null || s.connection.inProgress) raf = requestAnimationFrame(tick);
+      if (swarm.size > 0 || fx.hover !== null || fx.drop !== null || s.connection.inProgress) raf = requestAnimationFrame(tick);
     };
 
     resize();

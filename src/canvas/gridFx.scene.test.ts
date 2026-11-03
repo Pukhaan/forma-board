@@ -34,7 +34,7 @@ function state(caught: boolean) {
 
 describe("a wire caught by a port", () => {
   it("turns that port's plus into the end of the wire", () => {
-    const wants = sceneWants(state(true), { hover: "b", port: null });
+    const wants = sceneWants(state(true), { hover: "b", port: null, drop: null });
     const melted = [0, 1, 2, 3, 4].map((i) => wants.get(`p:b:left:${i}`));
     expect(melted.every(Boolean)).toBe(true);
     // The caught plus's dots now run along the wire, ending where it lands.
@@ -45,11 +45,22 @@ describe("a wire caught by a port", () => {
   });
 
   it("leaves the plus alone while the wire is still free", () => {
-    const wants = sceneWants(state(false), { hover: "b", port: null });
+    const wants = sceneWants(state(false), { hover: "b", port: null, drop: null });
     const plus = [0, 1, 2, 3, 4].map((i) => wants.get(`p:b:left:${i}`)!);
     expect(plus.every(Boolean)).toBe(true);
     // A plus: all five dots within a few px of the left port.
     for (const d of plus) expect(Math.abs(d.x - 590)).toBeLessThan(8);
     expect(wants.has("w:head")).toBe(true);
+  });
+});
+
+describe("a drag from outside", () => {
+  it("gathers a plus on the dot it would land on", () => {
+    const s = { ...state(false), connection: { inProgress: false } } as unknown as ReactFlowState;
+    const wants = sceneWants(s, { hover: null, port: null, drop: { x: 320, y: 192 } });
+    const plus = [0, 1, 2, 3, 4].map((i) => wants.get(`p:drop:top:${i}`)!);
+    expect(plus.every(Boolean)).toBe(true);
+    expect(plus[0]).toMatchObject({ x: 320, y: 192 });
+    expect(wants.size).toBe(5);
   });
 });
