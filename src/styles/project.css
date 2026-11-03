@@ -1,15 +1,25 @@
 /* The open project, top left: a pill like the toolbar, beside the window
-   buttons, and in the corner (on the board's own margin) when full screen. */
+   buttons, and in the corner (on the board's own margin) when full screen.
+   Its size, weight and corners are its own, as approved; only the shadow
+   and the white come from the scale. */
 .project-chip {
   position: fixed;
   top: 5px;
   left: 80px;
   z-index: 31;
+  transition: opacity var(--t-base) ease;
 }
 
 .project-chip[data-full] {
   top: 16px;
   left: 16px;
+}
+
+/* An opened stack or a lifted live card has the window to itself: the pill
+   steps aside, and comes back when it closes. */
+body:has(.focus, .lift) .project-chip {
+  opacity: 0;
+  pointer-events: none;
 }
 
 .project-chip-button {
@@ -22,21 +32,20 @@
   font-weight: 550;
   color: var(--ink);
   border-radius: 9px;
-  transition: background 0.15s ease;
+  transition: background var(--t-fast) ease;
 }
 
 .project-chip[data-full] .project-chip-button {
   height: 32px;
   padding: 0 10px 0 13px;
-  font-size: 13px;
+  font-size: var(--text-md);
   border-radius: 10px;
 }
 
 /* A small control's shadow, solid white: the chrome's wide shadow and
    frosted glass are for the big toolbar. */
 .project-chip-button.chrome {
-  background: #ffffff;
-  border: 0;
+  background: var(--card);
   box-shadow: var(--shadow-control);
   -webkit-backdrop-filter: none;
   backdrop-filter: none;
@@ -44,7 +53,7 @@
 
 .project-chip-button.chrome:hover,
 .project-chip-button.chrome[aria-expanded="true"] {
-  box-shadow: 0 0 0 0.5px rgba(22, 22, 21, 0.12), 0 1px 3px rgba(18, 18, 16, 0.09), 0 3px 8px rgba(18, 18, 16, 0.06);
+  box-shadow: var(--shadow-control-hot);
 }
 
 .project-chip-name {
@@ -59,7 +68,7 @@
   height: 13px;
   stroke-width: 2;
   color: var(--ink-3);
-  transition: transform 0.2s var(--ease-out);
+  transition: transform var(--t-base) var(--ease-out);
 }
 
 .project-chip-button[aria-expanded="true"] > svg:last-child {
@@ -77,7 +86,7 @@
   gap: 4px;
   min-width: 240px;
   max-width: 300px;
-  padding: 6px;
+  padding: 7px;
   transform-origin: top left;
 }
 
@@ -86,12 +95,12 @@
   flex-direction: column;
   gap: 2px;
   padding: 8px 10px 9px;
-  background: rgba(22, 22, 21, 0.03);
-  border-radius: 9px;
+  background: var(--fill-1);
+  border-radius: var(--r-control);
 }
 
 .project-menu-name {
-  font-size: 13px;
+  font-size: var(--text-md);
   font-weight: 600;
   color: var(--ink);
 }
@@ -104,16 +113,16 @@
   gap: 8px;
   margin: 0 -6px -4px;
   padding: 3px 6px 4px;
-  font: 11px var(--mono);
+  font: var(--text-xs) var(--mono);
   color: var(--ink-3);
-  border-radius: 6px;
+  border-radius: var(--r-sm);
   cursor: copy;
-  transition: color 0.15s ease, background 0.15s ease;
+  transition: color var(--t-fast) ease, background var(--t-fast) ease;
 }
 
 .project-menu .project-menu-path:hover {
   color: var(--ink-2);
-  background: rgba(22, 22, 21, 0.04);
+  background: var(--fill-1);
 }
 
 .project-menu-path[data-copied] {
@@ -135,7 +144,7 @@
   width: 14px;
   height: 14px;
   opacity: 0.55;
-  transition: opacity 0.15s ease;
+  transition: opacity var(--t-fast) ease;
 }
 
 .project-menu-path:hover .project-menu-copy,
@@ -157,26 +166,27 @@
 
 .project-menu-label {
   padding: 6px 10px 3px;
-  font-size: 11px;
+  font-size: var(--text-xs);
   color: var(--ink-3);
 }
 
 .project-menu button {
   padding: 7px 10px;
-  font-size: 13px;
+  font-size: var(--text-md);
   color: var(--ink);
   text-align: left;
-  border-radius: 8px;
+  border-radius: var(--r-control);
+  transition: background var(--t-fast) ease;
 }
 
 .project-menu button:hover {
-  background: rgba(22, 22, 21, 0.06);
+  background: var(--fill-2);
 }
 
 .project-menu-note {
   max-width: 220px;
   padding: 7px 10px;
-  font-size: 12px;
+  font-size: var(--text-sm);
   line-height: 1.4;
   color: var(--ink-2);
 }

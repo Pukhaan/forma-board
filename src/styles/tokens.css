@@ -71,8 +71,6 @@
   --r-block: 22px;
   --r-area: 28px;
   --r-round: 999px;
-  /* Old name, until every sheet uses the scale. */
-  --r-chrome: var(--r-panel);
 
   --shadow-rest: 0 1px 2px rgba(18, 18, 16, 0.06), 0 6px 16px rgba(18, 18, 16, 0.06);
   --shadow-lift: 0 2px 6px rgba(18, 18, 16, 0.08), 0 22px 44px rgba(18, 18, 16, 0.16);

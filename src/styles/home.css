@@ -39,7 +39,7 @@
   width: 256px;
   margin: -100px 0 0 -128px;
   outline: none;
-  transition: translate 0.45s var(--ease-out);
+  transition: translate var(--t-glide) var(--ease-out);
   -webkit-tap-highlight-color: transparent;
 }
 
@@ -58,10 +58,10 @@
   max-width: 240px;
   margin-top: 12px;
   overflow: hidden;
-  font-size: 13px;
+  font-size: var(--text-md);
   font-weight: 500;
   line-height: 17px;
-  letter-spacing: -0.005em;
+  letter-spacing: var(--track-title);
   white-space: nowrap;
   text-overflow: ellipsis;
   color: var(--ink);
@@ -70,7 +70,7 @@
 .home-pile-meta {
   margin-top: 3px;
   font-family: var(--mono);
-  font-size: 11px;
+  font-size: var(--text-xs);
   line-height: 15px;
   font-variant-numeric: tabular-nums;
   white-space: nowrap;
@@ -86,10 +86,10 @@
 .home-new-card {
   display: grid;
   place-items: center;
-  background: rgba(22, 22, 21, 0.035);
-  border-radius: var(--r-card);
+  background: var(--fill-1);
+  border-radius: var(--r-control);
   box-shadow: none;
-  transition: transform 0.35s var(--spring), background-color 0.2s ease, box-shadow 0.2s ease;
+  transition: transform var(--t-slow) var(--spring), background-color var(--t-base) ease, box-shadow var(--t-base) ease;
 }
 
 .home-new:hover .home-new-card,
@@ -117,7 +117,7 @@
   background: rgba(22, 22, 21, 0.42);
   border-radius: 50%;
   translate: calc(var(--dx) * var(--arm)) calc(var(--dy) * var(--arm));
-  transition: translate 0.35s var(--spring), background-color 0.2s ease;
+  transition: translate var(--t-slow) var(--spring), background-color var(--t-base) ease;
 }
 
 .home-new:hover .home-plus,
@@ -132,7 +132,7 @@
 
 .home-new .home-pile-name {
   color: var(--ink-2);
-  transition: color 0.15s ease;
+  transition: color var(--t-fast) ease;
 }
 
 .home-new:hover .home-pile-name {
@@ -146,13 +146,13 @@
   height: 26px;
   margin-top: 8px;
   padding: 0 10px;
-  font-size: 13px;
+  font-size: var(--text-md);
   font-weight: 500;
   text-align: center;
   background: var(--card);
   border: 0;
-  border-radius: 8px;
-  box-shadow: var(--shadow-rest);
+  border-radius: var(--r-control);
+  box-shadow: var(--shadow-control);
   outline: none;
 }
 
@@ -167,7 +167,7 @@
   left: 0;
   width: 400px;
   margin: 168px 0 0 -200px;
-  font-size: 12.5px;
+  font-size: var(--text-sm);
   line-height: 18px;
   text-align: center;
   color: var(--ink-3);
@@ -176,7 +176,7 @@
 .home-line button {
   font-weight: 500;
   color: var(--ink-2);
-  transition: color 0.15s ease;
+  transition: color var(--t-fast) ease;
 }
 
 .home-line button:hover {
@@ -198,7 +198,7 @@
 .project-chip-button.home-chip:hover {
   padding: 0 11px;
   font-weight: 600;
-  letter-spacing: -0.01em;
+  letter-spacing: var(--track-tight);
   background: none;
   box-shadow: none;
   cursor: default;
@@ -214,11 +214,11 @@
   right: 12px;
   height: 28px;
   padding: 0 11px;
-  font-size: 12.5px;
+  font-size: var(--text-md);
   font-weight: 500;
   color: var(--ink-2);
-  border-radius: 9px;
-  transition: color 0.15s ease, background-color 0.15s ease;
+  border-radius: var(--r-control);
+  transition: color var(--t-fast) ease;
 }
 
 .home-open[data-full] {
@@ -226,8 +226,6 @@
   right: 16px;
   height: 32px;
   padding: 0 13px;
-  font-size: 13px;
-  border-radius: 10px;
 }
 
 /* The quiet way in for boards kept elsewhere: text, darkening on hover. */
@@ -241,10 +239,10 @@
   left: 50%;
   max-width: 480px;
   margin: 0;
-  font-size: 12.5px;
+  font-size: var(--text-sm);
   line-height: 1.4;
   text-align: center;
-  color: #b42318;
+  color: var(--ink);
   translate: -50% 0;
 }
 

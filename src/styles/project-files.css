@@ -7,7 +7,7 @@
   gap: 6px;
   margin-top: 16px;
   opacity: var(--detail, 1);
-  transition: opacity 0.3s var(--ease-out);
+  transition: opacity var(--t-slow) var(--ease-out);
 }
 
 /* Nothing yet: just the add button, in the card's top right corner, so
@@ -35,28 +35,28 @@
   height: 28px;
   max-width: 220px;
   padding: 0 11px 0 7px;
-  font-size: 12.5px;
-  color: rgba(245, 245, 243, 0.88);
-  background: rgba(255, 255, 255, 0.08);
-  border-radius: 8px;
+  font-size: var(--text-sm);
+  color: var(--on-ink-2);
+  background: var(--on-ink-fill-1);
+  border-radius: var(--r-control);
   cursor: pointer;
-  transition: background 0.15s ease;
+  transition: background var(--t-fast) ease;
 }
 
 .project-file-open:hover {
-  background: rgba(255, 255, 255, 0.14);
+  background: var(--on-ink-fill-2);
 }
 
 .project-file-open .favicon {
   width: 16px;
   height: 16px;
   padding: 2px;
-  border-radius: 4px;
-  background: #ffffff;
+  border-radius: var(--r-xs);
+  background: var(--card);
 }
 
 .project-file-open .favicon-letter {
-  font-size: 9px;
+  font-size: var(--text-2xs);
   color: var(--ink);
 }
 
@@ -81,7 +81,7 @@
      drop shadow, which sat the circle low and the cross off its centre. */
   box-shadow: 0 0 0 2px var(--ink);
   opacity: 0;
-  transition: opacity 0.15s ease, background 0.15s ease;
+  transition: opacity var(--t-fast) ease, background var(--t-fast) ease;
 }
 
 .project-file:hover .project-file-remove {
@@ -101,16 +101,9 @@
   width: 100%;
   height: 100%;
   fill: none;
-  stroke: rgba(245, 245, 243, 0.92);
-  stroke-linecap: round;
-}
-
-.project-file-remove svg {
-  stroke-width: 1.5;
-}
-
-.project-file-add svg {
+  stroke: var(--on-ink-2);
   stroke-width: 1.6;
+  stroke-linecap: round;
 }
 
 .project-file-add {
@@ -118,10 +111,10 @@
   padding: 0;
   width: 28px;
   height: 28px;
-  background: rgba(255, 255, 255, 0.06);
-  border-radius: 8px;
+  background: var(--on-ink-fill-1);
+  border-radius: var(--r-control);
   opacity: 0;
-  transition: opacity 0.15s ease, background 0.15s ease;
+  transition: opacity var(--t-fast) ease, background var(--t-fast) ease;
 }
 
 .project:hover .project-file-add {
@@ -129,7 +122,7 @@
 }
 
 .project-file-add:hover {
-  background: rgba(255, 255, 255, 0.14);
+  background: var(--on-ink-fill-2);
 }
 
 .project-file-input {
@@ -137,14 +130,14 @@
   height: 28px;
   padding: 0 10px;
   font: inherit;
-  font-size: 12.5px;
-  color: #f5f5f3;
-  background: rgba(255, 255, 255, 0.1);
+  font-size: var(--text-sm);
+  color: var(--on-ink);
+  background: var(--on-ink-fill-1);
   border: 0;
-  border-radius: 8px;
+  border-radius: var(--r-control);
   outline: none;
 }
 
 .project-file-input::placeholder {
-  color: rgba(245, 245, 243, 0.45);
+  color: var(--on-ink-3);
 }

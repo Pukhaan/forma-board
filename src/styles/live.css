@@ -17,7 +17,7 @@
   border: 0;
   background: var(--card);
   opacity: 0;
-  transition: opacity 0.4s var(--ease-out);
+  transition: opacity var(--t-glide) var(--ease-out);
 }
 
 .live-frame[data-loaded] {
@@ -40,10 +40,10 @@
 /* Its name, under it like a stack's: it never fades, and zoomed out it grows
    so you can still read what each one is (body.ts keeps wires clear of it). */
 .card[data-kind="live"] .card-title {
-  font-size: 13px;
+  font-size: var(--text-md);
   font-weight: 500;
   line-height: 17px;
-  letter-spacing: -0.005em;
+  letter-spacing: var(--track-title);
   color: var(--ink);
   white-space: nowrap;
   scale: clamp(1, calc(0.96 / var(--z, 1)), 3.4);
@@ -57,7 +57,6 @@
 
 /* In an opened stack it is a card like a note or link. */
 .ft[data-kind="live"] .ft-media {
-  border-radius: var(--r-card);
   box-shadow: var(--shadow-rest);
 }
 
@@ -78,8 +77,8 @@
   height: 100%;
   overflow: hidden;
   background: var(--card);
-  border-radius: 14px;
-  box-shadow: 0 4px 12px rgba(18, 18, 16, 0.1), 0 40px 80px rgba(18, 18, 16, 0.22);
+  border-radius: var(--r-panel);
+  box-shadow: var(--shadow-high);
 }
 
 .live-stage-title {
@@ -87,9 +86,9 @@
   bottom: 100%;
   left: 2px;
   padding-bottom: 14px;
-  font-size: 15px;
+  font-size: var(--text-xl);
   font-weight: 600;
-  letter-spacing: -0.01em;
+  letter-spacing: var(--track-tight);
   color: var(--ink);
   white-space: nowrap;
 }
@@ -107,12 +106,12 @@
   flex-direction: column;
   gap: 4px;
   background: var(--card);
-  border-radius: var(--r-chrome);
+  border-radius: var(--r-panel);
   box-shadow: var(--shadow-chrome);
   font-family: var(--font);
   user-select: none;
   -webkit-user-select: none;
-  animation: dials-in 0.36s var(--ease-out) both;
+  animation: dials-in var(--t-slow) var(--ease-out) both;
 }
 
 /* Putting the card back: the dials step away the way they came, quickly,
@@ -123,7 +122,7 @@
   opacity: 0;
   transform: translateX(-6px);
   pointer-events: none;
-  transition: opacity 0.16s var(--ease-out), transform 0.2s var(--ease-out);
+  transition: opacity var(--t-fast) var(--ease-out), transform var(--t-base) var(--ease-out);
 }
 
 @keyframes dials-in {
@@ -135,15 +134,15 @@
 
 .dials-title {
   padding: 2px 4px 6px;
-  font-size: 12.5px;
+  font-size: var(--text-md);
   font-weight: 600;
-  letter-spacing: -0.01em;
+  letter-spacing: var(--track-tight);
   color: var(--ink);
 }
 
 .dials-group {
   padding: 8px 4px 2px;
-  font-size: 11px;
+  font-size: var(--text-xs);
   color: var(--ink-3);
 }
 
@@ -157,8 +156,8 @@
   overflow: hidden;
   font: inherit;
   color: inherit;
-  background: rgba(22, 22, 21, 0.035);
-  border-radius: 8px;
+  background: var(--fill-1);
+  border-radius: var(--r-control);
   outline: none;
   isolation: isolate;
 }
@@ -174,10 +173,10 @@
   position: absolute;
   inset: 0;
   z-index: -1;
-  background: rgba(22, 22, 21, 0.07);
+  background: var(--fill-2);
   transform: scaleX(var(--fill, 0));
   transform-origin: 0 50%;
-  transition: transform 0.12s var(--ease-out);
+  transition: transform var(--t-fast) var(--ease-out);
 }
 
 .dial-slider[data-dragging]::before {
@@ -186,21 +185,21 @@
 
 .dial:hover,
 .dial:focus-visible {
-  background: rgba(22, 22, 21, 0.05);
+  background: var(--fill-2);
 }
 
 .dial-slider[data-dragging]::before,
 .dial-slider:focus-visible::before {
-  background: rgba(22, 22, 21, 0.1);
+  background: var(--fill-3);
 }
 
 .dial-label {
-  font-size: 12px;
+  font-size: var(--text-sm);
   color: var(--ink-2);
 }
 
 .dial-value {
-  font: 11.5px var(--mono);
+  font: var(--text-xs) var(--mono);
   font-variant-numeric: tabular-nums;
   color: var(--ink);
 }
@@ -215,9 +214,9 @@
   position: relative;
   width: 24px;
   height: 14px;
-  background: rgba(22, 22, 21, 0.14);
-  border-radius: 999px;
-  transition: background-color 0.18s ease;
+  background: var(--fill-3);
+  border-radius: var(--r-round);
+  transition: background-color var(--t-base) ease;
 }
 
 .dial-toggle::after {
@@ -227,10 +226,10 @@
   left: 2px;
   width: 10px;
   height: 10px;
-  background: #ffffff;
+  background: var(--card);
   border-radius: 50%;
-  box-shadow: 0 1px 2px rgba(18, 18, 16, 0.2);
-  transition: transform 0.2s var(--spring);
+  box-shadow: var(--shadow-mark);
+  transition: transform var(--t-base) var(--spring);
 }
 
 .dial-toggle[data-on] {

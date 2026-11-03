@@ -32,7 +32,7 @@ textarea.note-field::placeholder {
 
 /* On the board, zoomed out, the heading grows as it does at rest (.note-show). */
 .note-editor .note-head {
-  font-size: calc(13.5px * var(--s, 1));
+  font-size: calc(var(--text-lg) * var(--s, 1));
 }
 
 /* Lifted: the paragraphs sit one blank line apart, like the read face's. */

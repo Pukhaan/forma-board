@@ -55,7 +55,7 @@
   color: var(--ink-2);
   /* Zoomed out the lines are grey mush: fade them with the board's detail. */
   opacity: var(--detail, 1);
-  transition: opacity 0.3s var(--ease-out);
+  transition: opacity var(--t-slow) var(--ease-out);
   will-change: opacity;
 }
 
@@ -84,7 +84,7 @@
   height: 15.9cqw;
   overflow: hidden;
   border-radius: 4cqw;
-  background: rgba(22, 22, 21, 0.05);
+  background: var(--fill-1);
 }
 
 .favicon img {
@@ -126,16 +126,16 @@
   text-overflow: ellipsis;
   color: var(--ink-3);
   opacity: var(--detail, 1);
-  transition: opacity 0.3s var(--ease-out);
+  transition: opacity var(--t-slow) var(--ease-out);
   will-change: opacity;
 }
 
-/* Live card at rest: a soft surface with its title at the bottom. Designed at
-   320px wide, so 1cqw = 3.2px on the board; it scales down into a pile card. */
+/* Live card at rest: a soft surface, white light falling across the
+   board's own off-white. No colour of its own: the component brings that. */
 .face-live {
   background:
-    radial-gradient(120% 90% at 18% 12%, rgba(214, 222, 236, 0.9), transparent 62%),
-    radial-gradient(110% 100% at 88% 96%, rgba(236, 226, 214, 0.9), transparent 64%),
-    #f3f3f1;
+    radial-gradient(120% 90% at 18% 12%, rgba(255, 255, 255, 0.95), transparent 62%),
+    radial-gradient(110% 100% at 88% 96%, var(--fill-1), transparent 64%),
+    var(--canvas);
 }
 

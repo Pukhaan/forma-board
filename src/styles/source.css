@@ -9,22 +9,22 @@
   width: 20px;
   height: 20px;
   background: var(--card);
-  border-radius: 6px;
-  box-shadow: 0 1px 2px rgba(18, 18, 16, 0.12), 0 2px 6px rgba(18, 18, 16, 0.06);
+  border-radius: var(--r-sm);
+  box-shadow: var(--shadow-mark);
   pointer-events: none;
   opacity: var(--detail, 1);
-  transition: opacity 0.25s var(--ease-out);
+  transition: opacity var(--t-slow) var(--ease-out);
 }
 
 .source-mark .favicon {
   width: 12px;
   height: 12px;
-  border-radius: 3px;
+  border-radius: var(--r-xs);
   background: none;
 }
 
 .source-mark .favicon-letter {
-  font-size: 8px;
+  font-size: var(--text-2xs);
 }
 
 /* On a pile: the cover's lower left corner, so it fans with the cover. */
@@ -66,8 +66,8 @@
   height: 16px;
   margin-right: 6px;
   vertical-align: -3px;
-  border-radius: 4px;
-  box-shadow: 0 1px 2px rgba(18, 18, 16, 0.12);
+  border-radius: var(--r-xs);
+  box-shadow: var(--shadow-mark);
   opacity: 1;
 }
 

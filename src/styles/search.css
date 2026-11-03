@@ -1,5 +1,6 @@
 /* Search: a small panel near the top, in the chrome's white. Solid, not
-   frosted, so nothing behind it has to be blurred while it is up. */
+   frosted, so nothing behind it has to be blurred while it is up. The
+   results sit under the field, set apart by space, never a line. */
 .search.chrome {
   position: fixed;
   top: 64px;
@@ -10,8 +11,8 @@
   flex-direction: column;
   width: min(460px, calc(100vw - 32px));
   margin: 0 auto;
-  padding: 6px;
-  background: #ffffff;
+  padding: 7px;
+  background: var(--card);
   -webkit-backdrop-filter: none;
   backdrop-filter: none;
   transform-origin: top center;
@@ -21,7 +22,7 @@
   height: 38px;
   padding: 0 10px;
   font: inherit;
-  font-size: 15px;
+  font-size: var(--text-xl);
   color: var(--ink);
   background: transparent;
   border: 0;
@@ -37,13 +38,11 @@
   flex-direction: column;
   gap: 1px;
   padding-top: 4px;
-  margin-top: 2px;
-  border-top: 1px solid var(--hairline);
 }
 
 .search-none {
   padding: 10px 10px 8px;
-  font-size: 13px;
+  font-size: var(--text-md);
   color: var(--ink-3);
 }
 
@@ -53,14 +52,14 @@
   gap: 10px;
   min-height: 40px;
   padding: 5px 8px;
-  border-radius: 9px;
+  border-radius: var(--r-control);
   cursor: default;
   user-select: none;
   -webkit-user-select: none;
 }
 
 .search-row[data-active] {
-  background: rgba(22, 22, 21, 0.05);
+  background: var(--fill-2);
 }
 
 /* A still or a site's icon; an empty slot keeps the words lined up. */
@@ -71,7 +70,7 @@
   width: 28px;
   height: 28px;
   overflow: hidden;
-  border-radius: 6px;
+  border-radius: var(--r-sm);
 }
 
 .search-thumb img {
@@ -90,7 +89,7 @@
 .search-thumb .favicon {
   width: 100%;
   height: 100%;
-  border-radius: 5px;
+  border-radius: var(--r-xs);
 }
 
 .search-thumb .favicon img {
@@ -98,7 +97,7 @@
 }
 
 .search-thumb .favicon-letter {
-  font-size: 11px;
+  font-size: var(--text-xs);
 }
 
 .search-text {
@@ -117,18 +116,18 @@
 }
 
 .search-line {
-  font-size: 13.5px;
+  font-size: var(--text-md);
   color: var(--ink);
 }
 
 .search-snippet {
-  font-size: 12px;
+  font-size: var(--text-sm);
   color: var(--ink-2);
 }
 
 /* The matched letters: heavier, the same colour. */
 .search-text b {
-  font-weight: 650;
+  font-weight: 600;
 }
 
 .search-snippet b {
@@ -140,7 +139,7 @@
   max-width: 150px;
   overflow: hidden;
   font-family: var(--mono);
-  font-size: 10.5px;
+  font-size: var(--text-xs);
   color: var(--ink-3);
   white-space: nowrap;
   text-overflow: ellipsis;

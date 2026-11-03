@@ -21,7 +21,7 @@
   position: absolute;
   inset: 0;
   opacity: 0;
-  transition: opacity 0.2s var(--ease-out);
+  transition: opacity var(--t-base) var(--ease-out);
 }
 
 .face-video-play[data-on] {
@@ -38,10 +38,10 @@
   width: 20px;
   height: 20px;
   background: var(--card);
-  border-radius: 6px;
-  box-shadow: 0 1px 2px rgba(18, 18, 16, 0.12), 0 2px 6px rgba(18, 18, 16, 0.06);
+  border-radius: var(--r-sm);
+  box-shadow: var(--shadow-mark);
   opacity: var(--detail, 1);
-  transition: opacity 0.25s var(--ease-out);
+  transition: opacity var(--t-slow) var(--ease-out);
 }
 
 .video-mark svg {
@@ -63,9 +63,9 @@
   background: rgba(22, 22, 21, 0.55);
   -webkit-backdrop-filter: blur(8px);
   backdrop-filter: blur(8px);
-  border-radius: 8px;
+  border-radius: var(--r-control);
   cursor: pointer;
-  transition: background 0.15s ease;
+  transition: background var(--t-fast) ease;
 }
 
 .video-sound:hover {
@@ -77,12 +77,12 @@
   width: 100%;
   height: 100%;
   fill: none;
-  stroke: rgba(245, 245, 243, 0.92);
+  stroke: var(--on-ink-2);
   stroke-width: 1.6;
   stroke-linecap: round;
   stroke-linejoin: round;
 }
 
 .video-sound .video-sound-body {
-  fill: rgba(245, 245, 243, 0.92);
+  fill: var(--on-ink-2);
 }

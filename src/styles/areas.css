@@ -15,7 +15,7 @@
   height: 100%;
   background: var(--area);
   border-radius: var(--r-area);
-  transition: background 0.2s ease;
+  transition: background var(--t-base) ease;
 }
 
 .react-flow__node-area:hover .area,
@@ -32,10 +32,10 @@
   left: 6px;
   max-width: calc(100% - 24px);
   padding: 3px 6px;
-  font-size: 12px;
-  font-weight: 550;
+  font-size: var(--text-sm);
+  font-weight: 500;
   line-height: 16px;
-  letter-spacing: -0.005em;
+  letter-spacing: var(--track-title);
   pointer-events: auto;
 }
 
@@ -44,17 +44,17 @@
    by zoom.ts once a zoom settles), growing upward from its corner. */
 .area-title {
   overflow: hidden;
-  font-size: 15px;
+  font-size: var(--text-xl);
   font-weight: 600;
   line-height: 18px;
   color: var(--ink-2);
   white-space: nowrap;
   text-overflow: ellipsis;
   cursor: grab;
-  border-radius: 7px;
+  border-radius: var(--r-sm);
   transform-origin: left bottom;
   scale: clamp(1, calc(0.9 / var(--z, 1)), 4);
-  transition: color 0.15s ease, scale 0.3s var(--ease-out);
+  transition: color var(--t-fast) ease, scale var(--t-slow) var(--ease-out);
 }
 
 .area-title:active {
@@ -71,8 +71,8 @@
   color: var(--ink);
   background: var(--card);
   border: none;
-  border-radius: 7px;
-  box-shadow: var(--shadow-rest);
+  border-radius: var(--r-sm);
+  box-shadow: var(--shadow-control);
   outline: none;
   -webkit-user-select: text;
   user-select: text;
@@ -114,7 +114,7 @@
   background: var(--ink-3);
   border-radius: 50%;
   opacity: 0;
-  transition: opacity 0.15s ease;
+  transition: opacity var(--t-fast) ease;
 }
 
 .react-flow__node-area:hover .area-handle::after,
