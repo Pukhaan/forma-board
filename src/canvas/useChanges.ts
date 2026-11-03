@@ -3,7 +3,8 @@ import { useCallback, useEffect, useEffectEvent, useRef } from "react";
 import type { Board } from "../model/format";
 import type { BoardStore } from "../store/types";
 import { diffBoards, prints, readPrints, remember, unseen, type Prints } from "./changes";
-import { drawWire, edgeEl, fadeOut, fadeSeen, glowLive, glowSeen, labelEl, nodeEl, watchSeen, whenDrawn } from "./glow";
+import { ripple } from "./gridFx.ripple";
+import { boardRectOf, drawWire, edgeEl, fadeOut, labelEl, nodeEl, pinSeen, settle, unpinSeen, watchSeen, whenDrawn } from "./glow";
 import "../styles/changes.css";
 
 /** How long a thing that moved takes to glide to where it was put. */
@@ -43,12 +44,12 @@ function keep(key: string, p: Prints) {
 
 /**
  * Makes what your AI did visible. `arrive` is for the folder watcher: given
- * the board that just came in, it lights up what was added or changed, draws
- * new wires in and fades out what was taken away, and returns the board to
- * show, with things that moved still where they were so they can glide.
- * Opening a board lights up, more quietly, what changed since it was last
- * seen, until it has been on screen a moment or is pointed at. Your own
- * changes in the app never light up.
+ * the board that just came in, what was added or changed settles in with the
+ * dot grid rippling out from it, new wires draw themselves in, what was taken
+ * away fades out, and it returns the board to show, with things that moved
+ * still where they were so they can glide. Opening a board pins a small dot
+ * on what changed since it was last seen, until it has been on screen a
+ * moment or is pointed at. Your own changes in the app never show.
  */
 export function useChanges(store: BoardStore, nodes: Node[], edges: Edge[]) {
   const flow = useStoreApi();
@@ -56,7 +57,7 @@ export function useChanges(store: BoardStore, nodes: Node[], edges: Edge[]) {
   const key = recordKey(store);
   /** What was last written down as seen. */
   const record = useRef<Prints | null>(null);
-  /** What is lit up as new and not looked at yet. */
+  /** What is marked as new and not looked at yet. */
   const waiting = useRef({ nodes: new Set<string>(), wires: new Set<string>() });
   const watcher = useRef<ReturnType<typeof watchSeen> | null>(null);
   const writeTimer = useRef<number | undefined>(undefined);
@@ -73,13 +74,13 @@ export function useChanges(store: BoardStore, nodes: Node[], edges: Edge[]) {
     writeTimer.current = window.setTimeout(write, WRITE_MS);
   }, [write]);
 
-  /** A thing lit up as new has been seen: its light fades and it's remembered as it is. */
+  /** A thing marked as new has been seen: its dot fades and it's remembered as it is. */
   const looked = useCallback(
     (el: HTMLElement) => {
       const id = el.dataset.id ?? el.dataset.wire;
       if (!id) return;
       watcher.current?.forget(el);
-      fadeSeen(el);
+      unpinSeen(el);
       waiting.current.nodes.delete(id);
       waiting.current.wires.delete(id);
       writeSoon();
@@ -87,9 +88,9 @@ export function useChanges(store: BoardStore, nodes: Node[], edges: Edge[]) {
     [writeSoon],
   );
 
-  /** Lights `el` up quietly until it has been seen. */
+  /** Pins the dot on `el` until it has been seen. */
   const waitFor = useCallback((el: HTMLElement) => {
-    glowSeen(el);
+    pinSeen(el);
     watcher.current?.watch(el);
   }, []);
 
@@ -127,9 +128,9 @@ export function useChanges(store: BoardStore, nodes: Node[], edges: Edge[]) {
     });
     watcher.current = watchSeen(looked, resting);
     open();
-    // Pointing at something lit up as new counts as seeing it.
+    // Pointing at something marked as new counts as seeing it.
     const onOver = (e: PointerEvent) => {
-      const lit = (e.target as Element | null)?.closest<HTMLElement>('[data-glow="seen"]');
+      const lit = (e.target as Element | null)?.closest<HTMLElement>('[data-unseen="pinned"]');
       if (lit) looked(lit);
     };
     const onHide = () => write();
@@ -178,10 +179,14 @@ export function useChanges(store: BoardStore, nodes: Node[], edges: Edge[]) {
       // Away from the window (another app in front, or minimised), what
       // arrives waits to be seen, like changes made while the board was closed.
       const away = document.hidden;
+      const fresh = new Set([...d.added, ...d.wires.added]);
+      // Seen as it happens: the grid ripples out from it, and a new thing settles in.
       const light = (el: HTMLElement) => {
         if (away) return waitFor(el);
         watcher.current?.forget(el);
-        glowLive(el);
+        unpinSeen(el);
+        if (fresh.has(el.dataset.id ?? el.dataset.wire ?? "")) settle(el);
+        if (!reduced()) ripple(boardRectOf(el, root, flow.getState().transform));
       };
 
       for (const id of d.removed) fadeOut(nodeEl(root, id));
@@ -202,22 +207,28 @@ export function useChanges(store: BoardStore, nodes: Node[], edges: Edge[]) {
       if (away) writeSoon();
 
       // Things that moved arrive where they were, then glide to their new place.
-      const was = new Map(before.nodes.map((n) => [n.id, n.position]));
+      const was = new Map(before.nodes.map((n) => [n.id, n]));
       const paths = new Map(
         d.moved.flatMap((id) => {
           const to = board.nodes.find((n) => n.id === id)?.position;
-          const from = was.get(id);
+          const from = was.get(id)?.position;
           return to && from ? [[id, { from, to }] as const] : [];
         }),
       );
-      if (!paths.size || paths.size > GLIDE_MAX || reduced()) return board;
-      glideTo(paths);
+      const glides = paths.size > 0 && paths.size <= GLIDE_MAX && !reduced();
+      if (glides) glideTo(paths);
+      // What didn't change stays the very same object, so React Flow only
+      // draws again what did (and keeps what you had selected).
+      const touched = new Set([...d.added, ...d.changed, ...d.moved]);
+      const wired = new Set([...d.wires.added, ...d.wires.changed]);
+      const wiresWere = new Map(before.edges.map((e) => [e.id, e]));
       return {
-        ...board,
         nodes: board.nodes.map((n) => {
-          const p = paths.get(n.id);
-          return p ? { ...n, position: p.from } : n;
+          const p = glides ? paths.get(n.id) : undefined;
+          if (p) return { ...n, position: p.from };
+          return touched.has(n.id) ? n : (was.get(n.id) ?? n);
         }),
+        edges: board.edges.map((e) => (wired.has(e.id) ? e : (wiresWere.get(e.id) ?? e))),
       };
     },
     [flow, getNodes, getEdges, glideTo, waitFor, writeSoon],

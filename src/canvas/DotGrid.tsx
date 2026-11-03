@@ -1,6 +1,7 @@
 import { useStoreApi } from "@xyflow/react";
 import { useEffect, useRef } from "react";
 import { dotStyle, GRID } from "./dots";
+import { DotRipples } from "./DotRipples";
 import { gridFx } from "./gridFx";
 import { dotFromKey } from "./gridFx.math";
 import { paintSwarm, readInk } from "./gridFx.paint";
@@ -319,6 +320,7 @@ export function DotGrid() {
     <div className="dots" aria-hidden="true">
       <canvas ref={gridRef} className="dots-grid" />
       <canvas ref={fxRef} className="dots-fx" />
+      <DotRipples />
     </div>
   );
 }

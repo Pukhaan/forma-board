@@ -1,12 +1,11 @@
-// The light on things that changed outside the app: the DOM side of
-// useChanges.ts. It only sets an attribute, or starts an animation, on
-// elements React Flow has already drawn, so nothing re-renders for it.
-// styles/changes.css draws the light itself.
+// How things that changed outside the app show it: the DOM side of
+// useChanges.ts (the grid's ripple is gridFx.ripple.ts). It only sets an
+// attribute, or starts an opacity and scale animation, on elements React
+// Flow has already drawn, so nothing re-renders for it. styles/changes.css
+// draws the "since you last looked" dot.
 
-/** How long a live glow lasts, rise and fade. changes.css matches it. */
-export const LIVE_MS = 2600;
-/** How long a "since you last looked" glow takes to fade once seen. */
-const SEEN_OUT_MS = 1600;
+/** How long the "since you last looked" dot takes to fade once seen. changes.css matches it. */
+const SEEN_OUT_MS = 1200;
 /** How long a new wire takes to draw itself in. */
 const DRAW_MS = 900;
 /** Something new is drawn a frame or two after it arrives; this is how long to look for it. */
@@ -37,29 +36,54 @@ function later(el: Element, ms: number, fn: () => void) {
 }
 
 /**
- * A soft light that rises and fades. The two names take turns so a thing that
- * changes again while it glows starts its glow over.
+ * Something new settles into place: in from a touch smaller and faint. On
+ * its inner element, so React Flow's own position transform is left alone.
  */
-export function glowLive(el: HTMLElement) {
-  const name = el.dataset.glow === "live-a" ? "live-b" : "live-a";
-  el.dataset.glow = name;
-  later(el, LIVE_MS + 100, () => {
-    if (el.dataset.glow === name) delete el.dataset.glow;
-  });
+export function settle(wrapper: HTMLElement) {
+  const el = wrapper.firstElementChild;
+  if (!el) return;
+  if (reduced()) el.animate([{ opacity: 0 }, { opacity: 1 }], { duration: 300 });
+  else el.animate([{ opacity: 0, scale: "0.985" }, { opacity: 1, scale: "1" }], { duration: 420, easing: easeOut });
 }
 
-/** The quieter light that stays until it has been seen. */
-export function glowSeen(el: HTMLElement) {
+/** The corner the dot is pinned to: a stack's cover card, a wire's note, or the thing itself. */
+function cornerOf(el: HTMLElement) {
+  const target =
+    el.querySelector<HTMLElement>(".stack-card:last-child") ??
+    el.querySelector<HTMLElement>(".wire-note") ??
+    el.querySelector<HTMLElement>(".card-media") ??
+    el;
+  const z = parseFloat(getComputedStyle(el).getPropertyValue("--z")) || 1;
+  const box = el.getBoundingClientRect();
+  const r = target.getBoundingClientRect();
+  return { x: (r.right - box.left) / z, y: (r.top - box.top) / z };
+}
+
+/**
+ * Where a thing is, in board units, from where it is drawn: a stack by its
+ * pile, so a ripple starts at the cards and not around the name.
+ */
+export function boardRectOf(el: HTMLElement, root: HTMLElement, [tx, ty, z]: readonly [number, number, number]) {
+  const r = (el.querySelector<HTMLElement>(".stack-pile") ?? el).getBoundingClientRect();
+  const o = root.getBoundingClientRect();
+  return { x: (r.left - o.left - tx) / z, y: (r.top - o.top - ty) / z, w: r.width / z, h: r.height / z };
+}
+
+/** A small ink dot on its top-right corner, until it has been seen. */
+export function pinSeen(el: HTMLElement) {
   window.clearTimeout(timers.get(el));
-  el.dataset.glow = "seen";
+  const { x, y } = cornerOf(el);
+  el.style.setProperty("--seen-x", `${x}px`);
+  el.style.setProperty("--seen-y", `${y}px`);
+  el.dataset.unseen = "pinned";
 }
 
-/** Seen: the quiet light fades away. */
-export function fadeSeen(el: HTMLElement) {
-  if (el.dataset.glow !== "seen") return;
-  el.dataset.glow = "seen-out";
+/** Seen: the dot fades away. */
+export function unpinSeen(el: HTMLElement) {
+  if (el.dataset.unseen !== "pinned") return;
+  el.dataset.unseen = "fading";
   later(el, SEEN_OUT_MS + 100, () => {
-    if (el.dataset.glow === "seen-out") delete el.dataset.glow;
+    if (el.dataset.unseen === "fading") delete el.dataset.unseen;
   });
 }
 
@@ -90,7 +114,7 @@ export function drawWire(edge: SVGGElement, delay = 0) {
 export function fadeOut(el: HTMLElement | null) {
   if (!el?.parentElement || el.querySelector("iframe")) return;
   const ghost = el.cloneNode(true) as HTMLElement;
-  for (const name of ["data-id", "data-testid", "data-glow", "tabindex", "role"]) ghost.removeAttribute(name);
+  for (const name of ["data-id", "data-testid", "data-unseen", "tabindex", "role"]) ghost.removeAttribute(name);
   ghost.setAttribute("aria-hidden", "true");
   ghost.style.pointerEvents = "none";
   el.parentElement.appendChild(ghost);
@@ -101,7 +125,7 @@ export function fadeOut(el: HTMLElement | null) {
 }
 
 /**
- * Watches the things glowing "since you last looked" and calls `seen` for
+ * Watches the things marked "since you last looked" and calls `seen` for
  * each once it has been on screen for a while with the board at rest.
  */
 export function watchSeen(seen: (el: HTMLElement) => void, resting: () => boolean, dwellMs = 2600) {

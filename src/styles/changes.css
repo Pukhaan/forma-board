@@ -1,181 +1,55 @@
-/* What your AI did, in light (src/canvas/useChanges.ts, glow.ts).
-   A thing that changed outside the app gets a soft warm light behind it:
-   a few blurred shadows, pale gold and peach, painted once into a layer of
-   their own. Only that layer's opacity and scale animate, so a
-   board full of glows pans like a quiet one. No borders, no outlines.
-   - live-a / live-b: it just changed. The light rises quickly and fades over
-     about 2.5s. (Two names, so a second change starts it over.)
-   - seen: it changed since you last had the board open. A quieter light that
-     stays until it has been on screen a moment, or pointed at, then fades
-     (seen-out). */
+/* Since you last looked (src/canvas/useChanges.ts, glow.ts): a thing that
+   changed while the board was closed gets one small ink dot pinned just
+   outside its top-right corner (a stack's cover, a wire's note). The size of
+   a port's "+" dots, whatever the zoom. It stays until the thing has been on
+   screen a moment, or pointed at, then fades. glow.ts sets --seen-x and
+   --seen-y to the corner, in board units. Live changes need nothing here:
+   the dot grid ripples (gridFx.ripple.ts). */
 
-/* A stack's light sits behind its pile, not around its name. */
-.react-flow__node:not(.react-flow__node-stack)[data-glow]::before,
-.react-flow__node-stack[data-glow] .stack-pile::before,
-.wire-label[data-glow]::before {
+.react-flow__node[data-unseen]::after,
+.wire-label[data-unseen]::after {
+  --d: calc(3.2px / var(--z, 1));
+  --out: calc(5px / var(--z, 1));
   content: "";
   position: absolute;
-  inset: 0;
-  z-index: -1;
-  border-radius: 18px;
+  left: calc(var(--seen-x, 100%) + var(--out) - var(--d) / 2);
+  top: calc(var(--seen-y, 0px) - var(--out) - var(--d) / 2);
+  width: var(--d);
+  height: var(--d);
+  border-radius: 50%;
+  background: var(--ink-2);
   pointer-events: none;
-  /* Soft shadows, never animated themselves: painted once, then only the
-     layer fades. Gold up and to the left, peach down and to the right, a
-     warm white close in: light, not a frame. */
-  box-shadow:
-    0 0 16px 0 rgba(255, 226, 170, 0.6),
-    -18px -14px 64px 14px rgba(255, 202, 120, 0.4),
-    20px 18px 72px 14px rgba(255, 170, 130, 0.3);
-  will-change: opacity, transform;
 }
 
-/* A wire's note is small: its light is too. */
-.wire-label[data-glow]::before {
-  border-radius: 999px;
-  box-shadow:
-    0 0 12px 2px rgba(255, 222, 160, 0.8),
-    -8px -4px 28px 4px rgba(255, 204, 120, 0.4),
-    8px 6px 30px 4px rgba(255, 172, 130, 0.3);
+[data-unseen="pinned"]::after {
+  animation: seen-pin 0.5s 0.4s var(--spring) backwards;
 }
 
-[data-glow="live-a"]::before,
-[data-glow="live-a"] .stack-pile::before {
-  animation: glow-live-a 2.6s cubic-bezier(0.33, 0, 0.2, 1) both;
+[data-unseen="fading"]::after {
+  animation: seen-fade 1.2s var(--ease-out) both;
 }
 
-[data-glow="live-b"]::before,
-[data-glow="live-b"] .stack-pile::before {
-  animation: glow-live-b 2.6s cubic-bezier(0.33, 0, 0.2, 1) both;
-}
-
-[data-glow="seen"]::before,
-[data-glow="seen"] .stack-pile::before {
-  opacity: 0.6;
-  animation: glow-seen-in 1.4s 0.5s var(--ease-out) backwards;
-}
-
-[data-glow="seen-out"]::before,
-[data-glow="seen-out"] .stack-pile::before {
-  animation: glow-seen-out 1.6s ease-in-out both;
-}
-
-@keyframes glow-live-a {
-  0% {
-    opacity: 0;
-    transform: scale(0.9);
-  }
-  12% {
-    opacity: 1;
-    transform: scale(1);
-  }
-  36% {
-    opacity: 0.9;
-  }
-  100% {
-    opacity: 0;
-    transform: scale(1.06);
-  }
-}
-
-@keyframes glow-live-b {
-  0% {
-    opacity: 0;
-    transform: scale(0.9);
-  }
-  12% {
-    opacity: 1;
-    transform: scale(1);
-  }
-  36% {
-    opacity: 0.9;
-  }
-  100% {
-    opacity: 0;
-    transform: scale(1.06);
-  }
-}
-
-@keyframes glow-seen-in {
+@keyframes seen-pin {
   from {
     opacity: 0;
-    transform: scale(0.94);
+    transform: scale(0.4);
   }
 }
 
-@keyframes glow-seen-out {
-  from {
-    opacity: 0.6;
-  }
-  to {
-    opacity: 0;
-    transform: scale(1.04);
-  }
-}
-
-/* Reduced motion: the same light, still, only fading in and out. */
-@keyframes glow-still-a {
-  0% {
-    opacity: 0;
-  }
-  8% {
-    opacity: 1;
-  }
-  36% {
-    opacity: 0.9;
-  }
-  100% {
-    opacity: 0;
-  }
-}
-
-@keyframes glow-still-b {
-  0% {
-    opacity: 0;
-  }
-  8% {
-    opacity: 1;
-  }
-  36% {
-    opacity: 0.9;
-  }
-  100% {
-    opacity: 0;
-  }
-}
-
-@keyframes glow-fade-in {
-  from {
-    opacity: 0;
-  }
-}
-
-@keyframes glow-fade-out {
-  from {
-    opacity: 0.6;
-  }
+@keyframes seen-fade {
   to {
     opacity: 0;
   }
 }
 
 @media (prefers-reduced-motion: reduce) {
-  [data-glow="live-a"]::before,
-[data-glow="live-a"] .stack-pile::before {
-    animation-name: glow-still-a;
+  [data-unseen="pinned"]::after {
+    animation-name: seen-appear;
   }
+}
 
-  [data-glow="live-b"]::before,
-[data-glow="live-b"] .stack-pile::before {
-    animation-name: glow-still-b;
-  }
-
-  [data-glow="seen"]::before,
-[data-glow="seen"] .stack-pile::before {
-    animation-name: glow-fade-in;
-  }
-
-  [data-glow="seen-out"]::before,
-[data-glow="seen-out"] .stack-pile::before {
-    animation-name: glow-fade-out;
+@keyframes seen-appear {
+  from {
+    opacity: 0;
   }
 }
