@@ -1,5 +1,5 @@
 /* Since you last looked (src/canvas/useChanges.ts, glow.ts): a thing that
-   changed while the board was closed gets one small ink dot pinned just
+   changed while the board was closed gets one small blue dot pinned just
    outside its top-right corner (a stack's cover, a wire's note). The size of
    a port's "+" dots, whatever the zoom. It stays until the thing has been on
    screen a moment, or pointed at, then fades. glow.ts sets --seen-x and
@@ -9,7 +9,7 @@
 .react-flow__node[data-unseen]::after,
 .wire-label[data-unseen]::after {
   --z: inherit;
-  --d: calc(3.2px / var(--z, 1));
+  --d: calc(5px / var(--z, 1));
   --out: calc(5px / var(--z, 1));
   content: "";
   position: absolute;
@@ -18,7 +18,11 @@
   width: var(--d);
   height: var(--d);
   border-radius: 50%;
-  background: var(--ink-2);
+  /* The one accent Forma allows itself: David's choice, so what's new is
+     seen at a glance. The blue of the research it sits among (the stack
+     fan's blue card, the blue triangle). */
+  background: #2f6bff;
+  box-shadow: 0 0 0 calc(1.5px / var(--z, 1)) var(--canvas);
   pointer-events: none;
 }
 
