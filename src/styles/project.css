@@ -32,9 +32,19 @@
   border-radius: 10px;
 }
 
-.project-chip-button:hover,
-.project-chip-button[aria-expanded="true"] {
+/* A small control's shadow, solid white: the chrome's wide shadow and
+   frosted glass are for the big toolbar. */
+.project-chip-button.chrome {
   background: #ffffff;
+  border: 0;
+  box-shadow: var(--shadow-control);
+  -webkit-backdrop-filter: none;
+  backdrop-filter: none;
+}
+
+.project-chip-button.chrome:hover,
+.project-chip-button.chrome[aria-expanded="true"] {
+  box-shadow: 0 0 0 0.5px rgba(22, 22, 21, 0.12), 0 1px 3px rgba(18, 18, 16, 0.09), 0 3px 8px rgba(18, 18, 16, 0.06);
 }
 
 .project-chip-name {

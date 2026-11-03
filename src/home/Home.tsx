@@ -144,12 +144,12 @@ export function Home({ source, from, notice, onEnter }: Props) {
         </div>
       </div>
       <div className="home-chrome">
-        {/* The same pill as a board's, where it is on a board. It stays put going in, and reads the board's name there. */}
+        {/* The home's title, set where a board's pill puts its name, so the word stays put going in. */}
         <div className="project-chip" data-full={corner || undefined}>
-          <div className="project-chip-button chrome home-chip">Forma</div>
+          <div className="project-chip-button home-chip">Forma</div>
         </div>
         <div ref={chrome}>
-          <button className="home-open chrome" data-full={corner || undefined} onClick={() => void openFolder()}>
+          <button className="home-open" data-full={corner || undefined} onClick={() => void openFolder()}>
             Open a folder…
           </button>
           {error && <p className="home-error">{error}</p>}

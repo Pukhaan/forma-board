@@ -191,17 +191,21 @@
   z-index: 31;
 }
 
-.home-chip {
+/* The title: plain type, no box. It isn't a menu, so it doesn't dress as
+   one; its padding matches the board's pill so "Forma" lines up with a
+   board's name in the same spot. */
+.project-chip-button.home-chip,
+.project-chip-button.home-chip:hover {
   padding: 0 11px;
+  font-weight: 600;
+  letter-spacing: -0.01em;
+  background: none;
+  box-shadow: none;
   cursor: default;
 }
 
-.project-chip[data-full] .home-chip {
+.project-chip[data-full] .project-chip-button.home-chip {
   padding: 0 13px;
-}
-
-.project-chip-button.home-chip:hover {
-  background: rgba(255, 255, 255, 0.86);
 }
 
 .home-open {
@@ -226,9 +230,9 @@
   border-radius: 10px;
 }
 
+/* The quiet way in for boards kept elsewhere: text, darkening on hover. */
 .home-open:hover {
   color: var(--ink);
-  background: #ffffff;
 }
 
 .home-error {
