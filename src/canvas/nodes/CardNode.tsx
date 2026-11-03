@@ -17,13 +17,13 @@ import { Ports } from "./Ports";
 type CardNodeType = Node<CardData, "card">;
 
 /**
- * A single loose item: an image, a link (double-click opens it), a document
- * (double-click opens it big to read), or a live card (a click opens it big,
- * like a stack). Drop it on a stack to file it, or on another card or note to
- * start a stack.
+ * A single loose item: a picture, a video, a document or a live card (a click
+ * opens it big, like a stack; Canvas.tsx), or a link (double-click opens
+ * it). Drop it on a stack to file it, or on another card or note to start a
+ * stack.
  */
 export function CardNode({ id, data, selected }: NodeProps<CardNodeType>) {
-  const { dropTargetId, liveId, openLive } = useCanvasUi();
+  const { dropTargetId, liveId } = useCanvasUi();
   useZoomVar();
   const { item } = data;
   const isLink = item.kind === "link";
@@ -47,16 +47,7 @@ export function CardNode({ id, data, selected }: NodeProps<CardNodeType>) {
       data-lifted={liveId === id || undefined}
       animate={{ scale: dropTargetId === id ? 1.05 : 1 }}
       transition={{ type: "spring", stiffness: 420, damping: 30 }}
-      onDoubleClick={
-        isLink
-          ? () => openLink(item.url ?? "")
-          : isDoc
-            ? (e) => {
-                const media = e.currentTarget.querySelector<HTMLElement>(".card-media");
-                if (media) openLive(id, item, media);
-              }
-            : undefined
-      }
+      onDoubleClick={isLink ? () => openLink(item.url ?? "") : undefined}
       title={isLink ? item.url : undefined}
     >
       {isLive ? (

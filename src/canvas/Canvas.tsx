@@ -132,14 +132,16 @@ export function Canvas({ store, initial }: Props) {
     [commit, getNode, setEdges],
   );
 
-  // Clicking a stack opens it, and so does clicking a live card (big). Neither
-  // is selected, so nothing is left highlighted when you close it again.
-  // Anything else clicked from too far away to read glides the board in to
-  // it, so a click always does something.
+  // Clicking a stack opens it, and so does clicking a card on the board
+  // that has more to show (a picture, a video, a document or a live card),
+  // big. None is selected, so nothing is left highlighted when you close it
+  // again. Anything else clicked from too far away to read glides the board
+  // in to it, so a click always does something.
   const onNodeClick = useCallback(
     (e: ReactMouseEvent, node: Node) => {
-      const liveItem = node.type === "card" && (node.data as CardData).item.kind === "live";
-      if (node.type !== "stack" && !liveItem) {
+      const kind = node.type === "card" ? (node.data as CardData).item.kind : null;
+      const opens = node.type === "stack" || kind === "live" || kind === "image" || kind === "video" || kind === "doc";
+      if (!opens) {
         if (!detailShows(getZoom(), false)) {
           const reduced = window.matchMedia("(prefers-reduced-motion: reduce)").matches;
           fitView({ nodes: [{ id: node.id }], maxZoom: 1, padding: 0.6, duration: reduced ? 0 : 640, ease: easeOutCubic });
@@ -217,9 +219,6 @@ export function Canvas({ store, initial }: Props) {
     [commit, focusId, setNodes],
   );
 
-  const openLive = useCallback((id: string, item: Item, media: HTMLElement) => {
-    setLive((l) => l ?? { id, item, from: rectOf(media) });
-  }, []);
   const updateItem = useCallback(
     (itemId: string, patch: Partial<Item>) => {
       commit();
@@ -228,8 +227,8 @@ export function Canvas({ store, initial }: Props) {
     [commit, setNodes],
   );
   const ui = useMemo(
-    () => ({ dropTargetId: dropTargetId ?? dropOver, commit, openLive, liveId: live?.id ?? null, updateItem, root: store.root }),
-    [dropTargetId, dropOver, commit, openLive, live?.id, updateItem, store.root],
+    () => ({ dropTargetId: dropTargetId ?? dropOver, commit, liveId: live?.id ?? null, updateItem, root: store.root }),
+    [dropTargetId, dropOver, commit, live?.id, updateItem, store.root],
   );
 
   return (

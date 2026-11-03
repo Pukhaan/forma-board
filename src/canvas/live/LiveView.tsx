@@ -9,9 +9,12 @@ export type OpenLive = { id: string; item: Item; from: Rect };
 
 type Props = { open: OpenLive | null; onDone: () => void };
 
+/** A card's box on the board, by the card's id. */
+const cardMedia = (id: string) => document.querySelector<HTMLElement>(`.react-flow__node[data-id="${CSS.escape(id)}"] .card-media`);
+
 /** Where a card's box is on screen now, to land back on (it may have moved). */
 function cardRect(id: string): Rect | null {
-  const el = document.querySelector(`.react-flow__node[data-id="${CSS.escape(id)}"] .card-media`);
+  const el = cardMedia(id);
   return el ? rectOf(el) : null;
 }
 
@@ -19,9 +22,9 @@ const typing = (t: EventTarget | null) =>
   t instanceof HTMLElement && (t.isContentEditable || t.matches("input, textarea, select"));
 
 /**
- * A live card from the board, opened big: it grows out of its card, with the
- * board blurred behind, the way an image lifts out of an opened stack. Esc or
- * a click around it puts it back.
+ * A card from the board opened big (a picture, a video, a document or a live
+ * card): it grows out of its card, with the board blurred behind, the way an
+ * image lifts out of an opened stack. Esc or a click around it puts it back.
  */
 export function LiveView({ open, onDone }: Props) {
   return open ? <Opened key={open.id} open={open} onDone={onDone} /> : null;
@@ -59,6 +62,7 @@ function Opened({ open, onDone }: { open: OpenLive; onDone: () => void }) {
       fade={reduced ? REDUCED_FADE : LIFT_FADE}
       onPutBack={putBack}
       onDone={onDone}
+      tileOf={() => cardMedia(open.id)}
     />
   );
 }

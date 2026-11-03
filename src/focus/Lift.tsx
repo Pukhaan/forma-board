@@ -1,6 +1,6 @@
 import { useReactFlow } from "@xyflow/react";
 import { motion, useMotionValue, useMotionValueEvent, useTransform, type Transition } from "motion/react";
-import { useEffect, useRef, useState } from "react";
+import { useEffect, useEffectEvent, useRef, useState } from "react";
 import { useCanvasUi } from "../canvas/context";
 import { LiveStage } from "../canvas/live/LiveStage";
 import { ItemFace } from "../canvas/nodes/Faces";
@@ -51,7 +51,15 @@ type Props = {
   fade: Transition;
   onPutBack: () => void;
   onDone: () => void;
+  /**
+   * The box it came out of, which shows again under it as it lands: its tile
+   * in an opened stack unless said otherwise (a card on the board).
+   */
+  tileOf?: () => HTMLElement | null;
 };
+
+/** A tile in the opened stack, by its item's id. */
+const stackTile = (id: string) => document.querySelector<HTMLElement>(`.focus .ft[data-id="${CSS.escape(id)}"] .ft-media`);
 
 /**
  * One image or note lifted toward you, everything else pushed back. It grows out of
@@ -59,7 +67,7 @@ type Props = {
  * live card comes up running and takes the pointer, so you can play with it,
  * and a note comes up ready to write in; only a click around them puts it back.
  */
-export function Lift({ item, from, to, reduced, spring, fade, onPutBack, onDone }: Props) {
+export function Lift({ item, from, to, reduced, spring, fade, onPutBack, onDone, tileOf }: Props) {
   const vw = window.innerWidth;
   const vh = window.innerHeight;
   const shape = itemShape(item);
@@ -107,17 +115,15 @@ export function Lift({ item, from, to, reduced, spring, fade, onPutBack, onDone 
   const rise = useTransform(() => shadowAt(scale.get(), tileScale.get()) * handover.get());
   const sink = useTransform(() => (1 - shadowAt(scale.get(), tileScale.get())) * handover.get());
   useMotionValueEvent(handover, "change", (v) => {
-    const tile = document.querySelector<HTMLElement>(`.focus .ft[data-id="${CSS.escape(item.id)}"] .ft-media`);
+    const tile = tileOf ? tileOf() : stackTile(item.id);
     if (tile) tile.style.visibility = v < 1 ? "visible" : "";
   });
-  // Landed: the tile is the tile again, hidden by the stack the next time it lifts.
-  useEffect(
-    () => () => {
-      const tile = document.querySelector<HTMLElement>(`.focus .ft[data-id="${CSS.escape(item.id)}"] .ft-media`);
-      if (tile) tile.style.visibility = "";
-    },
-    [item.id],
-  );
+  // Landed: the tile is the tile again, hidden the next time it lifts.
+  const release = useEffectEvent(() => {
+    const tile = tileOf ? tileOf() : stackTile(item.id);
+    if (tile) tile.style.visibility = "";
+  });
+  useEffect(() => () => release(), []);
   // A white card (note, document, link) rests on a soft shadow in its tile.
   // The lifted box carries the same one, sized so that at the tile it is
   // seen exactly as the tile's, and handing over to the lifted shadow as it

@@ -65,8 +65,9 @@ Make a new one, or open any folder as a board.
   Finder or a browser, or paste with ⌘V. Links become cards with the site's
   own icon.
 - **Stacks.** Drag a card onto another to start a stack, and drag more onto
-  it to add. Click a stack and it deals its contents out; click a picture or
-  a document to lift it toward you and read it. Esc steps back out.
+  it to add. Click a stack and it deals its contents out; click a picture, a
+  video or a document, in a stack or on the board, to open it big. Esc
+  steps back out.
 - **Wires.** Hover anything to see its ports and pull a wire to anything
   else. Hover a wire and press + (or double-click it) to say why the two
   connect.
