@@ -44,8 +44,11 @@ export function VideoFace({ item, playing = false, big = false }: Props) {
       )}
       {!live && (
         <span className="video-mark" aria-hidden>
+          {/* Filled with a round-joined stroke, so its corners are soft. Set a
+              little right of the box's centre, halfway to its centroid, so it
+              looks centred. */}
           <svg viewBox="0 0 20 20">
-            <path d="M8 6.2v7.6l6-3.8z" />
+            <path d="M7.9 7v6l5-3z" />
           </svg>
         </span>
       )}
@@ -59,9 +62,10 @@ export function VideoFace({ item, playing = false, big = false }: Props) {
             setSound((s) => !s);
           }}
         >
-          <svg viewBox="0 0 28 28" aria-hidden>
-            <path className="video-sound-body" d="M8 11.5h3l4-3.5v12l-4-3.5H8z" />
-            {sound ? <path d="M18 11a4 4 0 0 1 0 6M20.5 8.8a7 7 0 0 1 0 10.4" /> : <path d="M18.5 11.5l5 5M23.5 11.5l-5 5" />}
+          {/* Drawn in the button's own 24 units, the whole glyph centred on 12,12 in both states. */}
+          <svg viewBox="0 0 24 24" aria-hidden>
+            <path className="video-sound-body" d="M5.5 10h2.5l3.5-3v10l-3.5-3H5.5z" />
+            {sound ? <path d="M14.3 9.5a3.5 3.5 0 0 1 0 5M16.8 7.6a6.5 6.5 0 0 1 0 8.8" /> : <path d="M14.5 9.5l4 5M18.5 9.5l-4 5" />}
           </svg>
         </button>
       )}
