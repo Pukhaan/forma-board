@@ -8,6 +8,7 @@
 
 .react-flow__node[data-unseen]::after,
 .wire-label[data-unseen]::after {
+  --z: inherit;
   --d: calc(3.2px / var(--z, 1));
   --out: calc(5px / var(--z, 1));
   content: "";

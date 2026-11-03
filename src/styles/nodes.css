@@ -52,7 +52,43 @@
    - data-detail="off" once zoomed out past about 55%. Body text, counts, card
      titles and wire notes fade out, and come back the same way. Each of them
      is its own layer, so the fade runs on the compositor.
-   Outside the board (an opened stack) --detail falls back to 1. */
+   Outside the board (an opened stack) --detail falls back to 1.
+   --z reaches only what reads it. It is registered as not inherited and
+   passed down one chain of elements, so writing it restyles those few and
+   leaves everything else alone (the piles, their faces, the pictures). When
+   it inherited everywhere, each write restyled the whole board: with 40
+   notes in stacks about 5ms, and a dropped frame on most writes during a
+   long pinch. Anything new that reads --z joins the chain below. */
+@property --z {
+  syntax: "<number>";
+  inherits: false;
+  initial-value: 1;
+}
+
+.react-flow__renderer,
+.react-flow__pane,
+.react-flow__viewport,
+.react-flow__nodes,
+.react-flow__edgelabel-renderer,
+.react-flow__node,
+.wire-label,
+.wire-note,
+.wire-input,
+.project,
+.project-title,
+.note,
+.stack,
+.stack-label,
+.stack-label-in,
+.stack > .react-flow__handle-bottom,
+.card,
+.card-title,
+.card > .react-flow__handle-bottom,
+.area,
+.area-title {
+  --z: inherit;
+}
+
 .react-flow {
   --detail: 1;
 }
@@ -200,11 +236,6 @@
 
 /* Stack: a pile with its name underneath. */
 .stack {
-  /* How much the label is scaled up at this zoom, and whether the title has
-     wrapped to two lines (--tw is its one-line width, set by StackNode).
-     body.ts does the same sums for wires and the dot "+"s. */
-  --ls: clamp(1, calc(0.96 / var(--z, 1)), 3.4);
-  --wrap: clamp(0, calc((var(--tw, 0) * var(--ls) - 280) * 100), 1);
   display: flex;
   flex-direction: column;
   align-items: center;
@@ -222,6 +253,16 @@
 .stack > .port.react-flow__handle-right {
   top: 100px;
   right: -44px;
+}
+
+/* How much the label is scaled up at this zoom, and whether the title has
+   wrapped to two lines (--tw is its one-line width, set by StackNode).
+   Worked out on the label and its port only, so the pile never restyles
+   with the zoom. body.ts does the same sums for wires and the dot "+"s. */
+.stack-label-in,
+.stack > .port.react-flow__handle-bottom {
+  --ls: clamp(1, calc(0.96 / var(--z, 1)), 3.4);
+  --wrap: clamp(0, calc((var(--tw, 0) * var(--ls) - 280) * 100), 1);
 }
 
 .stack > .port.react-flow__handle-bottom {
