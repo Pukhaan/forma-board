@@ -23,9 +23,9 @@ const DIALS_SIDE = 252;
 const LIVE_MARGIN = 56;
 /**
  * How wide a note comes up. Its face is laid out in container units, so this
- * is the tile grown, line for line; at this width its body reads at 16px.
+ * is the tile grown, line for line; at this width its body reads at about 17px.
  */
-const NOTE_WIDTH = 320;
+const NOTE_WIDTH = 280;
 
 type Props = {
   item: Item;
