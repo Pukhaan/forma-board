@@ -1,5 +1,7 @@
 # Contributing to Forma
 
+- **Follow [DESIGN.md](DESIGN.md)** before building anything: the tokens, no
+  borders, no colour of its own, icons, motion and copy.
 - **Smooth is a requirement.** The board holds 60 fps on a realistic, full
   board, in WebKit. Every new animation or visual effect (and any change to
   how the board draws) must pass `pnpm bench` before it is committed. If your

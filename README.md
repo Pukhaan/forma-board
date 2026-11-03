@@ -12,6 +12,8 @@ your AI work on one board.
 Status: early design phase. The board runs on sample data saved in the
 browser. The project-folder file layer comes next.
 
+Before designing or building anything, read [DESIGN.md](DESIGN.md).
+
 ## Run it
 
 ```bash
