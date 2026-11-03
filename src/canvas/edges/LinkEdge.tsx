@@ -100,6 +100,7 @@ export function LinkEdge({ id, source, target, data, selected }: EdgeProps<LinkE
       <EdgeLabelRenderer>
         <div
           className="wire-label nodrag nopan"
+          data-wire={id}
           data-hot={loud || undefined}
           style={{ transform: `translate(-50%, -50%) translate(${mid.x}px, ${mid.y}px)` }}
           onMouseEnter={() => setHover(true)}

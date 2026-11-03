@@ -61,6 +61,7 @@ export const Tile = memo(function Tile({ item, size, start, z, raised, lifted, r
   return (
     <motion.div
       className="ft"
+      data-id={item.id}
       data-kind={item.kind}
       data-raised={raised || undefined}
       data-lifted={lifted || undefined}
