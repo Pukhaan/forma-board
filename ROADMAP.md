@@ -9,8 +9,6 @@ in an issue first, so two people don't build the same thing.
 - **A dark theme.** The same board at night: the tokens are ready for it.
 - **Signed downloads.** A Forma.app you can download from GitHub, for people
   who don't want to build it through their AI.
-- **Small things from daily use.** An image's note saving as you type, and
-  quitting from the Dock saving like ⌘Q does.
 
 ## Bringing research in
 

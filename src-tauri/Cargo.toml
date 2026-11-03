@@ -28,3 +28,5 @@ tauri-plugin-dialog = "2"
 # The Force Touch trackpad tick (NSHapticFeedbackManager).
 [target.'cfg(target_os = "macos")'.dependencies]
 objc2-app-kit = { version = "0.3.2", default-features = false, features = ["std", "NSHapticFeedback"] }
+# Answering macOS's "may I quit?" (system_quit.rs).
+objc2 = "0.6"

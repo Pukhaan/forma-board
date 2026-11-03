@@ -137,13 +137,20 @@ function Facts({ item, layout }: { item: Item; layout: DetailLayout }) {
   );
 }
 
+/** A pause this long in writing saves what's there, as in a note. */
+const PAUSE_MS = 1000;
+
 /**
- * Why the image was saved, typed straight in under it. Saved when you click
- * away, press Esc or put the image back; while you type, the board's keys
- * stay out of it. Someone else's change (the AI) shows when you aren't typing.
+ * Why the image was saved, typed straight in under it. Saved when writing
+ * pauses, when you click away, press Esc or put the image back, all of one go
+ * at it undoing as one step; while you type, the board's keys stay out of it.
+ * Someone else's change (the AI) shows when you aren't typing.
  */
 function NoteField({ item, layout }: { item: Item; layout: DetailLayout }) {
   const { updateItem } = useCanvasUi();
+  const { setNodes } = useReactFlow();
+  /** Saved at least once since writing started: later saves join that undo step. */
+  const again = useRef(false);
   const saved = item.note ?? "";
   const [draft, setDraft] = useState(saved);
   const [seen, setSeen] = useState(saved);
@@ -164,8 +171,19 @@ function NoteField({ item, layout }: { item: Item; layout: DetailLayout }) {
 
   const save = (text: string) => {
     const note = text.trim();
-    if (note !== saved.trim()) updateItem(item.id, { note: note || undefined });
+    if (note === saved.trim()) return;
+    const patch = { note: note || undefined };
+    if (again.current) setNodes((ns) => patchItem(ns, item.id, patch));
+    else updateItem(item.id, patch);
+    again.current = true;
   };
+  // A pause in writing saves it. Every key sets the pause going again.
+  const paused = useEffectEvent(() => save(draft));
+  useEffect(() => {
+    if (!editing) return;
+    const t = window.setTimeout(paused, PAUSE_MS);
+    return () => window.clearTimeout(t);
+  }, [editing, draft]);
   // Taken away while still typing (the view closed under it): keep what's there.
   const onLeave = useEffectEvent(() => {
     if (editing) save(draft);
@@ -184,7 +202,10 @@ function NoteField({ item, layout }: { item: Item; layout: DetailLayout }) {
       spellCheck
       onClick={keep}
       onChange={(e) => setDraft(e.target.value)}
-      onFocus={() => setEditing(true)}
+      onFocus={() => {
+        again.current = false;
+        setEditing(true);
+      }}
       onBlur={() => {
         setEditing(false);
         save(draft);

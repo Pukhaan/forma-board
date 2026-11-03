@@ -2,7 +2,8 @@
 //!
 //! The board saves a moment after each change, so quitting right after one
 //! could leave it unwritten. Every way out (⌘Q, Quit in the menu, the red
-//! button, ⌘W, the app being asked to exit) is held, the webview is told to
+//! button, ⌘W, the app being asked to exit, and through system_quit.rs Quit
+//! in the Dock and the Mac logging out or shutting down) is held, the webview is told to
 //! save (src/app/closing.ts: what's being typed is committed, the board
 //! written), and once it says it's done the app exits. If it doesn't answer
 //! in time, the app exits anyway: quitting never hangs.
@@ -27,6 +28,15 @@ const LONGEST: Duration = Duration::from_millis(2500);
 static DONE: AtomicBool = AtomicBool::new(false);
 /// Set once the webview has been asked to save, so asking twice waits once.
 static ASKED: AtomicBool = AtomicBool::new(false);
+/// Set when the Mac is logging out or shutting down (system_quit.rs): macOS
+/// is waiting on us, so once the board is saved the app simply ends.
+static ENDING: AtomicBool = AtomicBool::new(false);
+
+/// The Mac is logging out or shutting down.
+#[allow(dead_code)]
+pub fn ending() {
+    ENDING.store(true, Ordering::SeqCst);
+}
 
 pub fn done() -> bool {
     DONE.load(Ordering::SeqCst)
@@ -34,6 +44,11 @@ pub fn done() -> bool {
 
 fn finish<R: Runtime>(app: &AppHandle<R>) {
     DONE.store(true, Ordering::SeqCst);
+    if ENDING.load(Ordering::SeqCst) {
+        // The board is written; macOS is holding the shutdown for us, and
+        // ending here lets it carry on at once.
+        std::process::exit(0);
+    }
     app.exit(0);
 }
 

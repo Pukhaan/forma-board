@@ -1,5 +1,7 @@
 mod history;
 mod quit;
+#[cfg(target_os = "macos")]
+mod system_quit;
 
 use tauri::{Manager, RunEvent, WindowEvent};
 
@@ -33,6 +35,13 @@ pub fn run() {
         .plugin(tauri_plugin_fs::init())
         .plugin(tauri_plugin_opener::init())
         .menu(quit::menu)
+        .setup(|app| {
+            #[cfg(target_os = "macos")]
+            system_quit::install(app.handle());
+            #[cfg(not(target_os = "macos"))]
+            let _ = app;
+            Ok(())
+        })
         .on_menu_event(|app, event| {
             if event.id() == quit::QUIT_ID {
                 quit::request(app);
