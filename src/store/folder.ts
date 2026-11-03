@@ -6,13 +6,16 @@
 //
 // Writes go to a temporary file first and are then renamed into place, so
 // nothing (an AI, an editor, a crash) ever sees half a board. Changes made
-// outside the app are picked up and shown live.
+// outside the app are picked up and shown live. Earlier versions are kept in
+// the app's own data folder (keeper.ts), so a delete can be brought back.
 
 import { convertFileSrc } from "@tauri-apps/api/core";
 import { exists, mkdir, readTextFile, rename, watch, writeFile, writeTextFile } from "@tauri-apps/plugin-fs";
+import { saveOnClose } from "../app/closing";
 import { parseBoard, serialize, type Board } from "../model/format";
 import { newId } from "../model/operations";
 import type { Item } from "../model/types";
+import { keeperFor } from "./keeper";
 import { imageSize, newImageFields, titleFromName, type BoardStore } from "./types";
 import { isVideoFile, videoStill } from "./videoStill";
 
@@ -56,6 +59,9 @@ export function emptyBoard(root: string): Board {
   };
 }
 
+/** How to retire each folder's open store, when the same folder is opened again. */
+const closers = new Map<string, () => void>();
+
 export function folderStore(root: string): BoardStore {
   const boardPath = join(root, BOARD_FILE);
   // Not a dotfile: the app's file permissions ($HOME/**) don't match hidden
@@ -68,28 +74,63 @@ export function folderStore(root: string): BoardStore {
   let known = "";
   let timer: number | undefined;
   let pending: Board | null = null;
+  /** Every write, one after another. Never rejects, so one failure doesn't stop the next. */
   let writing: Promise<void> = Promise.resolve();
+  /** The board changed while open, by you or from outside: worth keeping as you leave it. */
+  let changed = false;
+  /** Told when the board on disk becomes another one (a change from outside, a restore). */
+  let listener: ((board: Board) => void) | null = null;
+  const keeper = keeperFor(root);
 
-  const write = async (board: Board) => {
-    const text = serialize(board);
-    if (text === known) return;
+  /** Whole text into place, never half of it. */
+  const put = async (text: string) => {
     known = text;
     await writeTextFile(tmpPath, text);
     await rename(tmpPath, boardPath);
   };
 
-  const flush = () => {
-    if (!pending) return;
-    const board = pending;
-    pending = null;
-    writing = writing.then(() => write(board)).catch((e) => {
+  /** Queues a write after any already going, and returns it (it rejects if the write failed). */
+  const queue = (job: () => Promise<void>) => {
+    const done = writing.then(job);
+    writing = done.catch((e) => {
       // Forget what we think is on disk, so the next change retries the write.
       known = "";
       console.error("Could not save the board", e);
     });
+    return done;
   };
 
-  window.addEventListener("beforeunload", flush);
+  const write = async (board: Board) => {
+    const text = serialize(board);
+    if (text === known) return;
+    const before = known;
+    await put(text);
+    changed = true;
+    // The board as it was before this save, kept once it's written.
+    void keeper.keep(before, "save");
+  };
+
+  /** Writes what's waiting now. Resolves once it's on disk. */
+  const flush = () => {
+    window.clearTimeout(timer);
+    if (!pending) return writing;
+    const board = pending;
+    pending = null;
+    return queue(() => write(board));
+  };
+
+  // Quitting writes what's waiting, and keeps the board as you left it, so a
+  // change made while the app is closed can be undone too. A board opened
+  // again takes over from its earlier store.
+  closers.get(root)?.();
+  const stop = saveOnClose(async (closing) => {
+    await flush();
+    if (closing && changed) await keeper.keep(known, "leave");
+  });
+  closers.set(root, () => {
+    void flush();
+    stop();
+  });
 
   return {
     name: folderName(root),
@@ -105,13 +146,26 @@ export function folderStore(root: string): BoardStore {
         throw new Error(`${BOARD_FILE} in ${folderName(root)} isn't a board this version of Forma can read.`);
       }
       const board = emptyBoard(root);
-      await write(board);
+      await queue(() => write(board));
       return board;
     },
     save(board) {
       pending = board;
       window.clearTimeout(timer);
-      timer = window.setTimeout(flush, 300);
+      timer = window.setTimeout(() => void flush().catch(() => {}), 300);
+    },
+    flush,
+    versions: () => keeper.list(),
+    async restore(name) {
+      const text = await keeper.read(name);
+      const board = parseBoard(text, resolve);
+      if (!board) throw new Error("That version isn't a board this version of Forma can read.");
+      // What's on screen goes to disk first, and is kept as a version itself.
+      await flush().catch(() => {});
+      await keeper.keep(known, "restore");
+      await queue(() => put(text));
+      changed = true;
+      listener?.(board);
     },
     async importMedia(file, source): Promise<Item> {
       const id = newId("item");
@@ -136,6 +190,7 @@ export function folderStore(root: string): BoardStore {
     watch(onChange) {
       let stop: (() => void) | null = null;
       let cancelled = false;
+      listener = onChange;
       watch(
         root,
         async (event) => {
@@ -146,7 +201,10 @@ export function folderStore(root: string): BoardStore {
             const board = parseBoard(text, resolve);
             // A half-written or broken file from someone else: wait for the next change.
             if (!board) return;
+            // The board as it was before this change, so it can be brought back.
+            void keeper.keep(known, "outside");
             known = text;
+            changed = true;
             onChange(board);
           } catch {
             // The file is mid-replace; the next event will catch it.
@@ -161,6 +219,7 @@ export function folderStore(root: string): BoardStore {
         .catch((e) => console.error("Could not watch the project folder", e));
       return () => {
         cancelled = true;
+        if (listener === onChange) listener = null;
         stop?.();
       };
     },

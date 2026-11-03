@@ -58,8 +58,9 @@ export function NoteNode({ id, data, selected }: NodeProps<NoteNodeType>) {
           look="board"
           text={data.text}
           start={editing.at}
-          onSave={(text) => {
-            commit();
+          onSave={(text, again) => {
+            // One go at the note is one undo, however often it saved on the way.
+            if (!again) commit();
             updateNodeData(id, { text });
           }}
           onLeave={() => setEditing(null)}

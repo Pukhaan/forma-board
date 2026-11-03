@@ -1,3 +1,4 @@
+import { useReactFlow } from "@xyflow/react";
 import { motion, type Transition } from "motion/react";
 import { useEffect, useRef, useState } from "react";
 import { useCanvasUi } from "../canvas/context";
@@ -5,6 +6,7 @@ import { LiveStage } from "../canvas/live/LiveStage";
 import { ItemFace } from "../canvas/nodes/Faces";
 import { NoteEditor } from "../canvas/nodes/NoteEditor";
 import { isMedia, itemShape } from "../model/items";
+import { patchItem } from "../model/operations";
 import { VideoFace } from "../canvas/nodes/VideoFace";
 import type { Item } from "../model/types";
 import { detailLayout } from "./detail";
@@ -110,5 +112,9 @@ export function Lift({ item, from, to, reduced, spring, fade, onPutBack, onDone 
 /** A lifted note: the read face, written in straight away. Esc lets go of it first. */
 function NoteSheet({ item }: { item: Item }) {
   const { updateItem } = useCanvasUi();
-  return <NoteEditor look="read" text={item.text ?? ""} onSave={(text) => updateItem(item.id, { text })} />;
+  const { setNodes } = useReactFlow();
+  // One go at the note is one undo: only its first save records one.
+  const onSave = (text: string, again: boolean) =>
+    again ? setNodes((ns) => patchItem(ns, item.id, { text })) : updateItem(item.id, { text });
+  return <NoteEditor look="read" text={item.text ?? ""} onSave={onSave} />;
 }

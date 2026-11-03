@@ -5,6 +5,8 @@ import { useEffect, useRef, useState } from "react";
 import { inApp, recentProjects } from "../app/projects";
 import { useFullscreen } from "../app/useFullscreen";
 import { folderName } from "../store/folder";
+import type { BoardStore } from "../store/types";
+import { Versions } from "./Versions";
 
 type Props = {
   name: string;
@@ -13,6 +15,8 @@ type Props = {
   onOpen: (root: string) => void;
   /** Back to the home screen and all the boards. Absent where there is no home (a plain browser tab). */
   onHome?: () => void;
+  /** The open board's store, for its earlier versions where they're kept. */
+  store?: BoardStore;
 };
 
 /** A folder as people read it: the home folder as ~. */
@@ -52,7 +56,7 @@ function PathRow({ root }: { root: string }) {
  * window buttons (in the corner when full screen). Its menu shows where the
  * project lives, the recent ones to switch to, and what you can do with it.
  */
-export function ProjectChip({ name, root, onSwitch, onOpen, onHome }: Props) {
+export function ProjectChip({ name, root, onSwitch, onOpen, onHome, store }: Props) {
   const [open, setOpen] = useState(false);
   const [recent, setRecent] = useState<string[]>([]);
   // The corner is free when full screen, and in a browser (no window buttons).
@@ -120,6 +124,7 @@ export function ProjectChip({ name, root, onSwitch, onOpen, onHome }: Props) {
                 <button role="menuitem" onClick={pick(() => revealItemInDir(root).catch(() => {}))}>
                   Show in Finder
                 </button>
+                {store?.versions && <Versions store={store} onPicked={() => setOpen(false)} />}
                 {onHome && (
                   <button role="menuitem" onClick={pick(onHome)}>
                     All boards

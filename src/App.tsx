@@ -1,5 +1,6 @@
 import { ReactFlowProvider } from "@xyflow/react";
 import { useEffect, useState } from "react";
+import { listenForQuit } from "./app/closing";
 import { inApp, pickFolder, rememberProject } from "./app/projects";
 import { Veil } from "./app/Veil";
 import { Canvas } from "./canvas/Canvas";
@@ -26,6 +27,9 @@ export default function App() {
   const [from, setFrom] = useState<string | null>(null);
   /** Why a board didn't open, said on the home. */
   const [notice, setNotice] = useState<string | null>(null);
+
+  // Quitting or closing the window saves everything first (see closing.ts).
+  useEffect(() => listenForQuit(), []);
 
   // A browser without the home goes straight to its board, as before.
   useEffect(() => {
@@ -77,6 +81,7 @@ export default function App() {
             onSwitch={() => void pickFolder("Open a folder as a board").then(switchTo)}
             onOpen={(root) => void switchTo(root)}
             onHome={source ? () => setVeil("out") : undefined}
+            store={opened.store}
           />
         </>
       ) : (

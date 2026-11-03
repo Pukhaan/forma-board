@@ -1,6 +1,7 @@
 import type { Board } from "../model/format";
 import { isoDay } from "../model/items";
 import type { Item } from "../model/types";
+import type { Version } from "./keeper";
 import { paletteFields } from "./readPalette";
 
 /** Where a board lives. The canvas only talks to this, never to storage directly. */
@@ -20,6 +21,16 @@ export interface BoardStore {
   importMedia(file: File, source?: string): Promise<Item>;
   /** Called when the board changes outside the app (an AI, an editor). Returns a stop function. */
   watch(onChange: (board: Board) => void): () => void;
+  /** Writes what's waiting now, without the usual moment's wait. Resolves once it's kept; rejects if it couldn't be. */
+  flush(): Promise<void>;
+  /** Earlier versions of the board, the latest first. Only where they're kept (the Mac app). */
+  versions?(): Promise<Version[]>;
+  /**
+   * Brings back an earlier version (by its name from `versions`). The board
+   * as it is now is kept as a version first, and the one brought back arrives
+   * like a change from outside, so ⌘Z takes it back.
+   */
+  restore?(name: string): Promise<void>;
 }
 
 /** Natural size of an image file, for keeping its proportions on the board. */

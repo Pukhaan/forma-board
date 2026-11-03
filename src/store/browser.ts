@@ -1,6 +1,7 @@
 // The board kept in the browser. Used when the interface runs outside the Mac
 // app (for design work in a normal browser tab).
 
+import { saveOnClose } from "../app/closing";
 import { parseBoard, serialize, type Board } from "../model/format";
 import { newId } from "../model/operations";
 import { sampleEdges, sampleNodes } from "../model/sample";
@@ -20,6 +21,19 @@ function readDataUrl(file: Blob): Promise<string> {
 
 export function browserStore(): BoardStore {
   let timer: number | undefined;
+  let pending: Board | null = null;
+  const flush = async () => {
+    window.clearTimeout(timer);
+    if (!pending) return;
+    const board = pending;
+    pending = null;
+    try {
+      localStorage.setItem(KEY, serialize(board));
+    } catch {
+      // Full or blocked. The board still works, it just won't survive a reload.
+    }
+  };
+  saveOnClose(flush);
   return {
     name: "Sample board",
     async load() {
@@ -33,15 +47,11 @@ export function browserStore(): BoardStore {
       return { nodes: sampleNodes, edges: sampleEdges };
     },
     save(board: Board) {
+      pending = board;
       window.clearTimeout(timer);
-      timer = window.setTimeout(() => {
-        try {
-          localStorage.setItem(KEY, serialize(board));
-        } catch {
-          // Full or blocked. The board still works, it just won't survive a reload.
-        }
-      }, 300);
+      timer = window.setTimeout(() => void flush(), 300);
     },
+    flush,
     async importMedia(file, source) {
       if (isVideoFile(file)) {
         // Kept in the page, so it only lasts as long as the browser keeps it.

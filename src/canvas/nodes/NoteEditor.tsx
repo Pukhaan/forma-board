@@ -36,8 +36,12 @@ type Look = "board" | "read";
 type Props = {
   text: string;
   look: Look;
-  /** The new text, once writing stops (focus leaves, or the editor goes away) and only if it changed. */
-  onSave: (text: string) => void;
+  /**
+   * The new text, only if it changed: when writing pauses, when focus leaves,
+   * or when the editor goes away. `again` is true for every save after the
+   * first while writing, so all of one go at a note undoes as one step.
+   */
+  onSave: (text: string, again: boolean) => void;
   /** Focus left the editor. */
   onLeave?: () => void;
   /** Focus straight away, the caret here (or at the very end when null). */
@@ -45,6 +49,8 @@ type Props = {
 };
 
 const FIELD = "note-field nodrag nowheel";
+/** A pause this long in writing saves what's there, so a long note is never only in the editor. */
+const PAUSE_MS = 1000;
 
 /**
  * A note as you write it: the heading and every paragraph of the rest are
@@ -64,6 +70,8 @@ export function NoteEditor({ text, look, onSave, onLeave, start }: Props) {
   const root = useRef<HTMLElement>(null);
   /** What was last handed to onSave, so leaving twice saves once. */
   const saved = useRef<string | null>(null);
+  /** Saved at least once since writing started. */
+  const again = useRef(false);
 
   const fieldAt = (i: number) => root.current?.querySelectorAll("textarea")[i] ?? null;
   const place = (c: Caret) => {
@@ -84,8 +92,17 @@ export function NoteEditor({ text, look, onSave, onLeave, start }: Props) {
     const next = toText(fields);
     if (!changed(fields, text) || next === saved.current) return;
     saved.current = next;
-    onSave(next);
+    onSave(next, again.current);
+    again.current = true;
   };
+
+  // A pause in writing saves it. Every key sets the pause going again.
+  const paused = useEffectEvent(() => save());
+  useEffect(() => {
+    if (!active) return;
+    const t = window.setTimeout(paused, PAUSE_MS);
+    return () => window.clearTimeout(t);
+  }, [active, fields]);
 
   // Each field as tall as what's in it, in whole lines: scrollHeight rounds,
   // and a 19.5px line would come out half a pixel off. The box they sit in
@@ -150,6 +167,7 @@ export function NoteEditor({ text, look, onSave, onLeave, start }: Props) {
     if (root.current?.contains(e.relatedTarget as Node | null)) return;
     setActive(false);
     save();
+    again.current = false;
     onLeave?.();
   };
 
