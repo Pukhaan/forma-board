@@ -168,6 +168,11 @@ running, and starts its own otherwise.
 
 ## Licence
 
-AGPL-3.0. See [LICENSE](LICENSE).
+The app is [AGPL-3.0](LICENSE): use it, change it and share it freely, and if
+you release your own version or host it for others, share your code too.
+
+The board format ([FORMAT.md](FORMAT.md)) and the AI skill
+([skills/forma](skills/forma)) are [MIT](skills/forma/LICENSE), so anything can
+read, write and build on Forma boards.
 
 Made by David Pukha, [pukha.world](https://pukha.world).

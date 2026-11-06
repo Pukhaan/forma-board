@@ -71,5 +71,5 @@ of its `board.json` helps (take out anything private first).
 
 ## Licence
 
-By contributing you agree that your work is released under the AGPL-3.0 licence,
-like the rest of Forma.
+By contributing you agree that your work is released under the same licence
+as what you changed: AGPL-3.0 for the app, MIT for FORMAT.md and `skills/forma`.

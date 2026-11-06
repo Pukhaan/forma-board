@@ -199,3 +199,7 @@ the two things are connected. Direction doesn't matter to the app.
 - Ids must be unique. Wires to missing nodes are dropped.
 - The app saves through a temporary file and a rename, so you never read a
   half-written board. Do the same if you write often.
+
+## Licence
+
+This format is under the [MIT licence](skills/forma/LICENSE): anything can read and write Forma boards.
