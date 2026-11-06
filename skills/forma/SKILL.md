@@ -94,6 +94,44 @@ SKILL.md       these rules (the app adds it; leave it be)
 - Positions are board units, y grows downward, on a 32-unit grid. Ids are
   unique across the whole board.
 
+## The shape of a board
+
+A board is a map you read at a glance, and the wires give it its shape. Build
+every new board this way, and grow an existing one in the shape it already has.
+
+- **The project stays in the middle.** Four to six things wire straight to it,
+  each heading off in its own direction, about 450 units away.
+- **Branches grow outward.** What comes from a thing sits further out in the
+  same direction, 320 to 500 units along its wire, as a chain or a small fan.
+  Each branch keeps to its own side, so wires don't cross.
+- **Wire each thing to what it grew from.** Most things connect to a neighbour
+  on their branch, and nothing is left floating. Put a few words on a wire when
+  the reason isn't obvious.
+- **Stacks hold the material.** A branch is a few piles and notes, with the
+  pictures inside the piles.
+- **Keep it loose.** Uneven distances and angles are good: they make each part
+  easy to recognise. Boxes, areas, columns, rows and grids look tidy and are
+  hard to scan, so never lay a board out that way.
+
+A new board's positions, roughly:
+
+```
+project            -170,  -80   the middle
+note "The idea"    -640,   64   left
+  stack "How"     -1056,  416   further out, down and left
+  stack "Links"    -320,  608   down
+stack "Why"        -384, -512   up and left
+  stack "Call"     -672, -864   further out the same way
+note "Rules"         32, -544   up and right
+  stack "Surface"   -64, -896   further up
+    stack "Calm"    -64,-1216   further up again
+stack "Plan"        416, -320   right
+  stack "So far"    320,   64   down and right
+```
+
+This never overrides the rule above: things the user already placed stay where
+they are, unless they ask you to rearrange them.
+
 ## How to edit safely
 
 1. **Read board.json right before you change it,** every time. The user may
