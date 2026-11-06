@@ -1,7 +1,7 @@
 // A sample project used while designing: a made-up client, with research
-// already sorted into stacks and connected. The images live in public/sample,
-// which stays out of git; the live card's component is public/live/hello.html,
-// which is committed.
+// already sorted into stacks and connected. The images in public/sample are
+// drawn by scripts/sample-art.mjs; the live card's component is
+// public/live/hello.html.
 
 import type { Edge, Node } from "@xyflow/react";
 import type { Item } from "./types";
@@ -40,7 +40,7 @@ const type = [
 ];
 
 const packaging = [
-  img("35515d79", 400, 300, "HAVN wrapper"),
+  img("35515d79", 400, 300, "Bar wrapper"),
   img("cd067aa2", 240, 300),
   img("0cadf925", 240, 300),
   img("074f85be", 225, 300),
@@ -70,7 +70,7 @@ export const sampleNodes: Node[] = [
     type: "note",
     position: { x: -760, y: 160 },
     data: {
-      text: "Who buys\n\nSmall brand owners, 28 to 40. Run the shop from their phone. Buy on trust, not on features.",
+      text: "Who buys\n\nSmall brand owners, 28 to 40. Run the shop from their phone. They buy on trust.",
     },
   },
   { id: "stack-blue", type: "stack", position: { x: 480, y: -400 }, data: { title: "Blue and white", items: blueWhite } },

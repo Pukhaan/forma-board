@@ -6,6 +6,10 @@ links, notes, documents and small coded prototypes, gathered in stacks and
 connected by wires that each say why. It's a Mac app, it's free, and each
 board is a plain folder on your Mac that you and your AI edit together.
 
+![A Forma board: stacks opening, a wire with a note on why, and an AI adding to the board](docs/film.gif)
+
+**[Try the board in your browser](https://forma-preview-ten.vercel.app)**, no install needed.
+
 Forma is Latin for form: your research goes in raw, and the board gives it
 shape.
 
@@ -122,8 +126,11 @@ Coming: a dark theme, and more ways to bring research in. See
 
 ## Contributing
 
-Read [CONTRIBUTING.md](CONTRIBUTING.md) and [DESIGN.md](DESIGN.md) first.
-Forma should look like one person designed it, and it has to stay smooth.
+Developers and designers are both welcome. Start with an issue marked
+[good first issue](https://github.com/Pukhaan/forma-board/labels/good%20first%20issue),
+or pick something from [ROADMAP.md](ROADMAP.md). Read
+[CONTRIBUTING.md](CONTRIBUTING.md) and [DESIGN.md](DESIGN.md) first: Forma should
+look like one person designed it, and it has to stay smooth.
 
 ```bash
 pnpm install
@@ -157,7 +164,7 @@ running, and starts its own otherwise.
 - `src/styles` design tokens and styles
 - `src-tauri` the Mac app shell
 - `skills/forma` the SKILL.md every board carries
-- `scripts` the 60 fps check and its board
+- `scripts` the 60 fps check and its board, and the sample board's pictures
 
 ## Licence
 

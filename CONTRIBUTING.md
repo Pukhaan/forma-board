@@ -4,6 +4,13 @@ Thank you for wanting to help. Forma is small on purpose, made by one
 designer, and it should keep looking like one person designed it. These are
 the few rules that keep it that way.
 
+## Where to start
+
+Issues marked `good first issue` are small and self-contained, and `help
+wanted` marks the bigger pieces. You don't need to write code to help: a
+clear bug report, a recipe for SKILL.md or a board you made with your AI all
+make Forma better.
+
 ## Before you start
 
 - **Open an issue first** for anything bigger than a fix: what you want to

@@ -23,8 +23,8 @@ dist-ssr
 *.sln
 *.sw?
 
-# Local sample images (from a private library, never committed)
-public/sample/
+# Private film and design folders never belong in the app
+public/sample/forma*/
 
 # Placeholder images drawn by pnpm bench
 scripts/bench/media/
