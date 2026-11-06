@@ -17,6 +17,8 @@ in an issue first, so two people don't build the same thing.
 - **Screens and flows.** Mobbin screens and flows as stacks, with where they
   came from.
 - **Email.** A thread's attachments and the lines that matter.
+- **A repo as a board.** Give your AI a GitHub link and it draws the project
+  as a board: its files, its folders and how they connect.
 - **Any tool through its AI.** FORMAT.md is the whole contract: anything
   that can write a folder can put research on a board. More recipes in
   SKILL.md as people find them.
