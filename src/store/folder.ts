@@ -55,7 +55,7 @@ export function emptyBoard(root: string): Board {
         id: "project",
         type: "project",
         position: { x: -170, y: -80 },
-        data: { title: folderName(root), brief: "What is this project? Double-click a note to start writing." },
+        data: { title: folderName(root), brief: "" },
       },
     ],
     edges: [],

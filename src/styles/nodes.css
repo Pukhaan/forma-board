@@ -158,6 +158,32 @@
   will-change: opacity;
 }
 
+.project-brief[data-empty] {
+  opacity: calc(var(--detail, 1) * 0.42);
+}
+
+/* Writing the brief: the same words in the same place, now a field. */
+.project-brief-edit {
+  display: block;
+  width: 100%;
+  padding: 0;
+  overflow: hidden;
+  font: inherit;
+  font-size: var(--text-md);
+  line-height: 1.45;
+  color: inherit;
+  background: none;
+  border: 0;
+  outline: none;
+  resize: none;
+  opacity: 0.86;
+}
+
+.project-brief-edit::placeholder {
+  color: inherit;
+  opacity: 0.5;
+}
+
 /* Selected things lift a little. Never a border or outline. */
 .project[data-selected] {
   box-shadow: var(--shadow-high);

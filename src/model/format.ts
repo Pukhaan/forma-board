@@ -11,6 +11,9 @@ import { itemShape } from "./items";
 
 export const FORMAT_VERSION = 1;
 
+/** What new boards used to put in the brief as a prompt. It was never the user's words: read it as no brief. */
+const OLD_BRIEF_PROMPT = "What is this project? Double-click a note to start writing.";
+
 /** An item as stored: `file` is a path inside the project folder. */
 export type FileItem = Item;
 
@@ -159,7 +162,7 @@ export function parseBoard(text: string, resolve: Resolve = (f) => f): Board | n
     const base = { id: n.id, position };
     if (n.type === "project") {
       const links = cleanWorkingFiles(n.links);
-      nodes.push({ ...base, type: "project", data: { title: n.title ?? "", brief: n.brief ?? "", ...(links.length ? { links } : {}) } });
+      nodes.push({ ...base, type: "project", data: { title: n.title ?? "", brief: n.brief === OLD_BRIEF_PROMPT ? "" : (n.brief ?? ""), ...(links.length ? { links } : {}) } });
     } else if (n.type === "note") {
       nodes.push({ ...base, type: "note", data: noteData(n.text, n.source) });
     } else if (n.type === "stack") {
