@@ -176,6 +176,20 @@ they are, unless they ask you to rearrange them.
   stack per source event, named after it ("Call with Bob, 14 Oct"), with short
   items: the decisions and the person's own words, each with `source` pointing
   back to the original. Pictures over links when the picture is the research.
+- **A repo as a board** (the user gives you a GitHub link or a code folder):
+  read before you draw. Start with the README, then the top-level folders,
+  the Markdown docs, the manifest (`package.json`, `Cargo.toml` and the like)
+  and the main entry files. Skip what's generated or installed
+  (`node_modules`, `dist`, `target`, lockfiles). Make a new board named after
+  the repo, unless the user names one. The repo goes in the middle as the
+  `project`: its name, a one-line `brief` from the README in plain words, and
+  its address in `links`. Around it, four to six notes for the parts that
+  matter, each saying what that part does and why it's there, with its key
+  files on their own line. Docs worth reading go in a stack called Docs, as
+  `doc` items; screenshots, diagrams and films from the repo go in a stack
+  called Pictures. Wire each part to the project, and parts that depend on
+  each other to each other, with a few words on why. Follow the shape above.
+  Only read the repo: never change, commit or push anything in it.
 - **A live card:** one self-contained HTML file in `components/`, added like
   an image with `kind: "live"`. It reads `#card` (on the board: quiet, playing
   by itself, no words or controls) or `#open` (opened big) from its address,
