@@ -175,4 +175,6 @@ The board format ([FORMAT.md](FORMAT.md)) and the AI skill
 ([skills/forma](skills/forma)) are [MIT](skills/forma/LICENSE), so anything can
 read, write and build on Forma boards.
 
-Made by David Pukha, [pukha.world](https://pukha.world).
+Made by David Pukha, [pukha.world](https://pukha.world). If you share a board
+you made, or something you built on Forma, tag
+[@davidpukhaa](https://x.com/davidpukhaa) on X. I'd love to see it.
