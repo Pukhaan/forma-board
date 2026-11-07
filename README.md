@@ -95,6 +95,8 @@ ask in plain words:
 - "Make a note of what we decided in today's call, and wire it to the
   pricing stack."
 - "Build a live card of the toolbar idea next to its references."
+- "Turn github.com/you/your-app into a board, so I can see how it fits
+  together."
 
 Forma watches the folder. What your AI adds or changes appears straight
 away: the dot grid ripples out from it, and it keeps a small blue dot until
