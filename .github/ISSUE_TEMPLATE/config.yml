@@ -1,1 +1,5 @@
 blank_issues_enabled: true
+contact_links:
+  - name: A question, or something to show
+    url: https://github.com/Pukhaan/forma-board/discussions
+    about: Ask how something works, or share a board you made with your AI.

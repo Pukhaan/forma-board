@@ -7,8 +7,8 @@ in an issue first, so two people don't build the same thing.
 ## Now
 
 - **A dark theme.** The same board at night: the tokens are ready for it.
-- **Signed downloads.** A Forma.app you can download from GitHub, for people
-  who don't want to build it through their AI.
+- **A download signed by Apple.** A Forma.app you can download in a browser,
+  for people who don't use Terminal or an AI.
 
 ## Bringing research in
 

@@ -1,0 +1,33 @@
+{
+  "name": "forma-board",
+  "version": "0.1.0",
+  "description": "Install Forma on your Mac: one board for you and your AI. Run it again to update.",
+  "bin": {
+    "forma-board": "bin/forma-board.mjs"
+  },
+  "files": [
+    "bin"
+  ],
+  "type": "module",
+  "engines": {
+    "node": ">=18"
+  },
+  "os": [
+    "darwin"
+  ],
+  "license": "AGPL-3.0-only",
+  "homepage": "https://formaboard.app",
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/Pukhaan/forma-board.git",
+    "directory": "installer"
+  },
+  "keywords": [
+    "forma",
+    "board",
+    "research",
+    "designers",
+    "ai",
+    "macos"
+  ]
+}

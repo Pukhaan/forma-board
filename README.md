@@ -26,27 +26,27 @@ read it, add to it and connect things, while you see every change it makes.
 
 ## Install
 
-Forma installs through your AI. Paste this into Claude Code, Codex, Cursor
-or any AI that can run commands on your Mac:
-
-```text
-Install Forma for me, the research board app from
-https://github.com/Pukhaan/forma-board. Clone it into ~/Developer/forma-board,
-install what it needs to build (Xcode command line tools, Rust through
-rustup, Node 20 or later, pnpm), then run `pnpm install` and
-`pnpm tauri build`. Copy the built Forma.app from
-src-tauri/target/release/bundle/macos/ into /Applications and open it.
-Also copy skills/forma/SKILL.md into your own skills or rules folder, so you
-know how to work on my Forma boards. Tell me if anything fails, and don't
-change any of my files outside that folder.
+```bash
+npx forma-board
 ```
 
-The first build takes a few minutes. Because the app is built on your own
-Mac, it opens without the "unidentified developer" warning.
+It downloads Forma, puts it in your Applications folder and opens it. Run it
+again any time to update; your boards are never touched. You need a Mac and
+Node 18 or later.
 
-**To update,** tell your AI: "update my Forma". It pulls the latest version
-in ~/Developer/forma-board and builds and copies it the same way. Your
-boards are never touched by an update.
+**Or let your AI install it.** Paste this into Claude Code, Codex, Cursor or
+any AI that can run commands on your Mac:
+
+```text
+Install Forma for me, the board app from github.com/Pukhaan/forma-board. Run
+npx forma-board in Terminal, wait for it to finish and open Forma. Then copy
+skills/forma/SKILL.md from that repo into your own skills or rules, so you
+know how to work on my boards. Tell me if anything fails.
+```
+
+Forma is signed on its own build machine, not yet by Apple. Installed this way
+it opens straight away; a download signed by Apple, for people who'd rather
+not use Terminal, is on the [roadmap](ROADMAP.md).
 
 **To build it yourself:**
 

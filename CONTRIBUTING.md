@@ -2,7 +2,8 @@
 
 Thank you for wanting to help. Forma is small on purpose, made by one
 designer, and it should keep looking like one person designed it. These are
-the few rules that keep it that way.
+the few rules that keep it that way. Everyone here follows the
+[code of conduct](CODE_OF_CONDUCT.md).
 
 ## Where to start
 
@@ -10,6 +11,19 @@ Issues marked `good first issue` are small and self-contained, and `help
 wanted` marks the bigger pieces. You don't need to write code to help: a
 clear bug report, a recipe for SKILL.md or a board you made with your AI all
 make Forma better.
+
+## Running it
+
+```bash
+pnpm install
+pnpm dev            # the interface in a browser at http://localhost:1420, on a sample board
+pnpm tauri dev      # the Mac app, reloading as you edit (needs Rust: rustup)
+pnpm test           # the logic tests
+```
+
+The sample board's pictures are drawn by the repo itself, so a fresh clone
+opens on a full board. Questions go to
+[Discussions](https://github.com/Pukhaan/forma-board/discussions).
 
 ## Before you start
 
@@ -68,6 +82,13 @@ change doesn't fit Forma, you'll get a clear reason why.
 Say what you did, what you expected and what happened, with your macOS
 version and, if you can, a screen recording. If it's about a board, a copy
 of its `board.json` helps (take out anything private first).
+
+## Releasing
+
+For maintainers: a version tag (`git tag v0.2.0 && git push --tags`) builds
+Forma.app on GitHub and attaches it to a release, which is what
+`npx forma-board` installs. The installer itself lives in `installer/` and is
+published to npm by hand.
 
 ## Licence
 
