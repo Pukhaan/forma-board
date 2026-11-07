@@ -278,6 +278,10 @@
   pointer-events: none;
 }
 
+.empty-hint-line {
+  display: inline-block;
+}
+
 /* The one part that takes a click: it copies a prompt to start with. */
 .empty-hint-ask {
   padding: 0;

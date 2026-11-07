@@ -61,17 +61,28 @@ function Line({ projectId, root }: { projectId: string; root?: string }) {
         animate={{ opacity: 1, transition: { duration: reduced ? 0 : 0.6, delay: reduced ? 0 : 0.4 } }}
         exit={{ opacity: 0, transition: { duration: reduced ? 0 : 0.32 } }}
       >
-        {copied ? (
-          HINT_COPIED
-        ) : (
-          <>
-            {HINT_START}
-            <button className="empty-hint-ask nodrag nopan" onClick={copy} title="Copies a prompt to start this board with your AI">
-              {HINT_ASK}
-            </button>
-            .
-          </>
-        )}
+        {/* The line blurs out and the other blurs in, one after the other. */}
+        <AnimatePresence mode="wait" initial={false}>
+          <motion.span
+            key={copied ? "copied" : "ask"}
+            className="empty-hint-line"
+            initial={reduced ? { opacity: 0 } : { opacity: 0, filter: "blur(4px)", y: 3 }}
+            animate={reduced ? { opacity: 1 } : { opacity: 1, filter: "blur(0px)", y: 0, transition: { duration: 0.28, ease: [0.22, 1, 0.36, 1] } }}
+            exit={reduced ? { opacity: 0 } : { opacity: 0, filter: "blur(4px)", y: -3, transition: { duration: 0.16, ease: "easeIn" } }}
+          >
+            {copied ? (
+              HINT_COPIED
+            ) : (
+              <>
+                {HINT_START}
+                <button className="empty-hint-ask nodrag nopan" onClick={copy} title="Copies a prompt to start this board with your AI">
+                  {HINT_ASK}
+                </button>
+                .
+              </>
+            )}
+          </motion.span>
+        </AnimatePresence>
       </motion.div>
     </ViewportPortal>
   );
