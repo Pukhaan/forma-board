@@ -71,7 +71,9 @@
   opacity: 1;
 }
 
+/* Here the icon is the whole mark, edge to edge: big enough to recognise. */
 .detail-fact .source-mark .favicon {
-  width: 10px;
-  height: 10px;
+  width: 16px;
+  height: 16px;
+  border-radius: var(--r-xs);
 }

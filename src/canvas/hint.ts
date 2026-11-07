@@ -6,7 +6,20 @@
 
 import type { Node } from "@xyflow/react";
 
-export const HINT = "Paste or drop anything here, or ask your AI.";
+export const HINT_START = "Paste or drop anything here, or ";
+export const HINT_ASK = "ask your AI";
+export const HINT = `${HINT_START}${HINT_ASK}.`;
+/** What the line says for a moment once the prompt is copied. */
+export const HINT_COPIED = "Copied a prompt. Paste it into your AI.";
+
+/**
+ * What "ask your AI" copies: enough for any AI to start on this board,
+ * starting with where it is, so it never has to ask.
+ */
+export function starterPrompt(root?: string) {
+  const where = root ? `This is my new Forma board, in the folder ${root}. Read SKILL.md in that folder first` : "This is my new Forma board. Read its SKILL.md first";
+  return `${where}: it says how to work on the board. Then help me start it: ask me what this project is, write the project's brief with me, and add the first notes and research around it.`;
+}
 
 const KEY = "forma.hinted";
 /** How many boards are remembered: plenty, and the list never grows without end. */

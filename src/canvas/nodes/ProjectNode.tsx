@@ -1,5 +1,5 @@
 import { useReactFlow, type Node, type NodeProps } from "@xyflow/react";
-import { useState, type KeyboardEvent } from "react";
+import { useState, type ChangeEvent, type KeyboardEvent } from "react";
 import type { ProjectData } from "../../model/types";
 import { addWorkingFile, workingFileName } from "../../model/workfiles";
 import { useCanvasUi } from "../context";
@@ -10,21 +10,73 @@ import { Ports } from "./Ports";
 
 type ProjectNodeType = Node<ProjectData, "project">;
 
-/** The centre of the board. Everything else connects back to it. */
+/** What an empty brief says, until there is one. */
+export const BRIEF_PROMPT = "What is this project? Double-click to write it.";
+
+/** The centre of the board. Everything else connects back to it. Double-click to write its brief. */
 export function ProjectNode({ id, data, selected }: NodeProps<ProjectNodeType>) {
+  const [writing, setWriting] = useState(false);
   useZoomVar();
   return (
-    <div className="project" data-selected={selected || undefined}>
+    <div className="project" data-selected={selected || undefined} onDoubleClick={() => setWriting(true)}>
       <div className="project-kicker">Project</div>
       {/* Grows when zoomed out; the hidden copy keeps the block's size. */}
       <div className="project-title">{data.title}</div>
       <div className="project-title-size" aria-hidden>
         {data.title}
       </div>
-      <p className="project-brief">{data.brief}</p>
+      {writing ? (
+        <BriefEditor id={id} brief={data.brief} onLeave={() => setWriting(false)} />
+      ) : (
+        <p className="project-brief" data-empty={data.brief.trim() ? undefined : true}>
+          {data.brief.trim() || BRIEF_PROMPT}
+        </p>
+      )}
       <WorkingFiles id={id} links={data.links ?? []} />
       <Ports />
     </div>
+  );
+}
+
+/** Grows with what's typed, so the brief never scrolls inside itself. */
+const fit = (el: HTMLTextAreaElement | null) => {
+  if (!el) return;
+  el.style.height = "auto";
+  el.style.height = `${el.scrollHeight}px`;
+};
+
+/** The brief as a field: Return or clicking away keeps it, Escape leaves it as it was. */
+function BriefEditor({ id, brief, onLeave }: { id: string; brief: string; onLeave: () => void }) {
+  const { updateNodeData } = useReactFlow();
+  const { commit } = useCanvasUi();
+  const keep = (text: string) => {
+    const next = text.trim();
+    if (next !== brief.trim()) {
+      commit();
+      updateNodeData(id, { brief: next });
+    }
+    onLeave();
+  };
+  const onKeyDown = (e: KeyboardEvent<HTMLTextAreaElement>) => {
+    e.stopPropagation();
+    if (e.key === "Enter" && !e.shiftKey) {
+      e.preventDefault();
+      keep(e.currentTarget.value);
+    } else if (e.key === "Escape") onLeave();
+  };
+  return (
+    <textarea
+      className="project-brief project-brief-edit nodrag nopan nowheel"
+      defaultValue={brief}
+      placeholder={BRIEF_PROMPT}
+      rows={1}
+      autoFocus
+      ref={fit}
+      onFocus={(e) => e.currentTarget.setSelectionRange(e.currentTarget.value.length, e.currentTarget.value.length)}
+      onChange={(e: ChangeEvent<HTMLTextAreaElement>) => fit(e.currentTarget)}
+      onKeyDown={onKeyDown}
+      onBlur={(e) => keep(e.currentTarget.value)}
+    />
   );
 }
 
@@ -54,7 +106,7 @@ function WorkingFiles({ id, links }: { id: string; links: string[] }) {
   };
 
   return (
-    <div className="project-files nodrag" data-empty={links.length || adding ? undefined : true} onClick={(e) => e.stopPropagation()}>
+    <div className="project-files nodrag" data-empty={links.length || adding ? undefined : true} onClick={(e) => e.stopPropagation()} onDoubleClick={(e) => e.stopPropagation()}>
       {links.map((url) => (
         <span key={url} className="project-file">
           <button className="project-file-open" title={url} onClick={() => openLink(url)}>

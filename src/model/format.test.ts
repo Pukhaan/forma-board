@@ -262,3 +262,12 @@ describe("board.json", () => {
     expect(toBoardFile(board).nodes[0]).toMatchObject({ links: ["https://github.com/a/b"] });
   });
 });
+
+describe("a new board's old brief prompt", () => {
+  it("reads as no brief, so it never passes for the user's words", () => {
+    const board = parseBoard(
+      JSON.stringify({ forma: 1, nodes: [{ id: "project", type: "project", x: 0, y: 0, title: "ojo", brief: "What is this project? Double-click a note to start writing." }], wires: [] }),
+    )!;
+    expect((board.nodes[0].data as { brief: string }).brief).toBe("");
+  });
+});

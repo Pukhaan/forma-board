@@ -1,6 +1,6 @@
 import type { Node } from "@xyflow/react";
 import { describe, expect, it } from "vitest";
-import { HINT, onlyProject, withBoard } from "./hint";
+import { HINT, onlyProject, starterPrompt, withBoard } from "./hint";
 
 const at = { x: 0, y: 0 };
 
@@ -20,5 +20,13 @@ describe("the empty board's hint", () => {
   it("says it in a short, plain line", () => {
     expect(HINT).not.toMatch(/—/);
     expect(HINT.split(" ").length).toBeLessThan(12);
+  });
+
+  it("copies a prompt that tells the AI where the board is and how to start", () => {
+    const p = starterPrompt("/Users/me/Documents/Forma/ojo");
+    expect(p).toContain("/Users/me/Documents/Forma/ojo");
+    expect(p).toContain("SKILL.md");
+    expect(p).not.toMatch(/\u2014/);
+    expect(starterPrompt()).toContain("SKILL.md");
   });
 });

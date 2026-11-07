@@ -173,6 +173,13 @@ they are, unless they ask you to rearrange them.
   size for `w` and `h`, then add a `card` (or an item in a stack). Set `added`
   to today (`YYYY-MM-DD`) and `source` to where it came from when you know.
   Leave `palette` out: the app works it out.
+- **A picture from a link** (Cosmos, Are.na, Pinterest, X or any page): the
+  picture is the research, so save the picture itself. Open the page, find
+  the picture's own file (its `og:image`, or the largest picture on the page),
+  download it into `media/` and add it as an image, with `source` set to the
+  page the user gave you. When a site won't show you the picture (X often
+  needs a login), say so and ask the user to drop the picture into the chat
+  or onto the board. Never save a sign-in page or a blank picture.
 - **A video:** copy it into `media/` (`.mp4`, `.mov`, `.webm`), save one frame
   as a picture beside it for `poster` (for example with
   `ffmpeg -ss 0.5 -i in.mp4 -frames:v 1 media/name.jpg`), and set `w`, `h` from

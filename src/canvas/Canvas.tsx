@@ -286,7 +286,7 @@ export function Canvas({ store, initial }: Props) {
           proOptions={{ hideAttribution: true }}
         >
           <DotGrid />
-          <EmptyHint board={store.root ?? "browser"} projectId={nodes[0]?.id ?? ""} bare={onlyProject(nodes)} />
+          <EmptyHint board={store.root ?? "browser"} root={store.root} projectId={nodes[0]?.id ?? ""} bare={onlyProject(nodes)} />
         </ReactFlow>
         <Toolbar
           tool={tool}

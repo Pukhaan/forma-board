@@ -277,3 +277,26 @@
   color: var(--ink-3);
   pointer-events: none;
 }
+
+.empty-hint-line {
+  display: inline-block;
+}
+
+/* The one part that takes a click: it copies a prompt to start with. */
+.empty-hint-ask {
+  padding: 0;
+  font: inherit;
+  color: var(--ink-2);
+  background: none;
+  border: 0;
+  text-decoration: underline;
+  text-decoration-color: var(--ink-3);
+  text-underline-offset: 3px;
+  cursor: pointer;
+  pointer-events: auto;
+  transition: color var(--t-fast) ease;
+}
+
+.empty-hint-ask:hover {
+  color: var(--ink);
+}
