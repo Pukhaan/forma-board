@@ -55,6 +55,12 @@ Every node has a unique `id`, a `type`, and a position `x`, `y` (board units,
 y grows downward). Sizes are not stored, except an area's; the app lays each
 other node out itself.
 
+A node without `x` and `y` gets a place from the app (0.1.2 and later): it
+grows out from what the node is wired to, away from the project, into free
+space, and the position is written back. Nodes that have a position never
+move. So a tool adding to a board can leave positions out and let its wires
+shape the board.
+
 | type | fields | what it is |
 | --- | --- | --- |
 | `project` | `title`, `brief`, `links` | The centre of the board. Usually one. `links` are its working files: the few addresses you work in (the Figma file, the repo, the live site), shown on the project and opened with a click. |

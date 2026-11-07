@@ -26,7 +26,8 @@ The board is the user's thinking. Treat everything already on it as theirs.
   reason you can't see. Only go ahead on a clear yes.
 - **Things you added in this conversation** you may adjust without asking.
 - **Never rearrange or tidy the board,** never add areas, and never move things
-  to make room unless asked. Place new things in free space instead.
+  to make room unless asked. Leave positions out of new things instead:
+  Forma finds them a place (see "The shape of a board").
 - **The user's words stay the user's.** Don't rewrite their notes or wire notes.
   A note on an image (`note`) says why *they* saved it: never write one for
   them. You may write facts with their source, like what was said in a meeting
@@ -91,13 +92,23 @@ SKILL.md       these rules (the app adds it; leave it be)
   `title`, `w`, `h`), `doc` (`file`: a PDF, Markdown, text or any other
   file; optional `title`, `note`, `source`, `added`).
 - **Wires:** `from`, `to` (node ids) and an optional `note`: why they connect.
-- Positions are board units, y grows downward, on a 32-unit grid. Ids are
-  unique across the whole board.
+- Positions are board units, y grows downward, on a 32-unit grid. Leave `x`
+  and `y` out of anything you add (see below). Ids are unique across the
+  whole board.
 
 ## The shape of a board
 
-A board is a map you read at a glance, and the wires give it its shape. Build
-every new board this way, and grow an existing one in the shape it already has.
+A board is a map you read at a glance, and the wires give it its shape.
+
+**Leave `x` and `y` out of everything you add.** Forma places each new thing
+itself: it grows out from what it's wired to, heading away from the project,
+in free space, with no crossed wires and nothing lined up in rows. It writes
+the positions back into board.json. Things that already have a position never
+move. So the wires decide the shape: get them right and the board comes out
+right. Write `x` and `y` only when the user tells you where something goes
+("top left, by the call notes").
+
+What Forma builds from your wires:
 
 - **The project stays in the middle.** Four to six things wire straight to it,
   each heading off in its own direction, about 450 units away.
@@ -113,7 +124,11 @@ every new board this way, and grow an existing one in the shape it already has.
   easy to recognise. Boxes, areas, columns, rows and grids look tidy and are
   hard to scan, so never lay a board out that way.
 
-A new board's positions, roughly:
+Forma older than 0.1.2 can't place things, and puts anything without a
+position in the middle. Check its version with
+`defaults read /Applications/Forma.app/Contents/Info.plist CFBundleShortVersionString`
+(or `~/Applications/Forma.app`). On an older one, write positions yourself,
+roughly like this for a new board:
 
 ```
 project            -170,  -80   the middle
@@ -144,11 +159,12 @@ they are, unless they ask you to rearrange them.
    with a dot) in the folder: the app can't see them.
 4. **Write valid JSON** (two-space indent is fine). Re-read it after writing to
    check it parses.
-5. **Place new things in free space,** near what they relate to, on the
-   32-unit grid, without covering anything. Rough sizes in board units: a note
-   is 256 wide and about 120 to 260 tall; a stack's pile is 200 square with
-   its title under it; a card is about 168 to 200 wide; the project block is
-   352 wide. Leave at least 64 between things.
+5. **Leave positions out of new things,** and wire each one to what it grew
+   from. If you must write a position (the user said where, or Forma is older
+   than 0.1.2), keep to the 32-unit grid and free space. Rough sizes in board
+   units: a note is 256 wide and about 120 to 260 tall; a stack's pile is 200
+   square with its title under it; a card is about 168 to 200 wide; the
+   project block is 352 wide. Leave at least 64 between things.
 
 ## Recipes
 

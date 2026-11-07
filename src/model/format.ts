@@ -6,6 +6,8 @@ import type { AreaData, CardData, Item, LinkData, NoteData, ProjectData, StackDa
 import { cleanWorkingFiles } from "./workfiles";
 import { areaNode, areaSize, NEW_AREA } from "./operations";
 import { isHex } from "./palette";
+import { grow, type Spot } from "./grow";
+import { itemShape } from "./items";
 
 export const FORMAT_VERSION = 1;
 
@@ -147,8 +149,12 @@ export function parseBoard(text: string, resolve: Resolve = (f) => f): Board | n
   const file = raw as BoardFile;
 
   const nodes: Node[] = [];
+  const unplaced = new Set<string>();
   for (const n of file.nodes) {
     if (!n || typeof n.id !== "string") continue;
+    // Left out (or not a number), and Forma finds it a place: see model/grow.ts.
+    const placed = n.x != null && n.y != null && Number.isFinite(Number(n.x)) && Number.isFinite(Number(n.y));
+    if (!placed && n.type !== "area") unplaced.add(n.id);
     const position = { x: Number(n.x) || 0, y: Number(n.y) || 0 };
     const base = { id: n.id, position };
     if (n.type === "project") {
@@ -182,5 +188,34 @@ export function parseBoard(text: string, resolve: Resolve = (f) => f): Board | n
       data: w.note ? { note: w.note } : {},
     }));
 
-  return { nodes, edges };
+  return { nodes: unplaced.size ? placeNew(nodes, edges, unplaced) : nodes, edges };
+}
+
+/** About how big a thing is on the board, before the board has measured it. */
+export function roughSize(n: Node): { w: number; h: number } {
+  if (n.type === "project") return { w: 352, h: 160 };
+  if (n.type === "stack") return { w: 200, h: 248 };
+  if (n.type === "note") {
+    const lines = (n.data as NoteData).text.split("\n").reduce((sum, p) => sum + Math.max(1, Math.ceil(p.length / 32)), 0);
+    return { w: 256, h: Math.min(320, Math.max(96, 40 + lines * 20)) };
+  }
+  if (n.type === "card") {
+    const item = (n.data as CardData).item;
+    const box = item.kind === "link" || item.kind === "doc" ? 200 : 168;
+    const { w, h } = itemShape(item);
+    const s = box / Math.max(w, h);
+    return { w: Math.round(w * s), h: Math.round(h * s) + 32 };
+  }
+  return { w: 256, h: 160 };
+}
+
+/** Grid the board snaps to; matches canvas/dots.ts. */
+const GRID = 32;
+
+function placeNew(nodes: Node[], edges: Edge[], unplaced: Set<string>): Node[] {
+  const spots: Spot[] = nodes
+    .filter((n) => n.type !== "area")
+    .map((n) => ({ id: n.id, type: n.type ?? "", ...roughSize(n), ...(unplaced.has(n.id) ? {} : { at: n.position }) }));
+  const at = grow(spots, edges, GRID);
+  return nodes.map((n) => (unplaced.has(n.id) && at.has(n.id) ? { ...n, position: at.get(n.id)! } : n));
 }
