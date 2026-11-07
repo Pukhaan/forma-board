@@ -1,14 +1,15 @@
 # Forma
 
-**Forma, a research board for designers.** One board per project, with the
-project in the middle and everything you found around it: pictures, videos,
-links, notes, documents and small coded prototypes, gathered in stacks and
-connected by wires that each say why. It's a Mac app, it's free, and each
-board is a plain folder on your Mac that you and your AI edit together.
+**Forma, a visual memory for every project.** One board for you and your AI,
+with the project in the middle and everything you found around it: pictures,
+videos, links, notes, meetings, documents and small coded prototypes,
+gathered in stacks and connected by wires that each say why. You see it at a
+glance, and your AI reads and edits it, because each board is a plain folder
+on your Mac. It's free and open source.
 
 ![A Forma board: stacks opening, a wire with a note on why, and an AI adding to the board](docs/film.gif)
 
-**[Try the board in your browser](https://forma-preview-ten.vercel.app)**, no install needed.
+**[formaboard.app](https://formaboard.app)** · **[Try it in your browser](https://forma-preview-ten.vercel.app)**, no install needed.
 
 Forma is Latin for form: your research goes in raw, and the board gives it
 shape.
